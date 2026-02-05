@@ -9,4 +9,12 @@
         <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
     </PropertyGroup>
 
+    <!-- Add any DLLs placed in the lib folder to the build and publish output -->
+    <ItemGroup>
+        <Content Include="lib\**\*.dll">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+        </Content>
+    </ItemGroup>
+
 </Project>
