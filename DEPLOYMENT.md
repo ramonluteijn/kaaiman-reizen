@@ -7,7 +7,7 @@
 
 
 ## plesk structuur
-- doamin/httpdocs/[alles uit de publish folder]
+- doamin/httpdocs/[alles uit de publish folder] (httpdocs is niet per se nodig)
 - (optioneel) zorg dat php versie uit staat binnen subdomain
 - zorg dat .net core toolkit het volgende eruit zien op basis van eerder gevolgde stappen
 <img width="700" height="439" alt="image" src="https://github.com/user-attachments/assets/a0a63796-4245-460a-867a-8ee69c418dda" />
