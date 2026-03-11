@@ -16,5 +16,8 @@
             <CopyToPublishDirectory>Always</CopyToPublishDirectory>
         </Content>
     </ItemGroup>
+    <ItemGroup>
+      <PackageReference Include="CoreAdmin" Version="4.0.0" />
+    </ItemGroup>
 
 </Project>

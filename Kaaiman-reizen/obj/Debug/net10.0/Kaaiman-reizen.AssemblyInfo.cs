@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Kaaiman-reizen")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6e435c3d339511b3604d7fc93c5301f78fc5aa1c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+961d29889ab3ce5e8448d8a78ff30b563d286c7c")]
 [assembly: System.Reflection.AssemblyProductAttribute("Kaaiman-reizen")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Kaaiman-reizen")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
