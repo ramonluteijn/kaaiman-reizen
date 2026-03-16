@@ -2,6 +2,7 @@
 
 ```
 ├── Dtos                   # Data Transfer Objects
+├── Enums                  # Enumerations used across the application
 ├── Interfaces             # Interfaces for services and repositories
 ├── Migrations             # Database migration files
 ├── Models                 # Entity models representing database tables

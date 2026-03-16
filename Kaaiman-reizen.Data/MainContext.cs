@@ -2,8 +2,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Kaaiman_reizen.Data;
 
-public class MainContext(DbContextOptions<MainContext> options) : DbContext(options)
+public class MainContext : DbContext
 {
+    public MainContext(DbContextOptions<MainContext> options) : base(options)
+    {
+    }
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

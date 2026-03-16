@@ -1,0 +1,45 @@
+@typeparam TItem
+
+<table class="table">
+    <thead>
+        <tr>
+            @if (HeaderContent != null)
+            {
+                @HeaderContent
+            }
+            else
+            {
+                <th>Item</th>
+            }
+        </tr>
+    </thead>
+    <tbody>
+        @if (Items != null)
+        {
+            foreach (var item in Items)
+            {
+                <tr>
+                    @if (RowTemplate != null)
+                    {
+                        @RowTemplate(item)
+                    }
+                    else
+                    {
+                        <td>@item</td>
+                    }
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+@code {
+    [Parameter]
+    public IEnumerable<TItem>? Items { get; set; }
+
+    [Parameter]
+    public RenderFragment? HeaderContent { get; set; }
+
+    [Parameter]
+    public RenderFragment<TItem>? RowTemplate { get; set; }
+}
