@@ -9,6 +9,7 @@ public class MainContextFactory : IDesignTimeDbContextFactory<MainContext>
     public MainContext CreateDbContext(string[] args)
     {
         // When running dotnet ef, current directory is usually the startup project (Kaaiman-reizen)
+        // It makes sure that you can use the CLI from the startup project.
         var basePath = Directory.GetCurrentDirectory();
         if (!File.Exists(Path.Combine(basePath, "appsettings.json")))
             basePath = Path.Combine(basePath, "Kaaiman-reizen");
