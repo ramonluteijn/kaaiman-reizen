@@ -4,9 +4,9 @@ namespace Kaaiman_reizen.Data.Entities;
 public class PreferredDestination
 {
     public int Id { get; set; }
-    public int ReisleiderId { get; set; }
+    public int TravelLeaderId { get; set; }
     public int Rank { get; set; }  // 1, 2 of 3
     public string Destination { get; set; } = string.Empty;
 
-    public Reisleider Reisleider { get; set; } = null!;
+    public TravelLeader TravelLeader { get; set; } = null!;
 }
