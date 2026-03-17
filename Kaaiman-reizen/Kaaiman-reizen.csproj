@@ -16,5 +16,8 @@
             <CopyToPublishDirectory>Always</CopyToPublishDirectory>
         </Content>
     </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\Kaaiman-reizen.Data\Kaaiman-reizen.Data.csproj" />
+    </ItemGroup>
 
 </Project>
