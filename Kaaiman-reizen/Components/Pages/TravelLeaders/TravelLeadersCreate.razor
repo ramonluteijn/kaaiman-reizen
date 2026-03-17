@@ -1,0 +1,76 @@
+@page "/travelleaders/create"
+@rendermode InteractiveServer
+@using Kaaiman_reizen.Data.Entities
+@using Kaaiman_reizen.Data.Enums
+@using Kaaiman_reizen.Data.Services
+@inject ITravelLeaderService LeaderService
+@inject NavigationManager Navigation
+
+<PageTitle>Nieuwe reisleider</PageTitle>
+
+<h1 class="h4">Nieuwe reisleider</h1>
+
+<div class="card">
+    <div class="card-body">
+        <EditForm Model="_model" OnValidSubmit="HandleValidSubmit">
+            <DataAnnotationsValidator />
+
+            <div class="mb-3">
+                <label class="form-label">Naam</label>
+                <InputText class="form-control" @bind-Value="_model.Name" />
+                <ValidationMessage For="() => _model.Name" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Telefoon</label>
+                <InputText class="form-control" @bind-Value="_model.PhoneNumber" />
+                <ValidationMessage For="() => _model.PhoneNumber" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Aantal reizen</label>
+                <InputNumber class="form-control" @bind-Value="_model.AmountOfTrips" />
+                <ValidationMessage For="() => _model.AmountOfTrips" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Wanneer beschikbaar</label>
+                <InputText class="form-control" @bind-Value="_model.WhenAvailable" />
+                <ValidationMessage For="() => _model.WhenAvailable" />
+            </div>
+
+            <div class="d-flex">
+                <Button TItem="object" Type="ButtonType.Primary" HtmlType="submit">Opslaan</Button>
+                <span class="ms-2">
+                    <Button TItem="object" Type="ButtonType.Secondary" HtmlType="button" OnClickNoArg="EventCallback.Factory.Create(this, Cancel)">Annuleren</Button>
+                </span>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private TravelLeader _model = new();
+    private string[] _preferred = new string[3];
+
+    private void Cancel()
+    {
+        Navigation.NavigateTo("/travelleaders");
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        // map preferred destinations
+        _model.PreferredDestinations = new List<PreferredDestination>();
+        for (int i = 0; i < 3; i++)
+        {
+            if (!string.IsNullOrWhiteSpace(_preferred[i]))
+            {
+                _model.PreferredDestinations.Add(new PreferredDestination { Rank = i + 1, Destination = _preferred[i] });
+            }
+        }
+
+        await LeaderService.AddTravelLeaderAsync(_model);
+        Navigation.NavigateTo("/travelleaders");
+    }
+}

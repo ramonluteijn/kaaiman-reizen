@@ -1,0 +1,100 @@
+@page "/travelleaders/edit/{Id:int}"
+@rendermode InteractiveServer
+@using Kaaiman_reizen.Data.Entities
+@using Kaaiman_reizen.Data.Enums
+@using Kaaiman_reizen.Data.Services
+@inject ITravelLeaderService LeaderService
+@inject NavigationManager Navigation
+
+<PageTitle>Bewerk reisleider</PageTitle>
+
+<h1 class="h4">Bewerk reisleider</h1>
+
+<div class="card">
+    <div class="card-body">
+        @if (_loading)
+        {
+            <div>Bezig met laden…</div>
+        }
+        else if (_notFound)
+        {
+            <div class="text-muted">Reisleider niet gevonden.</div>
+        }
+        else
+        {
+            <EditForm Model="_model" OnValidSubmit="HandleValidSubmit">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="mb-3">
+                    <label class="form-label">Naam</label>
+                    <InputText class="form-control" @bind-Value="_model.Name" />
+                    <ValidationMessage For="() => _model.Name" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Telefoon</label>
+                    <InputText class="form-control" @bind-Value="_model.PhoneNumber" />
+                    <ValidationMessage For="() => _model.PhoneNumber" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Aantal reizen</label>
+                    <InputNumber class="form-control" @bind-Value="_model.AmountOfTrips" />
+                    <ValidationMessage For="() => _model.AmountOfTrips" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Wanneer beschikbaar</label>
+                    <InputText class="form-control" @bind-Value="_model.WhenAvailable" />
+                    <ValidationMessage For="() => _model.WhenAvailable" />
+                </div>
+
+                <div class="d-flex">
+                    <Button TItem="object" Type="ButtonType.Primary" HtmlType="submit">Opslaan</Button>
+                    <span class="ms-2">
+                        <Button TItem="object" Type="ButtonType.Secondary" HtmlType="button" OnClickNoArg="EventCallback.Factory.Create(this, Cancel)">Annuleren</Button>
+                    </span>
+                </div>
+            </EditForm>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private TravelLeader _model = new();
+    private bool _loading = true;
+    private bool _notFound = false;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _loading = true;
+        _notFound = false;
+
+        var item = await LeaderService.GetTravelLeaderByIdAsync(Id);
+        if (item == null)
+        {
+            _notFound = true;
+            _loading = false;
+            return;
+        }
+
+        _model = item;
+
+        _loading = false;
+    }
+
+    private void Cancel()
+    {
+        Navigation.NavigateTo("/travelleaders");
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        await LeaderService.UpdateTravelLeaderAsync(_model);
+        Navigation.NavigateTo("/travelleaders");
+    }
+}
