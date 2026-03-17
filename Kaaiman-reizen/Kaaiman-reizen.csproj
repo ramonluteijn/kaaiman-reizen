@@ -19,8 +19,5 @@
     <ItemGroup>
       <ProjectReference Include="..\Kaaiman-reizen.Data\Kaaiman-reizen.Data.csproj" />
     </ItemGroup>
-    <ItemGroup>
-      <PackageReference Include="EntityFramework" Version="6.5.1" />
-    </ItemGroup>
 
 </Project>
