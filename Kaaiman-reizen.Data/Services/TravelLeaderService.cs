@@ -1,3 +1,4 @@
+using Kaaiman_reizen.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kaaiman_reizen.Data.Services;
@@ -16,6 +17,13 @@ public class TravelLeaderService : ITravelLeaderService
         return await _db.TravelLeader
             .OrderBy(t => t.Name)
             .Select(t => t.Name)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<TravelLeader>> GetLeadersWithAvailabilityAsync(CancellationToken cancellationToken = default)
+    {
+        return await _db.TravelLeader
+            .OrderBy(t => t.Name)
             .ToListAsync(cancellationToken);
     }
 }

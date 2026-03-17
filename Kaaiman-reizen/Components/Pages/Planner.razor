@@ -1,0 +1,142 @@
+@page "/planner"
+@rendermode InteractiveServer
+@using Kaaiman_reizen.Data.Services
+@using Kaaiman_reizen.Data.Entities
+@inject ITravelLeaderService LeaderService
+
+<PageTitle>Planner</PageTitle>
+
+<div class="planner-page">
+    <MudText Typo="Typo.h4" Class="mb-4">Planner</MudText>
+
+    <div class="planner-layout">
+        <MudPaper Class="planner-calendar pa-4" Elevation="2">
+            <MudStack Row Spacing="2" Class="mb-3">
+                <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft" OnClick="PrevMonth" />
+                <MudText Typo="Typo.h6" Class="align-self-center">@_viewMonth.ToString("MMMM yyyy")</MudText>
+                <MudIconButton Icon="@Icons.Material.Filled.ChevronRight" OnClick="NextMonth" />
+            </MudStack>
+
+            <div class="calendar-grid">
+                @foreach (var w in new[] { "Ma", "Di", "Wo", "Do", "Vr", "Za", "Zo" })
+                {
+                    <div class="calendar-col-head">@w</div>
+                }
+                @foreach (var row in _calendarRows)
+                {
+                    @for (int i = 0; i < 7; i++)
+                    {
+                        var d = row != null ? row[i] : null;
+                        <div class="calendar-cell @(d.HasValue ? "calendar-cell--day" : "")"
+                             @onclick="@(() => { if (d.HasValue) ToggleDay(d.Value); })">
+                            @if (d.HasValue)
+                            {
+                                <MudChip T="string" Size="Size.Small"
+                                         Color="@(IsSelected(d.Value) ? Color.Primary : Color.Default)"
+                                         Class="calendar-day-chip">
+                                    @d.Value.Day
+                                </MudChip>
+                            }
+                        </div>
+                    }
+                }
+            </div>
+        </MudPaper>
+
+        <aside class="planner-sidebar">
+            <MudPaper Class="pa-4" Elevation="2">
+                <MudText Typo="Typo.h6" Class="mb-3">Beschikbare medewerkers voor geselecteerde dagen</MudText>
+                @if (!_selectedDates.Any())
+                {
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Selecteer één of meer dagen in de kalender.</MudText>
+                }
+                else
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-2">
+                        @_selectedDates.Count dag(en) geselecteerd.
+                    </MudText>
+                    @if (_leaders.Count == 0)
+                    {
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">Geen reisleiders gevonden.</MudText>
+                    }
+                    else
+                    {
+                        <MudList T="TravelLeader" Dense="true">
+                            @foreach (var leader in _leaders)
+                            {
+                                <MudListItem T="TravelLeader">
+                                    <MudStack Spacing="0">
+                                        <MudText Typo="Typo.body2">@leader.Name</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">@leader.WhenAvailable</MudText>
+                                    </MudStack>
+                                </MudListItem>
+                            }
+                        </MudList>
+                    }
+                }
+            </MudPaper>
+        </aside>
+    </div>
+</div>
+
+@code {
+    private DateTime _viewMonth = DateTime.Today;
+    private HashSet<DateTime> _selectedDates = new();
+    private List<DateTime?[]?> _calendarRows = new();
+    private List<TravelLeader> _leaders = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadLeaders();
+        BuildCalendar();
+    }
+
+    private async Task LoadLeaders()
+    {
+        try
+        {
+            _leaders = (await LeaderService.GetLeadersWithAvailabilityAsync()).ToList();
+        }
+        catch
+        {
+            _leaders = new List<TravelLeader>();
+        }
+    }
+
+    private void BuildCalendar()
+    {
+        _calendarRows.Clear();
+        var first = new DateTime(_viewMonth.Year, _viewMonth.Month, 1);
+        int offset = ((int)first.DayOfWeek + 6) % 7;
+        var start = first.AddDays(-offset);
+
+        for (int week = 0; week < 6; week++)
+        {
+            var row = new DateTime?[7];
+            for (int i = 0; i < 7; i++)
+            {
+                var d = start.AddDays(week * 7 + i);
+                row[i] = d.Month == _viewMonth.Month ? d : null;
+            }
+            _calendarRows.Add(row);
+        }
+    }
+
+    private void PrevMonth() { _viewMonth = _viewMonth.AddMonths(-1); BuildCalendar(); }
+    private void NextMonth() { _viewMonth = _viewMonth.AddMonths(1); BuildCalendar(); }
+
+    private bool IsSelected(DateTime date)
+    {
+        return _selectedDates.Contains(date.Date);
+    }
+
+    private void ToggleDay(DateTime date)
+    {
+        var d = date.Date;
+        if (_selectedDates.Contains(d))
+            _selectedDates.Remove(d);
+        else
+            _selectedDates.Add(d);
+        StateHasChanged();
+    }
+}

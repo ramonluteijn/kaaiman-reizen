@@ -1,4 +1,4 @@
-﻿@using Kaaiman_reizen.Data.Enums
+@using Kaaiman_reizen.Data.Enums
 @typeparam TItem
 
 @if (IsButton)
@@ -41,7 +41,7 @@ else
     public TItem? Item { get; set; }
     
     [Parameter]
-    public ButtonType Type { get; set; } = ButtonType.Primary;
+    public Kaaiman_reizen.Data.Enums.ButtonType Type { get; set; } = Kaaiman_reizen.Data.Enums.ButtonType.Primary;
     
     [Parameter]
     public bool IsButton { get; set; } = true;
@@ -53,13 +53,13 @@ else
     {
         return Type switch
         {
-            ButtonType.Secondary => "btn-secondary",
-            ButtonType.Success => "btn-success",
-            ButtonType.Danger => "btn-danger",
-            ButtonType.Warning => "btn-warning",
-            ButtonType.Info => "btn-info",
-            ButtonType.Light => "btn-light",
-            ButtonType.Dark => "btn-dark",
+            Kaaiman_reizen.Data.Enums.ButtonType.Secondary => "btn-secondary",
+            Kaaiman_reizen.Data.Enums.ButtonType.Success => "btn-success",
+            Kaaiman_reizen.Data.Enums.ButtonType.Danger => "btn-danger",
+            Kaaiman_reizen.Data.Enums.ButtonType.Warning => "btn-warning",
+            Kaaiman_reizen.Data.Enums.ButtonType.Info => "btn-info",
+            Kaaiman_reizen.Data.Enums.ButtonType.Light => "btn-light",
+            Kaaiman_reizen.Data.Enums.ButtonType.Dark => "btn-dark",
             _ => "btn-primary",
         };
     }

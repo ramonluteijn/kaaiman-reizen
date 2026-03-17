@@ -28,5 +28,8 @@
     <ItemGroup>
       <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
     </ItemGroup>
+    <ItemGroup>
+      <PackageReference Include="MudBlazor" Version="8.14.0" />
+    </ItemGroup>
 
 </Project>
