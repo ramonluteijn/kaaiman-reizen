@@ -1,0 +1,23 @@
+@rendermode InteractiveServer
+@using Kaaiman_reizen.Data.Services
+@inject ITravelLeaderService LeaderService
+
+<div class="leader-names-list">
+    <h2 class="h6 mb-2">Reisleiders</h2>
+    <ul class="list-unstyled mb-0">
+        @foreach (var name in _names)
+        {
+            <li>@name</li>
+        }
+    </ul>
+</div>
+
+@code {
+    private IReadOnlyList<string> _names = Array.Empty<string>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try { _names = await LeaderService.GetLeaderNamesAsync(); }
+        catch { _names = Array.Empty<string>(); }
+    }
+}
