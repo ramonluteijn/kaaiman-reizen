@@ -31,7 +31,7 @@ From the repo root:
 ```bash
 cd Kaaiman-reizen
 dotnet user-secrets init
-dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=localhost;Database=kaaiman_reizen;Uid=root;Pwd=;"
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=localhost;Database=kaaiman_reizen;Uid=root;Pwd=;{IF YOU HAVE PASSWORD OTHERWISE KEEP IT EMPTY ;) }"
 ```
 
 After that you can run migrations using:
