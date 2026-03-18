@@ -56,6 +56,11 @@
                     <ValidationMessage For="() => _model.MaxTrips" />
                 </div>
 
+                <div class="mb-3">
+                    <label class="form-label">Notitie</label>
+                    <InputTextArea class="form-control" @bind-Value="_model.Note" />
+                </div>
+
                 <h5>Beschikbaarheid (periode)</h5>
                 @for (int i = 0; i < _preferredPeriods.Count; i++)
                 {

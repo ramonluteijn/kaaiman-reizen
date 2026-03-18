@@ -22,6 +22,8 @@ public class TravelLeader : IValidatableObject
     [Range(0, int.MaxValue, ErrorMessage = "Maximaal aantal reizen moet groter of gelijk aan 0 zijn.")]
     public int MaxTrips { get; set; }
 
+    public string Note { get; set; } = string.Empty;
+
     public List<PreferredDestination> PreferredDestinations { get; set; } = new();
 
     public List<AvailabilityPeriod> AvailabilityPeriods { get; set; } = new();
