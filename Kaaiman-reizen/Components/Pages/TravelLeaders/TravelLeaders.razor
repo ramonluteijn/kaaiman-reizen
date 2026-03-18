@@ -25,6 +25,7 @@
                     <th>Max aantal reizen</th>
                     <th>Beschikbaar</th>
                     <th>Notitie</th>
+                    <th>Actief</th>
                     <th>Acties</th>
                 </tr>
             </thead>
@@ -44,6 +45,11 @@
                             }
                         </td>
                         <td>@leader.Note</td>
+                        <td>
+                            <span class="badge @(leader.IsActive ? "bg-success" : "bg-danger")">
+                                @(leader.IsActive ? "Ja" : "Nee")
+                            </span>
+                        </td>
                         <td>
                             <span class="me-2">
                                 <Button 
@@ -113,5 +119,20 @@
         {
             _leaders = new List<TravelLeader>();
         }
+    }
+
+    private async Task ToggleActive(TravelLeader? leader)
+    {
+        if (leader == null)
+            return;
+
+        leader.IsActive = !leader.IsActive;
+        await LeaderService.UpdateTravelLeaderAsync(leader);
+
+        var idx = _leaders.FindIndex(l => l.Id == leader.Id);
+        if (idx >= 0)
+            _leaders[idx] = leader;
+
+        StateHasChanged();
     }
 }

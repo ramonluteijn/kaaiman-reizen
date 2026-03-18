@@ -24,6 +24,8 @@ public class TravelLeader : IValidatableObject
 
     public string Note { get; set; } = string.Empty;
 
+    public bool IsActive { get; set; } = true;
+
     public List<PreferredDestination> PreferredDestinations { get; set; } = new();
 
     public List<AvailabilityPeriod> AvailabilityPeriods { get; set; } = new();

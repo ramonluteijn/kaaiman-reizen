@@ -50,6 +50,11 @@
                 <InputTextArea class="form-control" @bind-Value="_model.Note" />
             </div>
 
+            <div class="mb-3 form-check">
+                <InputCheckbox class="form-check-input" @bind-Value="_model.IsActive" />
+                <label class="form-check-label">Actief</label>
+            </div>
+
             <h5>Beschikbaarheid (periode)</h5>
             @for (int i = 0; i < _periods.Count; i++)
             {
