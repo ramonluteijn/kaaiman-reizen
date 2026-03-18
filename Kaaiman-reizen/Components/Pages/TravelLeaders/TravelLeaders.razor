@@ -32,7 +32,12 @@
                         <td>@leader.Name</td>
                         <td>@leader.PhoneNumber</td>
                         <td>@leader.AmountOfTrips</td>
-                        <td>@leader.WhenAvailable</td>
+                        <td>
+                            @if (leader.AvailabilityPeriods != null && leader.AvailabilityPeriods.Any())
+                            {
+                                @FormatAvailability(leader)
+                            }
+                        </td>
                         <td>
                             <span class="me-2">
                                 <Button 
@@ -68,6 +73,13 @@
 
 @code {
     private List<TravelLeader> _leaders = new();
+
+    private string FormatAvailability(TravelLeader leader)
+    {
+        var periods = leader.AvailabilityPeriods ?? new List<AvailabilityPeriod>();
+        return string.Join("; ", periods.OrderBy(p => p.Start)
+            .Select(p => $"{p.Start:dd MMM} – {p.End:dd MMM}"));
+    }
 
     private async Task OnDelete(TravelLeader? leader)
     {

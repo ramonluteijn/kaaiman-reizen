@@ -15,8 +15,7 @@ public class TravelLeader
     [Range(1, int.MaxValue, ErrorMessage = "Aantal reizen moet groter zijn dan 0.")]
     public int AmountOfTrips { get; set; }
 
-    [Required(ErrorMessage = "Wanneer beschikbaar is verplicht.")]
-    public string WhenAvailable { get; set; } = string.Empty;
-
     public List<PreferredDestination> PreferredDestinations { get; set; } = new();
+
+    public List<AvailabilityPeriod> AvailabilityPeriods { get; set; } = new();
 }
