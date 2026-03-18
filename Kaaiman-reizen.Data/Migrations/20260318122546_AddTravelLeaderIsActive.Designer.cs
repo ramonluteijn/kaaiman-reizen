@@ -4,6 +4,7 @@ using Kaaiman_reizen.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Kaaiman_reizen.Data.Migrations
 {
     [DbContext(typeof(MainContext))]
-    partial class MainContextModelSnapshot : ModelSnapshot
+    [Migration("20260318122546_AddTravelLeaderIsActive")]
+    partial class AddTravelLeaderIsActive
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -180,8 +183,8 @@ namespace Kaaiman_reizen.Data.Migrations
                             Id = 1,
                             AmountOfTrips = 8,
                             IsActive = true,
-                            MaxTrips = 10,
-                            MinTrips = 2,
+                            MaxTrips = 0,
+                            MinTrips = 0,
                             Name = "Jan de Vries",
                             Note = "",
                             PhoneNumber = "06-12345678"
@@ -191,8 +194,8 @@ namespace Kaaiman_reizen.Data.Migrations
                             Id = 2,
                             AmountOfTrips = 12,
                             IsActive = true,
-                            MaxTrips = 15,
-                            MinTrips = 3,
+                            MaxTrips = 0,
+                            MinTrips = 0,
                             Name = "Maria Jansen",
                             Note = "",
                             PhoneNumber = "06-87654321"

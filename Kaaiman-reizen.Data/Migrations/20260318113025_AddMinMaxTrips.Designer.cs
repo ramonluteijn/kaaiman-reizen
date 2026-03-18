@@ -4,6 +4,7 @@ using Kaaiman_reizen.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Kaaiman_reizen.Data.Migrations
 {
     [DbContext(typeof(MainContext))]
-    partial class MainContextModelSnapshot : ModelSnapshot
+    [Migration("20260318113025_AddMinMaxTrips")]
+    partial class AddMinMaxTrips
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -149,9 +152,6 @@ namespace Kaaiman_reizen.Data.Migrations
                     b.Property<int>("AmountOfTrips")
                         .HasColumnType("int");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("tinyint(1)");
-
                     b.Property<int>("MaxTrips")
                         .HasColumnType("int");
 
@@ -159,10 +159,6 @@ namespace Kaaiman_reizen.Data.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("Note")
                         .IsRequired()
                         .HasColumnType("longtext");
 
@@ -179,22 +175,18 @@ namespace Kaaiman_reizen.Data.Migrations
                         {
                             Id = 1,
                             AmountOfTrips = 8,
-                            IsActive = true,
-                            MaxTrips = 10,
-                            MinTrips = 2,
+                            MaxTrips = 0,
+                            MinTrips = 0,
                             Name = "Jan de Vries",
-                            Note = "",
                             PhoneNumber = "06-12345678"
                         },
                         new
                         {
                             Id = 2,
                             AmountOfTrips = 12,
-                            IsActive = true,
-                            MaxTrips = 15,
-                            MinTrips = 3,
+                            MaxTrips = 0,
+                            MinTrips = 0,
                             Name = "Maria Jansen",
-                            Note = "",
                             PhoneNumber = "06-87654321"
                         });
                 });

@@ -20,8 +20,11 @@
                 <tr>
                     <th>Naam</th>
                     <th>Telefoon</th>
-                    <th>Aantal reizen</th>
+                    <th>Reizen ervaring</th>
+                    <th>Min aantal reizen</th>
+                    <th>Max aantal reizen</th>
                     <th>Beschikbaar</th>
+                    <th>Actief</th>
                     <th>Acties</th>
                 </tr>
             </thead>
@@ -32,11 +35,18 @@
                         <td>@leader.Name</td>
                         <td>@leader.PhoneNumber</td>
                         <td>@leader.AmountOfTrips</td>
+                        <td>@leader.MinTrips</td>
+                        <td>@leader.MaxTrips</td>
                         <td>
                             @if (leader.AvailabilityPeriods != null && leader.AvailabilityPeriods.Any())
                             {
                                 @FormatAvailability(leader)
                             }
+                        </td>
+                        <td>
+                            <span class="badge @(leader.IsActive ? "bg-success" : "bg-danger")">
+                                @(leader.IsActive ? "Ja" : "Nee")
+                            </span>
                         </td>
                         <td>
                             <span class="me-2">
@@ -107,5 +117,20 @@
         {
             _leaders = new List<TravelLeader>();
         }
+    }
+
+    private async Task ToggleActive(TravelLeader? leader)
+    {
+        if (leader == null)
+            return;
+
+        leader.IsActive = !leader.IsActive;
+        await LeaderService.UpdateTravelLeaderAsync(leader);
+
+        var idx = _leaders.FindIndex(l => l.Id == leader.Id);
+        if (idx >= 0)
+            _leaders[idx] = leader;
+
+        StateHasChanged();
     }
 }

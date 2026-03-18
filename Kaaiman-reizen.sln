@@ -1,8 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 18
+VisualStudioVersion = 18.4.11605.240 stable
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kaaiman-reizen", "Kaaiman-reizen\Kaaiman-reizen.csproj", "{ED1C44C7-F626-4A3E-9096-DB90630CC052}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kaaiman-reizen.Data", "Kaaiman-reizen.Data\Kaaiman-reizen.Data.csproj", "{91B69FB3-2629-4915-B633-87F79A038D9D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kaaiman-reizen.Tests", "Kaaiman-reizen.Tests\Kaaiman-reizen.Tests.csproj", "{7C839D23-6C62-478F-4C06-8828C2F95A64}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -18,5 +23,15 @@ Global
 		{91B69FB3-2629-4915-B633-87F79A038D9D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{91B69FB3-2629-4915-B633-87F79A038D9D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{91B69FB3-2629-4915-B633-87F79A038D9D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7C839D23-6C62-478F-4C06-8828C2F95A64}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7C839D23-6C62-478F-4C06-8828C2F95A64}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7C839D23-6C62-478F-4C06-8828C2F95A64}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7C839D23-6C62-478F-4C06-8828C2F95A64}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {279A7D90-B09D-41E0-9976-79C93D3ED49C}
 	EndGlobalSection
 EndGlobal

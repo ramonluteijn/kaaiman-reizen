@@ -24,7 +24,6 @@
         {
             <EditForm Model="_model" OnValidSubmit="HandleValidSubmit">
                 <DataAnnotationsValidator />
-                <ValidationSummary />
 
                 <div class="mb-3">
                     <label class="form-label">Naam</label>
@@ -42,6 +41,28 @@
                     <label class="form-label">Aantal reizen</label>
                     <InputNumber class="form-control" @bind-Value="_model.AmountOfTrips" />
                     <ValidationMessage For="() => _model.AmountOfTrips" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Minimaal aantal reizen per jaar</label>
+                    <InputNumber class="form-control" @bind-Value="_model.MinTrips" />
+                    <ValidationMessage For="() => _model.MinTrips" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Maximaal aantal reizen per jaar</label>
+                    <InputNumber class="form-control" @bind-Value="_model.MaxTrips" />
+                    <ValidationMessage For="() => _model.MaxTrips" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Notitie</label>
+                    <InputTextArea class="form-control" @bind-Value="_model.Note" />
+                </div>
+
+                <div class="mb-3 form-check">
+                    <InputCheckbox class="form-check-input" @bind-Value="_model.IsActive" />
+                    <label class="form-check-label">Actief</label>
                 </div>
 
                 <h5>Beschikbaarheid (periode)</h5>
