@@ -1,5 +1,6 @@
 using Kaaiman_reizen.Components;
 using Kaaiman_reizen.Data;
+using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +18,7 @@ if (string.IsNullOrWhiteSpace(connectionString))
 }
 builder.Services.AddMainContext(connectionString);
 builder.Services.AddDataServices();
+builder.Services.AddMudServices();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()

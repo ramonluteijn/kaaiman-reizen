@@ -58,19 +58,39 @@
                             <InputDate @bind-Value="period.End" class="form-control" />
                         </div>
                         <div class="col-md-2">
-                            <button type="button" class="btn btn-outline-danger" @onclick="() => RemovePeriod(idx)">Verwijder</button>
+                            <MudButton Variant="Variant.Outlined"
+                                       Color="Color.Error"
+                                       StartIcon="@Icons.Material.Filled.Delete"
+                                       OnClick="@(EventCallback.Factory.Create(this, () => RemovePeriod(idx)))">
+                                Verwijder
+                            </MudButton>
                         </div>
                     </div>
                 }
 
                 <div class="mb-3">
-                    <button type="button" class="btn btn-sm btn-secondary" @onclick="AddPeriod">+ Periode toevoegen</button>
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Secondary"
+                               StartIcon="@Icons.Material.Filled.Add"
+                               OnClick="AddPeriod">
+                        Periode toevoegen
+                    </MudButton>
                 </div>
 
                 <div class="d-flex">
-                    <button type="submit" class="btn btn-primary">Opslaan</button>
+                    <MudButton ButtonType="ButtonType.Submit"
+                               Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Save">
+                        Opslaan
+                    </MudButton>
                     <span class="ms-2">
-                        <Button TItem="object" Class="btn-secondary" OnClickNoArg="EventCallback.Factory.Create(this, Cancel)">Annuleren</Button>
+                        <MudButton Variant="Variant.Text"
+                                   Color="Color.Secondary"
+                                   StartIcon="@Icons.Material.Filled.Close"
+                                   OnClick="Cancel">
+                            Annuleren
+                        </MudButton>
                     </span>
                 </div>
             </EditForm>

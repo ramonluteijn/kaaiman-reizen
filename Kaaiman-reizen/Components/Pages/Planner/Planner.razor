@@ -1,0 +1,98 @@
+@page "/planner"
+@rendermode InteractiveServer
+@using Kaaiman_reizen.Data.Entities
+@using Kaaiman_reizen.Data.Services
+@inject ITravelLeaderService LeaderService
+
+<PageTitle>Planner</PageTitle>
+
+<MudStack Spacing="2">
+    <MudText Typo="Typo.h5">Planner</MudText>
+
+    <MudGrid Spacing="2">
+        <MudItem xs="12" md="8">
+            <MudPaper Elevation="1" Class="pa-6 d-flex align-center justify-center" Style="min-height: 420px; background-color: #f3f4f6;">
+                <MudText Typo="Typo.h6" Color="Color.Secondary">here we will place planner view</MudText>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" md="4">
+            <MudPaper Elevation="1" Class="pa-4" Style="min-height: 420px;">
+                <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-2">
+                    <MudText Typo="Typo.h6">Reisleiders</MudText>
+                    <MudChip T="int" Size="Size.Small" Variant="Variant.Outlined">@_leaders.Count</MudChip>
+                </MudStack>
+
+                @if (_loading)
+                {
+                    <MudProgressLinear Indeterminate="true" Color="Color.Primary" Class="mb-3" />
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Laden…</MudText>
+                }
+                else if (!string.IsNullOrWhiteSpace(_error))
+                {
+                    <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">@_error</MudAlert>
+                }
+                else if (_leaders.Count == 0)
+                {
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Geen reisleiders gevonden.</MudText>
+                }
+                else
+                {
+                    <MudList T="TravelLeader" Dense="true">
+                        @foreach (var leader in _leaders)
+                        {
+                            <MudListItem T="TravelLeader">
+                                <MudStack Spacing="0">
+                                    <MudText Typo="Typo.body2">@leader.Name</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                        @FormatAvailability(leader)
+                                    </MudText>
+                                </MudStack>
+                            </MudListItem>
+                        }
+                    </MudList>
+                }
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</MudStack>
+
+@code {
+    private bool _loading = true;
+    private string? _error;
+    private List<TravelLeader> _leaders = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+        _error = null;
+
+        try
+        {
+            var items = await LeaderService.GetTravelLeadersAsync();
+            _leaders = items.ToList();
+        }
+        catch (Exception ex)
+        {
+            _error = $"Kon reisleiders niet laden: {ex.Message}";
+            _leaders = new List<TravelLeader>();
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private static string FormatAvailability(TravelLeader leader)
+    {
+        var periods = leader.AvailabilityPeriods ?? new List<AvailabilityPeriod>();
+        if (periods.Count == 0)
+            return "—";
+
+        return string.Join("; ",
+            periods
+                .OrderBy(p => p.Start)
+                .Select(p => $"{p.Start:dd MMM} – {p.End:dd MMM}"));
+    }
+}
+
