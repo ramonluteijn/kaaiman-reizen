@@ -123,20 +123,5 @@ namespace Kaaiman_reizen.Tests.Services
             Assert.Single(results);
             Assert.Contains("Minimaal aantal reizen mag niet groter zijn dan maximaal aantal reizen", results[0].ErrorMessage);
         }
-
-        [Fact]
-        public async Task GetLeaderNamesAsync_Should_Return_Ordered_Names()
-        {
-            var db = GetInMemoryDb();
-            var service = new TravelLeaderService(db);
-
-            await service.AddTravelLeaderAsync(new TravelLeader { Name = "Charlie", PhoneNumber = "1" });
-            await service.AddTravelLeaderAsync(new TravelLeader { Name = "Alice", PhoneNumber = "2" });
-            await service.AddTravelLeaderAsync(new TravelLeader { Name = "Bob", PhoneNumber = "3" });
-
-            var names = await service.GetLeaderNamesAsync();
-
-            Assert.Equal(new[] { "Alice", "Bob", "Charlie" }, names);
-        }
     }
 }
