@@ -3,8 +3,18 @@ using Kaaiman_reizen.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    throw new InvalidOperationException(
+        "Connection string 'DefaultConnection' is missing or empty.\n\n" +
+        "Configure it using User Secrets (recommended for local development):\n" +
+        "  cd Kaaiman-reizen\n" +
+        "  dotnet user-secrets init\n" +
+        "  dotnet user-secrets set \"ConnectionStrings:DefaultConnection\" \"Server=localhost;Database=kaaiman_reizen;Uid=root;Pwd=;\"\n\n" +
+        "Alternatively set it in Kaaiman-reizen/appsettings.Development.json (not recommended to commit because of security reasons)."
+    );
+}
 builder.Services.AddMainContext(connectionString);
 builder.Services.AddDataServices();
 
