@@ -2,7 +2,6 @@
 @rendermode InteractiveServer
 @using Kaaiman_reizen.Data.Services
 @using Kaaiman_reizen.Data.Entities
-@using Kaaiman_reizen.Data.Enums
 @inject ITravelLeaderService LeaderService
 @inject IJSRuntime JS
 
@@ -13,7 +12,7 @@
 <div class="card">
     <div class="card-body">
         <div class="d-flex justify-content-end mb-3">
-            <Button TItem="object" IsButton="false" Href="/travelleaders/create" Type="ButtonType.Success">Nieuwe reisleider</Button>
+            <Button TItem="object" IsButton="false" Href="/travelleaders/create" Class="btn-success">Nieuwe reisleider</Button>
         </div>
         <table class="table">
             <thead>
@@ -42,7 +41,7 @@
                             <span class="me-2">
                                 <Button 
                                     TItem="Kaaiman_reizen.Data.Entities.TravelLeader"
-                                    Item="leader" Type="ButtonType.Secondary" IsButton="false" Href="@($"/travelleaders/edit/{leader.Id}")"
+                                    Item="leader" Class="btn-secondary" IsButton="false" Href="@($"/travelleaders/edit/{leader.Id}")"
                                 >
                                     <i class="bi bi-pencil" aria-hidden="true"></i>
                                     <span class="visually-hidden">Bewerk</span>
@@ -51,7 +50,7 @@
                             <span>
                                 <Button 
                                     TItem="Kaaiman_reizen.Data.Entities.TravelLeader" 
-                                    Item="leader" Type="ButtonType.Danger" 
+                                    Item="leader" Class="btn-danger" 
                                     OnClick="@(EventCallback.Factory.Create<Kaaiman_reizen.Data.Entities.TravelLeader>(this, OnDelete))"
                                 >
                                     <i class="bi bi-trash" aria-hidden="true"></i>

@@ -1,7 +1,6 @@
 @page "/travelleaders/create"
 @rendermode InteractiveServer
 @using Kaaiman_reizen.Data.Entities
-@using Kaaiman_reizen.Data.Enums
 @using Kaaiman_reizen.Data.Services
 @inject ITravelLeaderService LeaderService
 @inject NavigationManager Navigation
@@ -60,7 +59,7 @@
             <div class="d-flex">
                 <button type="submit" class="btn btn-primary">Opslaan</button>
                 <span class="ms-2">
-                    <Button TItem="object" Type="ButtonType.Secondary" OnClickNoArg="EventCallback.Factory.Create(this, Cancel)">Annuleren</Button>
+                    <Button TItem="object" Class="btn-secondary" OnClickNoArg="EventCallback.Factory.Create(this, Cancel)">Annuleren</Button>
                 </span>
             </div>
         </EditForm>
