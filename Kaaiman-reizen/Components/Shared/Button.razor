@@ -4,7 +4,7 @@
 @if (IsButton)
 {
 
-    <button class="btn @GetButtonClass()" @onclick="HandleClick">
+    <button type="button" class="btn @GetButtonClass()" @onclick="HandleClick">
         @ChildContent
     </button>
 }
@@ -45,7 +45,7 @@ else
     
     [Parameter]
     public bool IsButton { get; set; } = true;
-    
+
     [Parameter]
     public string Href { get; set; } = "#";
     

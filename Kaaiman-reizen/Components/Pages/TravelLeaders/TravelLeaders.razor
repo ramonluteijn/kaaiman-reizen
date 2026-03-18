@@ -1,0 +1,111 @@
+@page "/travelleaders"
+@rendermode InteractiveServer
+@using Kaaiman_reizen.Data.Services
+@using Kaaiman_reizen.Data.Entities
+@using Kaaiman_reizen.Data.Enums
+@inject ITravelLeaderService LeaderService
+@inject IJSRuntime JS
+
+<PageTitle>Reisleiders</PageTitle>
+
+<h1 class="h4">Reisleiders</h1>
+
+<div class="card">
+    <div class="card-body">
+        <div class="d-flex justify-content-end mb-3">
+            <Button TItem="object" IsButton="false" Href="/travelleaders/create" Type="ButtonType.Success">Nieuwe reisleider</Button>
+        </div>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Naam</th>
+                    <th>Telefoon</th>
+                    <th>Aantal reizen</th>
+                    <th>Beschikbaar</th>
+                    <th>Acties</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var leader in _leaders)
+                {
+                    <tr>
+                        <td>@leader.Name</td>
+                        <td>@leader.PhoneNumber</td>
+                        <td>@leader.AmountOfTrips</td>
+                        <td>
+                            @if (leader.AvailabilityPeriods != null && leader.AvailabilityPeriods.Any())
+                            {
+                                @FormatAvailability(leader)
+                            }
+                        </td>
+                        <td>
+                            <span class="me-2">
+                                <Button 
+                                    TItem="Kaaiman_reizen.Data.Entities.TravelLeader"
+                                    Item="leader" Type="ButtonType.Secondary" IsButton="false" Href="@($"/travelleaders/edit/{leader.Id}")"
+                                >
+                                    <i class="bi bi-pencil" aria-hidden="true"></i>
+                                    <span class="visually-hidden">Bewerk</span>
+                                </Button>
+                            </span>
+                            <span>
+                                <Button 
+                                    TItem="Kaaiman_reizen.Data.Entities.TravelLeader" 
+                                    Item="leader" Type="ButtonType.Danger" 
+                                    OnClick="@(EventCallback.Factory.Create<Kaaiman_reizen.Data.Entities.TravelLeader>(this, OnDelete))"
+                                >
+                                    <i class="bi bi-trash" aria-hidden="true"></i>
+                                    <span class="visually-hidden">Verwijderen</span>
+                                </Button>
+                            </span>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        @if (_leaders.Count == 0)
+        {
+            <div class="text-muted">Geen reisleiders gevonden.</div>
+        }
+    </div>
+</div>
+
+@code {
+    private List<TravelLeader> _leaders = new();
+
+    private string FormatAvailability(TravelLeader leader)
+    {
+        var periods = leader.AvailabilityPeriods ?? new List<AvailabilityPeriod>();
+        return string.Join("; ", periods.OrderBy(p => p.Start)
+            .Select(p => $"{p.Start:dd MMM} – {p.End:dd MMM}"));
+    }
+
+    private async Task OnDelete(TravelLeader? leader)
+    {
+        if (leader == null)
+            return;
+
+        //TODO: Make a cool custom confirmation dialog
+        var confirm = await JS.InvokeAsync<bool>("confirm", $"Weet je zeker dat je '{leader.Name}' wilt verwijderen?");
+        if (!confirm)
+            return;
+
+        await LeaderService.DeleteTravelLeaderAsync(leader.Id);
+        _leaders.RemoveAll(l => l.Id == leader.Id);
+        StateHasChanged();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var items = await LeaderService.GetTravelLeadersAsync();
+            _leaders = items.ToList();
+        }
+        catch
+        {
+            _leaders = new List<TravelLeader>();
+        }
+    }
+}

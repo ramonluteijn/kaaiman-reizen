@@ -1,6 +1,12 @@
 using Kaaiman_reizen.Components;
+using Kaaiman_reizen.Data;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+builder.Services.AddMainContext(connectionString);
+builder.Services.AddDataServices();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()

@@ -1,0 +1,118 @@
+@page "/travelleaders/create"
+@rendermode InteractiveServer
+@using Kaaiman_reizen.Data.Entities
+@using Kaaiman_reizen.Data.Enums
+@using Kaaiman_reizen.Data.Services
+@inject ITravelLeaderService LeaderService
+@inject NavigationManager Navigation
+
+<PageTitle>Nieuwe reisleider</PageTitle>
+
+<h1 class="h4">Nieuwe reisleider</h1>
+
+<div class="card">
+    <div class="card-body">
+        <EditForm Model="_model" OnValidSubmit="HandleValidSubmit">
+            <DataAnnotationsValidator />
+
+            <div class="mb-3">
+                <label class="form-label">Naam</label>
+                <InputText class="form-control" @bind-Value="_model.Name" />
+                <ValidationMessage For="() => _model.Name" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Telefoon</label>
+                <InputText class="form-control" @bind-Value="_model.PhoneNumber" />
+                <ValidationMessage For="() => _model.PhoneNumber" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Aantal reizen</label>
+                <InputNumber class="form-control" @bind-Value="_model.AmountOfTrips" />
+                <ValidationMessage For="() => _model.AmountOfTrips" />
+            </div>
+
+            <h5>Beschikbaarheid (periode)</h5>
+            @for (int i = 0; i < _periods.Count; i++)
+            {
+                var period = _periods[i];
+                var idx = i;
+                <div class="row mb-2 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label">Start</label>
+                        <InputDate @bind-Value="period.Start" class="form-control" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Eind</label>
+                        <InputDate @bind-Value="period.End" class="form-control" />
+                    </div>
+                    <div class="col-md-2">
+                        <button type="button" class="btn btn-outline-danger" @onclick="() => RemovePeriod(idx)">Verwijder</button>
+                    </div>
+                </div>
+            }
+
+            <div class="mb-3">
+                <button type="button" class="btn btn-sm btn-secondary" @onclick="AddPeriod">+ Periode toevoegen</button>
+            </div>
+
+            <div class="d-flex">
+                <button type="submit" class="btn btn-primary">Opslaan</button>
+                <span class="ms-2">
+                    <Button TItem="object" Type="ButtonType.Secondary" OnClickNoArg="EventCallback.Factory.Create(this, Cancel)">Annuleren</Button>
+                </span>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private TravelLeader _model = new();
+    private string[] _preferred = new string[3];
+    private List<PeriodModel> _periods = new();
+
+    private class PeriodModel
+    {
+        public DateTime? Start { get; set; }
+        public DateTime? End { get; set; }
+    }
+
+    private void AddPeriod()
+    {
+        _periods.Add(new PeriodModel());
+    }
+
+    private void RemovePeriod(int index)
+    {
+        if (index >= 0 && index < _periods.Count)
+            _periods.RemoveAt(index);
+    }
+
+    private void Cancel()
+    {
+        Navigation.NavigateTo("/travelleaders");
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        // map preferred destinations
+        _model.PreferredDestinations = new List<PreferredDestination>();
+        for (int i = 0; i < 3; i++)
+        {
+            if (!string.IsNullOrWhiteSpace(_preferred[i]))
+            {
+                _model.PreferredDestinations.Add(new PreferredDestination { Rank = i + 1, Destination = _preferred[i] });
+            }
+        }
+
+        // map availability periods
+        _model.AvailabilityPeriods = _periods
+            .Where(p => p.Start.HasValue && p.End.HasValue)
+            .Select(p => new AvailabilityPeriod { Start = DateOnly.FromDateTime(p.Start!.Value), End = DateOnly.FromDateTime(p.End!.Value) })
+            .ToList();
+
+        await LeaderService.AddTravelLeaderAsync(_model);
+        Navigation.NavigateTo("/travelleaders");
+    }
+}
