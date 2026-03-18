@@ -13,14 +13,17 @@ public class TravelLeader : IValidatableObject
     [Required(ErrorMessage = "Telefoon is verplicht.")]
     public string PhoneNumber { get; set; } = string.Empty;
 
+    [Required(ErrorMessage = "Aantal reizen is verplicht.")]
     [Range(0, int.MaxValue, ErrorMessage = "Aantal reizen moet groter of gelijk aan 0 zijn.")]
-    public int AmountOfTrips { get; set; }
+    public int? AmountOfTrips { get; set; }
 
+    [Required(ErrorMessage = "Minimaal aantal reizen is verplicht.")]
     [Range(0, int.MaxValue, ErrorMessage = "Minimaal aantal reizen moet groter of gelijk aan 0 zijn.")]
-    public int MinTrips { get; set; }
+    public int? MinTrips { get; set; }
 
+    [Required(ErrorMessage = "Maximaal aantal reizen is verplicht.")]
     [Range(0, int.MaxValue, ErrorMessage = "Maximaal aantal reizen moet groter of gelijk aan 0 zijn.")]
-    public int MaxTrips { get; set; }
+    public int? MaxTrips { get; set; }
 
     public string Note { get; set; } = string.Empty;
 
@@ -32,9 +35,11 @@ public class TravelLeader : IValidatableObject
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
-        if (MinTrips > MaxTrips)
+        if (MinTrips.HasValue && MaxTrips.HasValue && MinTrips > MaxTrips)
         {
-            yield return new ValidationResult("Minimaal aantal reizen mag niet groter zijn dan maximaal aantal reizen.", new[] { nameof(MinTrips), nameof(MaxTrips) });
+            yield return new ValidationResult(
+                "Minimaal aantal reizen mag niet groter zijn dan maximaal aantal reizen.",
+                new[] { nameof(MinTrips), nameof(MaxTrips) });
         }
     }
 }
