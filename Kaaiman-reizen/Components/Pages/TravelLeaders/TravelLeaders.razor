@@ -24,7 +24,6 @@
                     <th>Min aantal reizen</th>
                     <th>Max aantal reizen</th>
                     <th>Beschikbaar</th>
-                    <th>Notitie</th>
                     <th>Actief</th>
                     <th>Acties</th>
                 </tr>
@@ -44,7 +43,6 @@
                                 @FormatAvailability(leader)
                             }
                         </td>
-                        <td>@leader.Note</td>
                         <td>
                             <span class="badge @(leader.IsActive ? "bg-success" : "bg-danger")">
                                 @(leader.IsActive ? "Ja" : "Nee")
