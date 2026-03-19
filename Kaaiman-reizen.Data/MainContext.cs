@@ -1,9 +1,11 @@
-using Microsoft.EntityFrameworkCore;
 using Kaaiman_reizen.Data.Entities;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Kaaiman_reizen.Data.Identity;
 
 namespace Kaaiman_reizen.Data;
 
-public class MainContext : DbContext
+public class MainContext : IdentityDbContext<ApplicationUser>
 {
     public MainContext(DbContextOptions<MainContext> options) : base(options)
     {

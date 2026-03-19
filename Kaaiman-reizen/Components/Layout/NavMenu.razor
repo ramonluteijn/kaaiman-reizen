@@ -1,10 +1,11 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+﻿@using Microsoft.AspNetCore.Components.Authorization
+<div class="top-row navbar navbar-dark ps-3">
     <div class="container-fluid">
         <a class="navbar-brand" href="">Kaaiman-reizen</a>
     </div>
 </div>
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler"/>
+<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
 
 <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
     <nav class="nav flex-column">
@@ -26,10 +27,40 @@
             </NavLink>
         </div>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="travelleaders">
-                <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> Reisleiders
-            </NavLink>
-        </div>
+        <AuthorizeView Roles="Planner">
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="travelleaders">
+                    <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> Reisleiders
+                </NavLink>
+            </div>
+        </AuthorizeView>
+
+        <hr class="text-white-50 mx-3" />
+
+        <AuthorizeView>
+            <Authorized>
+                <div class="nav-item px-3">
+                    <span class="nav-link text-white-50" style="font-size: 0.8rem;">
+                        <span class="bi bi-person-circle" aria-hidden="true"></span> @context.User.Identity?.Name
+                    </span>
+                </div>
+                <div class="nav-item px-3">
+                    <form action="Identity/Account/Logout" method="post">
+                        <AntiforgeryToken />
+                        <input type="hidden" name="ReturnUrl" value="" />
+                        <button type="submit" class="nav-link btn btn-link w-100 border-0 text-start shadow-none">
+                            <span class="bi bi-arrow-bar-left-nav-menu" aria-hidden="true"></span> Uitloggen
+                        </button>
+                    </form>
+                </div>
+            </Authorized>
+            <NotAuthorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="Identity/Account/Login">
+                        <span class="bi bi-box-arrow-in-right-nav-menu" aria-hidden="true"></span> Inloggen
+                    </NavLink>
+                </div>
+            </NotAuthorized>
+        </AuthorizeView>
     </nav>
 </div>
