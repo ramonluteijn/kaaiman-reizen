@@ -2,6 +2,7 @@ using Kaaiman_reizen.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Kaaiman_reizen.Data.Identity;
+using System.Collections;
 
 namespace Kaaiman_reizen.Data;
 
@@ -14,6 +15,8 @@ public class MainContext : IdentityDbContext<ApplicationUser>
     public DbSet<TravelLeader> TravelLeader { get; set; }
     public DbSet<PreferredDestination> PreferredDestinations { get; set; }
     public DbSet<AvailabilityPeriod> AvailabilityPeriods { get; set; }
+    public DbSet<Journey> Journey { get; set; }
+
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -26,8 +29,28 @@ public class MainContext : IdentityDbContext<ApplicationUser>
     private static void SeedData(ModelBuilder builder)
     {
         builder.Entity<TravelLeader>().HasData(
-            new TravelLeader { Id = 1, Name = "Jan de Vries", PhoneNumber = "06-12345678", AmountOfTrips = 8 },
-            new TravelLeader { Id = 2, Name = "Maria Jansen", PhoneNumber = "06-87654321", AmountOfTrips = 12 }
+            new TravelLeader
+            {
+                Id = 1,
+                Name = "Jan de Vries",
+                PhoneNumber = "06-12345678",
+                AmountOfTrips = 8,
+                MinTrips = 2,
+                MaxTrips = 10,
+                IsActive = true,
+                Note = ""
+            },
+            new TravelLeader
+            {
+                Id = 2,
+                Name = "Maria Jansen",
+                PhoneNumber = "06-87654321",
+                AmountOfTrips = 12,
+                MinTrips = 3,
+                MaxTrips = 15,
+                IsActive = true,
+                Note = ""
+            }
         );
         builder.Entity<PreferredDestination>().HasData(
             new PreferredDestination { Id = 1, TravelLeaderId = 1, Rank = 1, Destination = "Italië" },
@@ -42,6 +65,9 @@ public class MainContext : IdentityDbContext<ApplicationUser>
             new AvailabilityPeriod { Id = 1, TravelLeaderId = 1, Start = new DateOnly(2025, 4, 29), End = new DateOnly(2025, 5, 3) },
             new AvailabilityPeriod { Id = 2, TravelLeaderId = 1, Start = new DateOnly(2025, 5, 30), End = new DateOnly(2025, 6, 14) },
             new AvailabilityPeriod { Id = 3, TravelLeaderId = 2, Start = new DateOnly(2025, 1, 1), End = new DateOnly(2025, 12, 31) }
+        );
+        builder.Entity<Journey>().HasData(
+           new Journey { Id = 1, Country = "Italië", Start = new DateTime(2026, 7, 1), End = new DateTime(2026, 7, 14), Busses = 1, Travelers = 10 }
         );
     }
 
@@ -58,5 +84,9 @@ public class MainContext : IdentityDbContext<ApplicationUser>
             .WithMany(t => t.AvailabilityPeriods)
             .HasForeignKey(a => a.TravelLeaderId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<Journey>()
+           .HasMany(a => a.TravelLeaders)
+           .WithMany(r => r.Journeys);
     }
 }

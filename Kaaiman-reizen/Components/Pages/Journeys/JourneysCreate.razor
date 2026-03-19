@@ -1,0 +1,106 @@
+@page "/journeys/create"
+@rendermode InteractiveServer
+@using Kaaiman_reizen.Data.Entities
+@using Kaaiman_reizen.Data.Enums
+@using Kaaiman_reizen.Data.Services
+@inject IJourneyService JourneyService
+@inject ITravelLeaderService LeaderService
+@inject NavigationManager Navigation
+
+<PageTitle>Nieuwe reis</PageTitle>
+
+<h1 class="h4">Nieuwe reis</h1>
+
+<div class="card">
+    <div class="card-body">
+        <EditForm Model="_model" OnValidSubmit="HandleValidSubmit">
+            <DataAnnotationsValidator />
+
+            <div class="mb-3">
+                <label class="form-label">Land</label>
+                <InputText class="form-control" @bind-Value="_model.Country" />
+                <ValidationMessage For="() => _model.Country" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Start datum</label>
+                <InputDate class="form-control" @bind-Value="_model.Start" />
+                <ValidationMessage For="() => _model.Start" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Eind datum</label>
+                <InputDate class="form-control" @bind-Value="_model.End" />
+                <ValidationMessage For="() => _model.End" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Busjes</label>
+                <InputNumber class="form-control" @bind-Value="_model.Busses" />
+                <ValidationMessage For="() => _model.Busses" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Reizigers</label>
+                <InputNumber class="form-control" @bind-Value="_model.Travelers" />
+                <ValidationMessage For="() => _model.Travelers" />
+            </div>
+
+            <h5>Reisleiders</h5>
+            <p>Gebruik CTRL en SHIFT om meerdere reisleiders te selecteren</p>
+            <select multiple class="form-control mb-3" @onchange="OnLeadersChanged">
+                @foreach (var leader in _leaders)
+                {
+                    <option value="@leader.Id">@leader.Name</option>
+                }
+            </select>
+
+            <div class="d-flex">
+                <button type="submit" class="btn btn-primary">Opslaan</button>
+                <span class="ms-2">
+                    <Button TItem="object" Type="ButtonType.Secondary" OnClickNoArg="EventCallback.Factory.Create(this, Cancel)">Annuleren</Button>
+                </span>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private Journey _model = new();
+    private string[] _preferred = new string[3];
+    private List<TravelLeader> _leaders = new();
+    private List<int> _selectedLeaderIds = new();
+
+    private void OnLeadersChanged(ChangeEventArgs e)
+    {
+        var selectedValues = (string[])e.Value;
+
+        _selectedLeaderIds = selectedValues
+            .Select(int.Parse)
+            .ToList();
+    }
+
+    private void Cancel()
+    {
+        Navigation.NavigateTo("/journeys");
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        await JourneyService.AddJourneyAsync(_model, _selectedLeaderIds);
+        Navigation.NavigateTo("/journeys");
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var items = await LeaderService.GetTravelLeadersAsync();
+            _leaders = items.ToList();
+        }
+        catch
+        {
+            _leaders = new List<TravelLeader>();
+        }
+    }
+}
