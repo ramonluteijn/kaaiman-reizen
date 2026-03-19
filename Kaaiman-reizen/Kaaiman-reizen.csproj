@@ -7,7 +7,8 @@
         <RootNamespace>Kaaiman_reizen</RootNamespace>
         <AssemblyName>$(AssemblyName.Replace(' ', '_'))</AssemblyName>
         <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
-    </PropertyGroup>
+      <UserSecretsId>31dc3bed-1e8d-4dbb-b002-b1beada72abb</UserSecretsId>
+  </PropertyGroup>
 
     <!-- Add any DLLs placed in the lib folder to the build and publish output -->
     <ItemGroup>
@@ -25,6 +26,7 @@
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
+      <PackageReference Include="MudBlazor" Version="9.2.0" />
     </ItemGroup>
     <ItemGroup>
       <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />

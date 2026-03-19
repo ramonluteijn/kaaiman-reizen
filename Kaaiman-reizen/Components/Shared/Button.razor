@@ -1,10 +1,9 @@
-﻿@using Kaaiman_reizen.Data.Enums
 @typeparam TItem
 
 @if (IsButton)
 {
 
-    <button type="button" class="btn @GetButtonClass()" @onclick="HandleClick">
+    <button type="button" class="@GetCssClass()" @onclick="HandleClick">
         @ChildContent
     </button>
 }
@@ -12,13 +11,13 @@ else
 {
     @if (OnClick.HasDelegate)
     {
-        <a class="btn @GetButtonClass()" href="@Href" @onclick="HandleClick" @onclick:preventDefault="true">
+        <a class="@GetCssClass()" href="@Href" @onclick="HandleClick" @onclick:preventDefault="true">
             @ChildContent
         </a>
     }
     else
     {
-        <a class="btn @GetButtonClass()" href="@Href">
+        <a class="@GetCssClass()" href="@Href">
             @ChildContent
         </a>
     }
@@ -39,29 +38,20 @@ else
     
     [Parameter]
     public TItem? Item { get; set; }
-    
+
     [Parameter]
-    public ButtonType Type { get; set; } = ButtonType.Primary;
+    public string Class { get; set; } = string.Empty;
     
     [Parameter]
     public bool IsButton { get; set; } = true;
 
     [Parameter]
     public string Href { get; set; } = "#";
-    
-    private string GetButtonClass()
+
+    private string GetCssClass()
     {
-        return Type switch
-        {
-            ButtonType.Secondary => "btn-secondary",
-            ButtonType.Success => "btn-success",
-            ButtonType.Danger => "btn-danger",
-            ButtonType.Warning => "btn-warning",
-            ButtonType.Info => "btn-info",
-            ButtonType.Light => "btn-light",
-            ButtonType.Dark => "btn-dark",
-            _ => "btn-primary",
-        };
+        var extra = string.IsNullOrWhiteSpace(Class) ? "" : $" {Class}";
+        return $"btn btn-primary{extra}";
     }
 
     private async Task HandleClick()
