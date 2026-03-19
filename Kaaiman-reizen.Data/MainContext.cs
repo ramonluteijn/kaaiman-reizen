@@ -24,8 +24,28 @@ public class MainContext : DbContext
     private static void SeedData(ModelBuilder builder)
     {
         builder.Entity<TravelLeader>().HasData(
-            new TravelLeader { Id = 1, Name = "Jan de Vries", PhoneNumber = "06-12345678", AmountOfTrips = 8 },
-            new TravelLeader { Id = 2, Name = "Maria Jansen", PhoneNumber = "06-87654321", AmountOfTrips = 12 }
+            new TravelLeader
+            {
+                Id = 1,
+                Name = "Jan de Vries",
+                PhoneNumber = "06-12345678",
+                AmountOfTrips = 8,
+                MinTrips = 2,
+                MaxTrips = 10,
+                IsActive = true,
+                Note = ""
+            },
+            new TravelLeader
+            {
+                Id = 2,
+                Name = "Maria Jansen",
+                PhoneNumber = "06-87654321",
+                AmountOfTrips = 12,
+                MinTrips = 3,
+                MaxTrips = 15,
+                IsActive = true,
+                Note = ""
+            }
         );
         builder.Entity<PreferredDestination>().HasData(
             new PreferredDestination { Id = 1, TravelLeaderId = 1, Rank = 1, Destination = "Italië" },

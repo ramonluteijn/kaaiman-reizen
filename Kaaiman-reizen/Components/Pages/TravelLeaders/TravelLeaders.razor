@@ -2,6 +2,7 @@
 @rendermode InteractiveServer
 @using Kaaiman_reizen.Data.Services
 @using Kaaiman_reizen.Data.Entities
+@using Kaaiman_reizen.Data.Enums
 @inject ITravelLeaderService LeaderService
 @inject IJSRuntime JS
 
@@ -12,20 +13,18 @@
 <div class="card">
     <div class="card-body">
         <div class="d-flex justify-content-end mb-3">
-            <MudButton Variant="Variant.Filled"
-                       Color="Color.Success"
-                       StartIcon="@Icons.Material.Filled.Add"
-                       Href="/travelleaders/create">
-                Nieuwe reisleider
-            </MudButton>
+            <Button TItem="object" IsButton="false" Href="/travelleaders/create" Type="ButtonType.Success">Nieuwe reisleider</Button>
         </div>
         <table class="table">
             <thead>
                 <tr>
                     <th>Naam</th>
                     <th>Telefoon</th>
-                    <th>Aantal reizen</th>
+                    <th>Reizen ervaring</th>
+                    <th>Min aantal reizen</th>
+                    <th>Max aantal reizen</th>
                     <th>Beschikbaar</th>
+                    <th>Actief</th>
                     <th>Acties</th>
                 </tr>
             </thead>
@@ -36,6 +35,8 @@
                         <td>@leader.Name</td>
                         <td>@leader.PhoneNumber</td>
                         <td>@leader.AmountOfTrips</td>
+                        <td>@leader.MinTrips</td>
+                        <td>@leader.MaxTrips</td>
                         <td>
                             @if (leader.AvailabilityPeriods != null && leader.AvailabilityPeriods.Any())
                             {
@@ -43,17 +44,30 @@
                             }
                         </td>
                         <td>
-                            <MudStack Row Spacing="1" Justify="Justify.FlexEnd">
-                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                               Color="Color.Primary"
-                                               Href="@($"/travelleaders/edit/{leader.Id}")"
-                                               AriaLabel="Bewerk" />
-
-                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                               Color="Color.Error"
-                                               OnClick="@(EventCallback.Factory.Create(this, () => OnDelete(leader)))"
-                                               AriaLabel="Verwijderen" />
-                            </MudStack>
+                            <span class="badge @(leader.IsActive ? "bg-success" : "bg-danger")">
+                                @(leader.IsActive ? "Ja" : "Nee")
+                            </span>
+                        </td>
+                        <td>
+                            <span class="me-2">
+                                <Button 
+                                    TItem="Kaaiman_reizen.Data.Entities.TravelLeader"
+                                    Item="leader" Type="ButtonType.Secondary" IsButton="false" Href="@($"/travelleaders/edit/{leader.Id}")"
+                                >
+                                    <i class="bi bi-pencil" aria-hidden="true"></i>
+                                    <span class="visually-hidden">Bewerk</span>
+                                </Button>
+                            </span>
+                            <span>
+                                <Button 
+                                    TItem="Kaaiman_reizen.Data.Entities.TravelLeader" 
+                                    Item="leader" Type="ButtonType.Danger" 
+                                    OnClick="@(EventCallback.Factory.Create<Kaaiman_reizen.Data.Entities.TravelLeader>(this, OnDelete))"
+                                >
+                                    <i class="bi bi-trash" aria-hidden="true"></i>
+                                    <span class="visually-hidden">Verwijderen</span>
+                                </Button>
+                            </span>
                         </td>
                     </tr>
                 }
@@ -103,5 +117,20 @@
         {
             _leaders = new List<TravelLeader>();
         }
+    }
+
+    private async Task ToggleActive(TravelLeader? leader)
+    {
+        if (leader == null)
+            return;
+
+        leader.IsActive = !leader.IsActive;
+        await LeaderService.UpdateTravelLeaderAsync(leader);
+
+        var idx = _leaders.FindIndex(l => l.Id == leader.Id);
+        if (idx >= 0)
+            _leaders[idx] = leader;
+
+        StateHasChanged();
     }
 }
