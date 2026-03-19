@@ -91,11 +91,12 @@
 
     private void OnLeadersChanged(ChangeEventArgs e)
     {
-        var selectedValues = (string[])e.Value;
+        var selectedValues = e.Value as String[];
 
-        _selectedLeaderIds = selectedValues
-            .Select(int.Parse)
-            .ToList();
+        if (selectedValues is not null)
+            _selectedLeaderIds = selectedValues
+                .Select(int.Parse)
+                .ToList();
     }
 
     protected override async Task OnParametersSetAsync()

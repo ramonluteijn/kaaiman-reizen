@@ -1,7 +1,8 @@
 ﻿@using Microsoft.AspNetCore.Components.Authorization
-<div class="top-row navbar navbar-dark ps-3">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">Kaaiman-reizen</a>
+
+<div class="border-bottom mb-3 bg-white p-3 shadow">
+    <div class="p3 d-flex justify-content-center">
+        <img src="images/Kaaiman-reizen-logo.webp" class="navbar-brand img-fluid" style="max-height: 50px;" alt="Logo Kaaiman-reizen" />
     </div>
 </div>
 
@@ -43,12 +44,7 @@
         <hr class="text-white-50 mx-3" />
 
         <AuthorizeView>
-            <Authorized>
-                <div class="nav-item px-3">
-                    <span class="nav-link text-white-50" style="font-size: 0.8rem;">
-                        <span class="bi bi-person-circle" aria-hidden="true"></span> @context.User.Identity?.Name
-                    </span>
-                </div>
+            <Authorized>              
                 <div class="nav-item px-3">
                     <form action="Identity/Account/Logout" method="post">
                         <AntiforgeryToken />
@@ -67,6 +63,7 @@
                 </div>
             </NotAuthorized>
         </AuthorizeView>
+
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="travelleaders">
                 <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> Reisleiders
@@ -77,5 +74,15 @@
                 <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> Planner
             </NavLink>
         </div>
+
+        <AuthorizeView>
+            <Authorized>
+                <div class="nav-item px-3 pb-2 text-center">
+                    <small class="text-muted d-block text-truncate">
+                        <i class="bi bi-person-circle text-success me-1"></i> @context.User.Identity?.Name
+                    </small>
+                </div>
+            </Authorized>
+        </AuthorizeView>
     </nav>
 </div>

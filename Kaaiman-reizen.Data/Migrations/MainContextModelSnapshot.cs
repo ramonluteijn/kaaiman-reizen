@@ -448,101 +448,102 @@ namespace Kaaiman_reizen.Data.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", (string)null);
-            modelBuilder.Entity("JourneyTravelLeader", b =>
-                {
-                    b.HasOne("Kaaiman_reizen.Data.Entities.Journey", null)
-                        .WithMany()
-                        .HasForeignKey("JourneysId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    modelBuilder.Entity("JourneyTravelLeader", b =>
+                        {
+                            b.HasOne("Kaaiman_reizen.Data.Entities.Journey", null)
+                                .WithMany()
+                                .HasForeignKey("JourneysId")
+                                .OnDelete(DeleteBehavior.Cascade)
+                                .IsRequired();
 
-                    b.HasOne("Kaaiman_reizen.Data.Entities.TravelLeader", null)
-                        .WithMany()
-                        .HasForeignKey("TravelLeadersId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
+                            b.HasOne("Kaaiman_reizen.Data.Entities.TravelLeader", null)
+                                .WithMany()
+                                .HasForeignKey("TravelLeadersId")
+                                .OnDelete(DeleteBehavior.Cascade)
+                                .IsRequired();
+                        });
 
-            modelBuilder.Entity("Kaaiman_reizen.Data.Entities.AvailabilityPeriod", b =>
-                {
-                    b.HasOne("Kaaiman_reizen.Data.Entities.TravelLeader", "TravelLeader")
-                        .WithMany("AvailabilityPeriods")
-                        .HasForeignKey("TravelLeaderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    modelBuilder.Entity("Kaaiman_reizen.Data.Entities.AvailabilityPeriod", b =>
+                        {
+                            b.HasOne("Kaaiman_reizen.Data.Entities.TravelLeader", "TravelLeader")
+                                .WithMany("AvailabilityPeriods")
+                                .HasForeignKey("TravelLeaderId")
+                                .OnDelete(DeleteBehavior.Cascade)
+                                .IsRequired();
 
-                    b.Navigation("TravelLeader");
-                });
+                            b.Navigation("TravelLeader");
+                        });
 
-            modelBuilder.Entity("Kaaiman_reizen.Data.Entities.PreferredDestination", b =>
-                {
-                    b.HasOne("Kaaiman_reizen.Data.Entities.TravelLeader", "TravelLeader")
-                        .WithMany("PreferredDestinations")
-                        .HasForeignKey("TravelLeaderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    modelBuilder.Entity("Kaaiman_reizen.Data.Entities.PreferredDestination", b =>
+                        {
+                            b.HasOne("Kaaiman_reizen.Data.Entities.TravelLeader", "TravelLeader")
+                                .WithMany("PreferredDestinations")
+                                .HasForeignKey("TravelLeaderId")
+                                .OnDelete(DeleteBehavior.Cascade)
+                                .IsRequired();
 
-                    b.Navigation("TravelLeader");
-                });
+                            b.Navigation("TravelLeader");
+                        });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
-                {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
-                        .WithMany()
-                        .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
+                    modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
+                        {
+                            b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
+                                .WithMany()
+                                .HasForeignKey("RoleId")
+                                .OnDelete(DeleteBehavior.Cascade)
+                                .IsRequired();
+                        });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
-                {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
+                    modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
+                        {
+                            b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                                .WithMany()
+                                .HasForeignKey("UserId")
+                                .OnDelete(DeleteBehavior.Cascade)
+                                .IsRequired();
+                        });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
-                {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
+                    modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
+                        {
+                            b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                                .WithMany()
+                                .HasForeignKey("UserId")
+                                .OnDelete(DeleteBehavior.Cascade)
+                                .IsRequired();
+                        });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
-                {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
-                        .WithMany()
-                        .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
+                        {
+                            b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
+                                .WithMany()
+                                .HasForeignKey("RoleId")
+                                .OnDelete(DeleteBehavior.Cascade)
+                                .IsRequired();
 
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
+                            b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                                .WithMany()
+                                .HasForeignKey("UserId")
+                                .OnDelete(DeleteBehavior.Cascade)
+                                .IsRequired();
+                        });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
-                {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
+                    modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
+                        {
+                            b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                                .WithMany()
+                                .HasForeignKey("UserId")
+                                .OnDelete(DeleteBehavior.Cascade)
+                                .IsRequired();
+                        });
 
-            modelBuilder.Entity("Kaaiman_reizen.Data.Entities.TravelLeader", b =>
-                {
-                    b.Navigation("AvailabilityPeriods");
+                    modelBuilder.Entity("Kaaiman_reizen.Data.Entities.TravelLeader", b =>
+                        {
+                            b.Navigation("AvailabilityPeriods");
 
-                    b.Navigation("PreferredDestinations");
-                });
+                            b.Navigation("PreferredDestinations");
+                        });
 #pragma warning restore 612, 618
+                });
         }
     }
 }
