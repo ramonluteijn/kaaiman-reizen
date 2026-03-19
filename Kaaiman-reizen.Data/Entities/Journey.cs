@@ -11,13 +11,13 @@ public class Journey : IValidatableObject
     public string Country { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Start datum is verplicht.")]
-    public DateTime StartDate { get; set; }
+    public DateTime Start { get; set; }
 
     [Required(ErrorMessage = "Eind datum is verplicht.")]
-    public DateTime EndDate { get; set; }
+    public DateTime End { get; set; }
 
     [Required(ErrorMessage = "Aantal busjes is verplicht.")]
-    [Range(0, int.MaxValue, ErrorMessage = "Aantal busjes moet groter of gelijk aan 0 zijn.")]
+    [Range(1, int.MaxValue, ErrorMessage = "Aantal busjes moet groter of gelijk aan 1 zijn.")]
     public int? Busses { get; set; }
 
     [Required(ErrorMessage = "Aantal reizigers is verplicht.")]
@@ -28,11 +28,11 @@ public class Journey : IValidatableObject
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
-        if (StartDate >= EndDate)
+        if (Start >= End)
         {
             yield return new ValidationResult(
                 "Start datum mag niet later of gelijk zijn aan eind datum",
-                new[] { nameof(StartDate), nameof(EndDate) });
+                new[] { nameof(Start), nameof(End) });
         }
     }
 }

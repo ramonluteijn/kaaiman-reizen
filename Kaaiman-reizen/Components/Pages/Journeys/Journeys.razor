@@ -1,0 +1,114 @@
+@page "/journeys"
+@rendermode InteractiveServer
+@using Kaaiman_reizen.Data.Services
+@using Kaaiman_reizen.Data.Entities
+@using Kaaiman_reizen.Data.Enums
+@inject IJourneyService JourneyService
+@inject IJSRuntime JS
+
+<PageTitle>Reizen</PageTitle>
+
+<h1 class="h4">Reizen</h1>
+
+<div class="card">
+    <div class="card-body">
+        <div class="d-flex justify-content-end mb-3">
+            <Button TItem="object" IsButton="false" Href="/journeys/create" Type="ButtonType.Success">Nieuwe reis</Button>
+        </div>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Land</th>
+                    <th>Start datum</th>
+                    <th>Eind datum</th>
+                    <th>Busjes</th>
+                    <th>Reizigers</th>
+                    <th>Reisleiders</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var journey in _journeys)
+                {
+                    <tr>
+                        <td>@journey.Country</td>
+                        <td>@journey.Start</td>
+                        <td>@journey.End</td>
+                        <td>@journey.Busses</td>
+                        <td>@journey.Travelers</td>
+                        <td>
+                            @if (journey.TravelLeaders != null && journey.TravelLeaders.Any())
+                            {
+                                @FormatTravelLeaders(journey)
+                            }
+                        </td>
+                        <td>
+                            <span class="me-2">
+                                <Button 
+                                    TItem="Kaaiman_reizen.Data.Entities.Journey"
+                                    Item="journey" Type="ButtonType.Secondary" IsButton="false" Href="@($"/journeys/edit/{journey.Id}")"
+                                >
+                                    <i class="bi bi-pencil" aria-hidden="true"></i>
+                                    <span class="visually-hidden">Bewerk</span>
+                                </Button>
+                            </span>
+                            <span>
+                                <Button 
+                                    TItem="Kaaiman_reizen.Data.Entities.Journey" 
+                                    Item="journey" Type="ButtonType.Danger" 
+                                    OnClick="@(EventCallback.Factory.Create<Kaaiman_reizen.Data.Entities.Journey>(this, OnDelete))"
+                                >
+                                    <i class="bi bi-trash" aria-hidden="true"></i>
+                                    <span class="visually-hidden">Verwijderen</span>
+                                </Button>
+                            </span>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        @if (_journeys.Count == 0)
+        {
+            <div class="text-muted">Geen reizen gevonden.</div>
+        }
+    </div>
+</div>
+
+@code {
+    private List<Journey> _journeys = new();
+
+    private string FormatTravelLeaders(Journey journey)
+    {
+        var leaders = journey.TravelLeaders ?? new List<TravelLeader>();
+        return string.Join("; ", leaders.OrderBy(l => l.Name)
+            .Select(l => $"{l.Name}"));
+    }
+
+    private async Task OnDelete(Journey? journey)
+    {
+        if (journey == null)
+            return;
+
+        //TODO: Make a cool custom confirmation dialog
+        var confirm = await JS.InvokeAsync<bool>("confirm", $"Weet je zeker dat je '{journey.Country}' wilt verwijderen?");
+        if (!confirm)
+            return;
+
+        await JourneyService.DeleteJourneyAsync(journey.Id);
+        _journeys.RemoveAll(l => l.Id == journey.Id);
+        StateHasChanged();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var items = await JourneyService.GetJourneysAsync();
+            _journeys = items.ToList();
+        }
+        catch
+        {
+            _journeys = new List<Journey>();
+        }
+    }
+}
