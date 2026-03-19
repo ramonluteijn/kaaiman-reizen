@@ -2,7 +2,6 @@
 @rendermode InteractiveServer
 @using Kaaiman_reizen.Data.Services
 @using Kaaiman_reizen.Data.Entities
-@using Kaaiman_reizen.Data.Enums
 @inject IJourneyService JourneyService
 @inject IJSRuntime JS
 
@@ -12,60 +11,29 @@
 
 <div class="card">
     <div class="card-body">
-        <div class="d-flex justify-content-end mb-3">
-            <Button TItem="object" IsButton="false" Href="/journeys/create" Type="ButtonType.Success">Nieuwe reis</Button>
-        </div>
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Land</th>
-                    <th>Start datum</th>
-                    <th>Eind datum</th>
-                    <th>Busjes</th>
-                    <th>Reizigers</th>
-                    <th>Reisleiders</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var journey in _journeys)
-                {
-                    <tr>
-                        <td>@journey.Country</td>
-                        <td>@journey.Start</td>
-                        <td>@journey.End</td>
-                        <td>@journey.Busses</td>
-                        <td>@journey.Travelers</td>
-                        <td>
-                            @if (journey.TravelLeaders != null && journey.TravelLeaders.Any())
-                            {
-                                @FormatTravelLeaders(journey)
-                            }
-                        </td>
-                        <td>
-                            <span class="me-2">
-                                <Button 
-                                    TItem="Kaaiman_reizen.Data.Entities.Journey"
-                                    Item="journey" Type="ButtonType.Secondary" IsButton="false" Href="@($"/journeys/edit/{journey.Id}")"
-                                >
-                                    <i class="bi bi-pencil" aria-hidden="true"></i>
-                                    <span class="visually-hidden">Bewerk</span>
-                                </Button>
-                            </span>
-                            <span>
-                                <Button 
-                                    TItem="Kaaiman_reizen.Data.Entities.Journey" 
-                                    Item="journey" Type="ButtonType.Danger" 
-                                    OnClick="@(EventCallback.Factory.Create<Kaaiman_reizen.Data.Entities.Journey>(this, OnDelete))"
-                                >
-                                    <i class="bi bi-trash" aria-hidden="true"></i>
-                                    <span class="visually-hidden">Verwijderen</span>
-                                </Button>
-                            </span>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+        <Table TItem="Journey" Items="_journeys" OnDelete="@OnDelete" Path="journeys" CreateText="Nieuwe reis" EditHrefSelector="@GetEditHref">
+            <HeaderContent>
+                <th>Land</th>
+                <th>Start datum</th>
+                <th>Eind datum</th>
+                <th>Busjes</th>
+                <th>Reizigers</th>
+                <th>Reisleiders</th>
+            </HeaderContent>
+            <RowTemplate>
+                <td>@context.Country</td>
+                <td>@context.Start</td>
+                <td>@context.End</td>
+                <td>@context.Busses</td>
+                <td>@context.Travelers</td>
+                <td>
+                    @if (context.TravelLeaders != null && context.TravelLeaders.Any())
+                    {
+                        @FormatTravelLeaders(context)
+                    }
+                </td>
+            </RowTemplate>
+        </Table>
 
         @if (_journeys.Count == 0)
         {
@@ -76,6 +44,11 @@
 
 @code {
     private List<Journey> _journeys = new();
+
+    private static string GetEditHref(Journey journey)
+    {
+        return $"/journeys/edit/{journey.Id}";
+    }
 
     private string FormatTravelLeaders(Journey journey)
     {

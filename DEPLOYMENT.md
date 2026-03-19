@@ -14,3 +14,12 @@
 
 - restart eventueel de applicatie
 - de app zou nu moeten werken (nog zonder database)
+
+
+
+
+## errors en dergelijke
+- opletten dat er geen dubbele wwwroot komt te staan bij het uploaden van bestanden.
+- appsettings.Development.json -> appsettings.Production.json
+- juiste user credentials gebruikt? (dev pakt van laravel project momenteel (is ivm eigen server) )
+- mogelijk een export van de db importeren!

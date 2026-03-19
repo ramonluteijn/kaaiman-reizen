@@ -9,3 +9,7 @@
 .table tbody td {
   padding: 0.6rem 1rem;
 }
+
+.card {
+  border: none;
+}
