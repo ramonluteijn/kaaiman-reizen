@@ -1,6 +1,10 @@
 @page "/travelleaders"
 @rendermode InteractiveServer
 @using Kaaiman_reizen.Models.ViewModels
+@using Kaaiman_reizen.Data.Services
+@using Kaaiman_reizen.Data.Entities
+@inject ITravelLeaderService LeaderService
+@inject IJSRuntime JS
 
 <PageTitle>Reisleiders</PageTitle>
 
@@ -8,60 +12,98 @@
 
 <div class="card">
     <div class="card-body">
-        <div class="d-flex justify-content-end mb-3">
-            <MudButton Href="/travelleaders/create"
-                       Variant="Variant.Filled"
-                       Color="Color.Success">
-                Nieuwe reisleider
-            </MudButton>
-        </div>
-        <DataLoader TItem="TravelLeaderViewModel" Items="@_leaders" IsLoading="@_loading" Error="@_error" EmptyMessage="Geen reisleiders gevonden.">
-            <ChildContent Context="leaders">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Naam</th>
-                            <th>Telefoon</th>
-                            <th>Reizen ervaring</th>
-                            <th>Min aantal reizen</th>
-                            <th>Max aantal reizen</th>
-                            <th>Beschikbaar</th>
-                            <th>Actief</th>
-                            <th>Acties</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var leader in leaders)
-                        {
-                            <tr>
-                                <td>@leader.Name</td>
-                                <td>@leader.PhoneNumber</td>
-                                <td>@leader.AmountOfTrips</td>
-                                <td>@leader.MinTrips</td>
-                                <td>@leader.MaxTrips</td>
-                                <td>@leader.Availability</td>
-                                <td>
-                                    <span class="badge @(leader.IsActive ? "bg-success" : "bg-danger")">
-                                        @(leader.IsActive ? "Ja" : "Nee")
-                                    </span>
-                                </td>
-                                <td>
-                                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                                   Color="Color.Secondary"
-                                                   Href="@($"/travelleaders/edit/{leader.Id}")"
-                                                   title="Bewerk"
-                                                   aria-label="Bewerk" />
-                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                                   Color="Color.Error"
-                                                   title="Verwijderen"
-                                                   aria-label="Verwijderen"
-                                                   OnClick="@(() => OnDelete(leader))" />
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </ChildContent>
-        </DataLoader>
+        <Table TItem="TravelLeader" Items="_leaders" OnDelete="@OnDelete" Path="travelleaders" CreateText="Nieuwe reisleider" EditHrefSelector="@GetEditHref">
+            <HeaderContent>
+                <th>Naam</th>
+                <th>Telefoon</th>
+                <th>Reizen ervaring</th>
+                <th>Min aantal reizen</th>
+                <th>Max aantal reizen</th>
+                <th>Beschikbaar</th>
+                <th>Actief</th>
+            </HeaderContent>
+            <RowTemplate>
+                <td>@context.Name</td>
+                <td>@context.PhoneNumber</td>
+                <td>@context.AmountOfTrips</td>
+                <td>@context.MinTrips</td>
+                <td>@context.MaxTrips</td>
+                <td>
+                    @if (context.AvailabilityPeriods != null && context.AvailabilityPeriods.Any())
+                    {
+                        @FormatAvailability(context)
+                    }
+                </td>
+                <td>
+                    <span class="badge @(context.IsActive ? "bg-success" : "bg-danger")">
+                        @(context.IsActive ? "Ja" : "Nee")
+                    </span>
+                </td>
+            </RowTemplate>
+        </Table>
+
+        @if (_leaders.Count == 0)
+        {
+            <div class="text-muted">Geen reisleiders gevonden.</div>
+        }
     </div>
 </div>
+
+@code {
+    private List<TravelLeader> _leaders = new();
+    
+    private static string GetEditHref(TravelLeader leader)
+    {
+        return $"/travelleaders/edit/{leader.Id}";
+    }
+
+    private string FormatAvailability(TravelLeader leader)
+    {
+        var periods = leader.AvailabilityPeriods ?? new List<AvailabilityPeriod>();
+        return string.Join("; ", periods.OrderBy(p => p.Start)
+            .Select(p => $"{p.Start:dd MMM} – {p.End:dd MMM}"));
+    }
+
+    private async Task OnDelete(TravelLeader? leader)
+    {
+        if (leader == null)
+            return;
+
+        //TODO: Make a cool custom confirmation dialog
+        var confirm = await JS.InvokeAsync<bool>("confirm", $"Weet je zeker dat je '{leader.Name}' wilt verwijderen?");
+        if (!confirm)
+            return;
+
+        await LeaderService.DeleteTravelLeaderAsync(leader.Id);
+        _leaders.RemoveAll(l => l.Id == leader.Id);
+        StateHasChanged();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var items = await LeaderService.GetTravelLeadersAsync();
+            _leaders = items.ToList();
+        }
+        catch
+        {
+            _leaders = new List<TravelLeader>();
+        }
+    }
+
+    private async Task ToggleActive(TravelLeader? leader)
+    {
+        if (leader == null)
+            return;
+
+        leader.IsActive = !leader.IsActive;
+        await LeaderService.UpdateTravelLeaderAsync(leader);
+
+        var idx = _leaders.FindIndex(l => l.Id == leader.Id);
+        if (idx >= 0)
+            _leaders[idx] = leader;
+
+        StateHasChanged();
+    }
+}

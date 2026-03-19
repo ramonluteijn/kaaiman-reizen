@@ -1,9 +1,8 @@
 @typeparam TItem
 
-@if (IsButton)
+@if (!HasHref)
 {
-
-    <button type="button" class="@GetCssClass()" @onclick="HandleClick">
+    <button type="button" class="btn @GetButtonClass()" @onclick="HandleClick">
         @ChildContent
     </button>
 }
@@ -46,9 +45,11 @@ else
     public bool IsButton { get; set; } = true;
 
     [Parameter]
-    public string Href { get; set; } = "#";
-
-    private string GetCssClass()
+    public string? Href { get; set; }
+    
+    private bool HasHref => !string.IsNullOrWhiteSpace(Href);
+    
+    private string GetButtonClass()
     {
         var extra = string.IsNullOrWhiteSpace(Class) ? "" : $" {Class}";
         return $"btn btn-primary{extra}";
@@ -68,10 +69,10 @@ else
             return;
         }
 
-        if (!IsButton)
+        if (HasHref)
         {
             var isAbsolute = Uri.IsWellFormedUriString(Href, UriKind.Absolute);
-            NavigationManager.NavigateTo(Href, forceLoad: isAbsolute);
+            NavigationManager.NavigateTo(Href!, forceLoad: isAbsolute);
         }
     }
 }
