@@ -1,5 +1,6 @@
-using Microsoft.EntityFrameworkCore;
 using Kaaiman_reizen.Data.Entities;
+using Microsoft.EntityFrameworkCore;
+using System.Collections;
 
 namespace Kaaiman_reizen.Data;
 
@@ -12,6 +13,8 @@ public class MainContext : DbContext
     public DbSet<TravelLeader> TravelLeader { get; set; }
     public DbSet<PreferredDestination> PreferredDestinations { get; set; }
     public DbSet<AvailabilityPeriod> AvailabilityPeriods { get; set; }
+    public DbSet<Journey> Journey { get; set; }
+
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -61,6 +64,9 @@ public class MainContext : DbContext
             new AvailabilityPeriod { Id = 2, TravelLeaderId = 1, Start = new DateOnly(2025, 5, 30), End = new DateOnly(2025, 6, 14) },
             new AvailabilityPeriod { Id = 3, TravelLeaderId = 2, Start = new DateOnly(2025, 1, 1), End = new DateOnly(2025, 12, 31) }
         );
+        builder.Entity<Journey>().HasData(
+           new Journey { Id = 1, Country = "Italië", Start = new DateTime(2026, 7, 1), End = new DateTime(2026, 7, 14), Busses = 1, Travelers = 10 }
+        );
     }
 
     private static void CreateRelations(ModelBuilder builder)
@@ -76,5 +82,9 @@ public class MainContext : DbContext
             .WithMany(t => t.AvailabilityPeriods)
             .HasForeignKey(a => a.TravelLeaderId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<Journey>()
+           .HasMany(a => a.TravelLeaders)
+           .WithMany(r => r.Journeys);
     }
 }

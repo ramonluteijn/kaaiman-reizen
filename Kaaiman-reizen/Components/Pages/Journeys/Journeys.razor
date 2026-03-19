@@ -1,0 +1,87 @@
+@page "/journeys"
+@rendermode InteractiveServer
+@using Kaaiman_reizen.Data.Services
+@using Kaaiman_reizen.Data.Entities
+@inject IJourneyService JourneyService
+@inject IJSRuntime JS
+
+<PageTitle>Reizen</PageTitle>
+
+<h1 class="h4">Reizen</h1>
+
+<div class="card">
+    <div class="card-body">
+        <Table TItem="Journey" Items="_journeys" OnDelete="@OnDelete" Path="journeys" CreateText="Nieuwe reis" EditHrefSelector="@GetEditHref">
+            <HeaderContent>
+                <th>Land</th>
+                <th>Start datum</th>
+                <th>Eind datum</th>
+                <th>Busjes</th>
+                <th>Reizigers</th>
+                <th>Reisleiders</th>
+            </HeaderContent>
+            <RowTemplate>
+                <td>@context.Country</td>
+                <td>@context.Start</td>
+                <td>@context.End</td>
+                <td>@context.Busses</td>
+                <td>@context.Travelers</td>
+                <td>
+                    @if (context.TravelLeaders != null && context.TravelLeaders.Any())
+                    {
+                        @FormatTravelLeaders(context)
+                    }
+                </td>
+            </RowTemplate>
+        </Table>
+
+        @if (_journeys.Count == 0)
+        {
+            <div class="text-muted">Geen reizen gevonden.</div>
+        }
+    </div>
+</div>
+
+@code {
+    private List<Journey> _journeys = new();
+
+    private static string GetEditHref(Journey journey)
+    {
+        return $"/journeys/edit/{journey.Id}";
+    }
+
+    private string FormatTravelLeaders(Journey journey)
+    {
+        var leaders = journey.TravelLeaders ?? new List<TravelLeader>();
+        return string.Join("; ", leaders.OrderBy(l => l.Name)
+            .Select(l => $"{l.Name}"));
+    }
+
+    private async Task OnDelete(Journey? journey)
+    {
+        if (journey == null)
+            return;
+
+        //TODO: Make a cool custom confirmation dialog
+        var confirm = await JS.InvokeAsync<bool>("confirm", $"Weet je zeker dat je '{journey.Country}' wilt verwijderen?");
+        if (!confirm)
+            return;
+
+        await JourneyService.DeleteJourneyAsync(journey.Id);
+        _journeys.RemoveAll(l => l.Id == journey.Id);
+        StateHasChanged();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var items = await JourneyService.GetJourneysAsync();
+            _journeys = items.ToList();
+        }
+        catch
+        {
+            _journeys = new List<Journey>();
+        }
+    }
+}

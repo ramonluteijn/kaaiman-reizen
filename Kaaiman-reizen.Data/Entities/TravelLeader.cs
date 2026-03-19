@@ -33,6 +33,8 @@ public class TravelLeader : IValidatableObject
 
     public List<AvailabilityPeriod> AvailabilityPeriods { get; set; } = new();
 
+    public List<Journey> Journeys { get; set; } = new();
+
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
         if (MinTrips.HasValue && MaxTrips.HasValue && MinTrips > MaxTrips)

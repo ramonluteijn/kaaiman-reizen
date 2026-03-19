@@ -1,35 +1,71 @@
+@using Kaaiman_reizen.Data.Enums
 @typeparam TItem
 
+@if (CreateText != null && CreatePath != null)
+{
+    <div class="d-flex justify-content-end mb-3">
+        <Button TItem="object" Href="@CreatePath" Type="@ButtonType.Success">@CreateText</Button>
+    </div>
+}
 <table class="table">
     <thead>
-        <tr>
-            @if (HeaderContent != null)
-            {
-                @HeaderContent
-            }
-            else
-            {
-                <th>Item</th>
-            }
-        </tr>
+    <tr>
+        @if (HeaderContent != null)
+        {
+            @HeaderContent
+        }
+        else
+        {
+            <th>Item</th>
+        }
+
+        @if (HasActions)
+        {
+            <th>Acties</th>
+        }
+    </tr>
     </thead>
     <tbody>
-        @if (Items != null)
+    @if (Items != null)
+    {
+        foreach (var item in Items)
         {
-            foreach (var item in Items)
-            {
-                <tr>
-                    @if (RowTemplate != null)
+            <tr>
+                @if (RowTemplate != null)
+                {
+                    @RowTemplate(item)
+                }
+                else
+                {
+                    <td>@item</td>
+                }
+
+                @if (HasActions)
                     {
-                        @RowTemplate(item)
+                        <td>
+                            @if (EditHrefSelector != null)
+                            {
+                                <span class="me-2">
+                                    <Button TItem="TItem" Item="item" Type="@ButtonType.Secondary" Href="@EditHrefSelector(item)">
+                                        <i class="bi bi-pencil" aria-hidden="true"></i>
+                                        <span class="visually-hidden">Bewerk</span>
+                                    </Button>
+                                </span>
+                            }
+                            @if (OnDelete.HasDelegate)
+                            {
+                                <span>
+                                    <Button TItem="TItem" Item="item" Type="@ButtonType.Danger" OnClick="@OnDelete">
+                                        <i class="bi bi-trash" aria-hidden="true"></i>
+                                        <span class="visually-hidden">Verwijderen</span>
+                                    </Button>
+                                </span>
+                            }
+                        </td>
                     }
-                    else
-                    {
-                        <td>@item</td>
-                    }
-                </tr>
-            }
+            </tr>
         }
+    }
     </tbody>
 </table>
 
@@ -42,4 +78,20 @@
 
     [Parameter]
     public RenderFragment<TItem>? RowTemplate { get; set; }
+    
+    [Parameter]
+    public Func<TItem, string?>? EditHrefSelector { get; set; }
+
+    [Parameter]
+    public EventCallback<TItem?> OnDelete { get; set; }
+
+    [Parameter]
+    public string? CreateText { get; set; }
+
+    [Parameter]
+    public string? Path { get; set; }
+
+    private bool HasActions => EditHrefSelector != null || OnDelete.HasDelegate;
+
+    private string? CreatePath => !string.IsNullOrWhiteSpace(Path) ? $"/{Path}/create" : null;
 }
