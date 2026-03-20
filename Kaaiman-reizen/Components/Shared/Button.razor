@@ -1,78 +1,26 @@
-@typeparam TItem
-
-@if (!HasHref)
-{
-    <button type="button" class="btn @GetButtonClass()" @onclick="HandleClick">
-        @ChildContent
-    </button>
-}
-else
-{
-    @if (OnClick.HasDelegate)
-    {
-        <a class="@GetCssClass()" href="@Href" @onclick="HandleClick" @onclick:preventDefault="true">
-            @ChildContent
-        </a>
-    }
-    else
-    {
-        <a class="@GetCssClass()" href="@Href">
-            @ChildContent
-        </a>
-    }
-}
+<MudButton Variant="Variant.Filled"
+           Color="@GetMudColor()"
+           Href="@Href"
+           OnClick="@HandleClick"
+           ButtonType="@GetMudButtonType()">
+    @ChildContent
+</MudButton>
 
 @code {
-    [Inject]
-    private NavigationManager NavigationManager { get; set; } = default!;
+    [Parameter] public string? Href { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public EventCallback HandleClick { get; set; }
+    [Parameter] public string? Type { get; set; }
 
-    [Parameter]
-    public RenderFragment? ChildContent { get; set; }
-
-    [Parameter]
-    public EventCallback<TItem?> OnClick { get; set; }
-
-    [Parameter]
-    public EventCallback OnClickNoArg { get; set; }
-    
-    [Parameter]
-    public TItem? Item { get; set; }
-
-    [Parameter]
-    public string Class { get; set; } = string.Empty;
-    
-    [Parameter]
-    public bool IsButton { get; set; } = true;
-
-    [Parameter]
-    public string? Href { get; set; }
-    
-    private bool HasHref => !string.IsNullOrWhiteSpace(Href);
-    
-    private string GetButtonClass()
+    private Color GetMudColor() => Type?.ToLower() switch
     {
-        var extra = string.IsNullOrWhiteSpace(Class) ? "" : $" {Class}";
-        return $"btn btn-primary{extra}";
-    }
+        "primary" => Color.Primary,
+        "secondary" => Color.Secondary,
+        "danger" => Color.Error,
+        "success" => Color.Success,
+        _ => Color.Default
+    };
 
-    private async Task HandleClick()
-    {
-        if (OnClick.HasDelegate)
-        {
-            await OnClick.InvokeAsync(Item);
-            return;
-        }
-
-        if (OnClickNoArg.HasDelegate)
-        {
-            await OnClickNoArg.InvokeAsync();
-            return;
-        }
-
-        if (HasHref)
-        {
-            var isAbsolute = Uri.IsWellFormedUriString(Href, UriKind.Absolute);
-            NavigationManager.NavigateTo(Href!, forceLoad: isAbsolute);
-        }
-    }
+    private MudBlazor.ButtonType GetMudButtonType() =>
+        Type == "submit" ? MudBlazor.ButtonType.Submit : MudBlazor.ButtonType.Button;
 }
