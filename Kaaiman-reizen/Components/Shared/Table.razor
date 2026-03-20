@@ -52,7 +52,7 @@
                                 <span class="me-2">
                                     <MudIconButton Icon="@Icons.Material.Filled.Edit"
                                                    Variant="Variant.Filled"
-                                                   Color="Color.Secondary"
+                                                   Color="Color.Primary"
                                                    Size="Size.Small"
                                                    Href="@EditHrefSelector(item)"
                                                    Title="Bewerk" />
@@ -61,12 +61,12 @@
                             @if (OnDelete.HasDelegate)
                             {
                                 <span>
-                                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                                   Color="Color.Secondary"
-                                                   Href="@EditHrefSelector(item)"
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
                                                    Variant="Variant.Filled"
+                                                   Color="Color.Error"
                                                    Size="Size.Small"
-                                                   aria-label="Bewerk" />
+                                                   OnClick="@(() => OnDelete.InvokeAsync(item))"
+                                                   Title="Verwijder" />
                                 </span>
                             }
                         </td>

@@ -55,10 +55,10 @@
             </select>
 
             <div class="d-flex">
-                <button type="submit" class="btn btn-primary">Opslaan</button>
-                <span class="ms-2">
-                    <Button TItem="object" Type="ButtonType.Secondary" OnClickNoArg="EventCallback.Factory.Create(this, Cancel)">Annuleren</Button>
-                </span>
+                <div class="d-flex">
+                    <button type="submit" class="btn btn-primary">Opslaan</button>
+                    <button type="button" class="btn btn-secondary ms-2" @onclick="Cancel">Annuleren</button>
+                </div>
             </div>
         </EditForm>
     </div>
