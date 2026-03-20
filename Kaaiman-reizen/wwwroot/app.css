@@ -67,13 +67,15 @@ h1:focus {
     width: 100%;
     align-items: flex-start;
 }
-.planner-calendar { flex: 1; min-width: 0; }
+.planner-calendar { flex: 1; min-width: 0; background-color: rgba(0,0,0,0.015); }
 .planner-sidebar { flex: 0 0 280px; min-width: 280px; }
 
 .calendar-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 2px;
+    gap: 0;
+    background-color: rgba(0,0,0,0.025); /* lighter container behind the stripes */
+    border: 1px solid rgba(0,0,0,0.18);
 }
 .calendar-grid > * {
     min-width: 0;
@@ -89,27 +91,46 @@ h1:focus {
     padding: 4px 0;
     color: var(--mud-palette-text-secondary, #666);
     text-align: center;
+    box-shadow:
+        inset -1px 0 0 rgba(0,0,0,0.14),
+        inset 0 -1px 0 rgba(0,0,0,0.14);
 }
 .calendar-cell {
-    aspect-ratio: 1;
-    max-height: 3.5rem;
+    height: 2.25rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 4px;
+    border-radius: 0;
+    box-shadow:
+        inset -1px 0 0 rgba(0,0,0,0.14), /* vertical border lines */
+        inset 0 -1px 0 rgba(0,0,0,0.14); /* horizontal border lines */
 }
 .calendar-cell--day {
     cursor: pointer;
-    background-color: rgba(0,0,0,0.04);
+    background-color: transparent;
 }
 .calendar-cell--day:hover {
-    background-color: rgba(0,0,0,0.08);
+    background-color: rgba(0,0,0,0.06);
 }
-.calendar-cell .calendar-day-chip {
-    width: auto;
-    min-width: 2rem;
-    justify-content: center;
-    margin: 0;
+.calendar-cell--empty {
+    cursor: default;
+    background-color: transparent;
+}
+
+.calendar-cell--selected {
+    background-color: var(--mud-palette-primary, #1976d2);
+}
+
+.calendar-cell--selected .calendar-day-number {
+    color: #fff;
+    font-weight: 600;
+}
+
+.calendar-day-number {
+    width: 100%;
+    text-align: center;
+    color: var(--mud-palette-text-secondary, #666);
+    line-height: 1;
 }
 
 @media (min-width: 1000px) and (max-width: 1200px) {

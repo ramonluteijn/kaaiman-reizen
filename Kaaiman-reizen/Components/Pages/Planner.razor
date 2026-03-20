@@ -27,15 +27,14 @@
                     @for (int i = 0; i < 7; i++)
                     {
                         var d = row != null ? row[i] : null;
-                        <div class="calendar-cell @(d.HasValue ? "calendar-cell--day" : "")"
+                        var selected = d.HasValue && IsSelected(d.Value);
+                        <div class="calendar-cell @(d.HasValue ? "calendar-cell--day" : "calendar-cell--empty") @(selected ? "calendar-cell--selected" : "")"
                              @onclick="@(() => { if (d.HasValue) ToggleDay(d.Value); })">
                             @if (d.HasValue)
                             {
-                                <MudChip T="string" Size="Size.Small"
-                                         Color="@(IsSelected(d.Value) ? Color.Primary : Color.Default)"
-                                         Class="calendar-day-chip">
+                                <MudText Typo="Typo.caption" Class="calendar-day-number">
                                     @d.Value.Day
-                                </MudChip>
+                                </MudText>
                             }
                         </div>
                     }
