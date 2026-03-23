@@ -32,12 +32,13 @@ namespace Kaaiman_reizen.Tests.Services
                 End = new DateTime(0001, 1, 2),
                 Busses = 1,
                 Travelers = 1,
+                BookingStatus = 1,
             };
             await service.AddJourneyAsync(journey, new List<int>());
 
             var allJourneys = await service.GetJourneysAsync();
             Assert.Single(allJourneys);
-            Assert.Equal("Test Name", allJourneys.First().Name);
+            Assert.Equal("Test Country", allJourneys.First().Name);
         }
 
         [Fact]
@@ -53,6 +54,7 @@ namespace Kaaiman_reizen.Tests.Services
                 End = new DateTime(0001, 1, 2),
                 Busses = 1,
                 Travelers = 1,
+                BookingStatus = 1,
             };
             await service.AddJourneyAsync(journey, new List<int>());
 
@@ -77,6 +79,7 @@ namespace Kaaiman_reizen.Tests.Services
                 End = new DateTime(0001, 1, 2),
                 Busses = 1,
                 Travelers = 1,
+                BookingStatus = 1,
             }; 
             await service.AddJourneyAsync(journey, new List<int>());
 
@@ -100,6 +103,7 @@ namespace Kaaiman_reizen.Tests.Services
                 End = new DateTime(0001, 1, 2),
                 Busses = 1,
                 Travelers = 1,
+                BookingStatus = 1,
             }; 
             await service.AddJourneyAsync(journey, new List<int>());
 
@@ -120,6 +124,7 @@ namespace Kaaiman_reizen.Tests.Services
                 End = new DateTime(0001, 1, 1),
                 Busses = 1,
                 Travelers = 1,
+                BookingStatus = 1,
             };
 
             var results = journey.Validate(new System.ComponentModel.DataAnnotations.ValidationContext(journey)).ToList();
