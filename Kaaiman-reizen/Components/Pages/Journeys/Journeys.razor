@@ -12,6 +12,12 @@
 <div class="card">
     <div class="card-body">
         <input type="text" id="filterInput" onkeyup="filterList()" placeholder="Zoek op land">
+        <input type="checkbox" id="ascendingInput" onchange="sortList()">
+        <select name="sortInput" id="sortInput" onchange="sortList()">
+            <option value="country">Land</option>
+            <option value="busses">Busjes</option>
+            <option value="travelers">Reizigers</option>
+        </select>
 
         <Table TItem="Journey" Items="_journeys" OnDelete="@OnDelete" Path="journeys" CreateText="Nieuwe reis" EditHrefSelector="@GetEditHref">
             <HeaderContent>
@@ -23,11 +29,11 @@
                 <th>Reisleiders</th>
             </HeaderContent>
             <RowTemplate>
-                <td>@context.Country</td>
+                <td id="country">@context.Country</td>
                 <td>@context.Start</td>
                 <td>@context.End</td>
-                <td>@context.Busses</td>
-                <td>@context.Travelers</td>
+                <td id="busses">@context.Busses</td>
+                <td id="travelers">@context.Travelers</td>
                 <td>
                     @if (context.TravelLeaders != null && context.TravelLeaders.Any())
                     {
@@ -89,20 +95,50 @@
 }
 
 <script>
+    // Filter list based on input
     function filterList() {
-      let input = document.getElementById('filterInput');
-      let filter = document.getElementById('filterInput').value.toUpperCase();
-      let list = document.getElementsByTagName("table")[0];
-      let content = list.getElementsByTagName('tbody');
+        const input = document.getElementById('filterInput');
+        const filter = document.getElementById('filterInput').value.toLowerCase();
+        const list = document.getElementsByTagName("table")[0];
+        const content = list.getElementsByTagName("tbody")[0].getElementsByTagName("tr");
 
-      for (i = 0; i < content.length; i++) {
-        let item = content[i].getElementsByTagName("td")[0];
-        let textValue = item.textContent || item.innerText;
-        if (textValue.toUpperCase().indexOf(filter) > -1) {
-          content[i].style.display = "";
-        } else {
-          content[i].style.display = "none";
+        for (i = 0; i < content.length; i++) {
+            let item = content[i].getElementsByTagName("td")[0];
+            let textValue = item.textContent || item.innerText;
+            if (textValue.toLowerCase().indexOf(filter) > -1) {
+                content[i].style.display = "";
+            } else {
+                content[i].style.display = "none";
+            }
         }
-      }
+    }
+
+    // Sort list based on input and ascending
+    function sortList() {
+        const sort = document.getElementById("sortInput").value.toLowerCase();
+        const ascending = document.getElementById("ascendingInput").checked;
+        const list = document.getElementsByTagName("table")[0];
+        let sorting = true;
+        let shouldSort = false;
+
+        while (sorting) {
+            sorting = false;
+            let content = list.getElementsByTagName("tbody")[0].getElementsByTagName("tr");
+
+            for (i = 0; i < (content.length - 1); i++) {
+                let item = content[i].querySelector(`#${sort}`).innerHTML.toLowerCase();
+                let nextItem = content[i+1].querySelector(`#${sort}`).innerHTML.toLowerCase();
+                shouldSort = false;
+                console.log(`item: ${item}, next item: ${item}, ascending: ${ascending}`)
+                if ((item > nextItem && ascending == true) || (item < nextItem && ascending == false)) {
+                    shouldSort = true;
+                    break;
+                }
+            }
+            if (shouldSort) {
+                content[i].parentNode.insertBefore(content[i + 1], content[i]);
+                sorting = true;
+            }
+        }
     }
 </script>
