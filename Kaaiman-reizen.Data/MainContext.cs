@@ -65,7 +65,7 @@ public class MainContext : DbContext
             new AvailabilityPeriod { Id = 3, TravelLeaderId = 2, Start = new DateOnly(2025, 1, 1), End = new DateOnly(2025, 12, 31) }
         );
         builder.Entity<Journey>().HasData(
-           new Journey { Id = 1, Name = "Italië", Start = new DateTime(2026, 7, 1), End = new DateTime(2026, 7, 14), Busses = 1, Travelers = 10 }
+           new Journey { Id = 1, Name = "Italië", Start = new DateTime(2026, 7, 1), End = new DateTime(2026, 7, 14), Busses = 1, Travelers = 10, BookingStatus = 2 }
         );
     }
 

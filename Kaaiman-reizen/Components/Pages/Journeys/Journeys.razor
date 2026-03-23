@@ -16,22 +16,39 @@
                 <th>Reis</th>
                 <th>Start datum</th>
                 <th>Eind datum</th>
+                <th>Reisleiders</th>
+                <th>Boekinsstatus</th>
                 <th>Busjes</th>
                 <th>Reizigers</th>
-                <th>Reisleiders</th>
             </HeaderContent>
             <RowTemplate>
                 <td>@context.Name</td>
                 <td>@context.Start</td>
                 <td>@context.End</td>
-                <td>@context.Busses</td>
-                <td>@context.Travelers</td>
                 <td>
-                    @if (context.TravelLeaders != null && context.TravelLeaders.Any())
-                    {
+                    @if (context.TravelLeaders != null && context.TravelLeaders.Any()) {
                         @FormatTravelLeaders(context)
                     }
                 </td>
+                <td>
+                    @if (context.BookingStatus == 1) {
+                        <span class="badge bg-success">Bezig</span>
+                    }
+                    else if (context.BookingStatus == 2)
+                    {
+                        <span class="badge bg-warning">Geweest</span>
+                    }
+                    else if (context.BookingStatus == 3)
+                    {
+                        <span class="badge bg-danger">Geannuleerd</span>
+                    }
+                </td>
+                <td>
+                    <span class="badge @(context.Busses > 0 ? "bg-warning" : "bg-secondary")">
+                        @(context.Busses > 0 ? context.Busses + " busje(s)" : "N.v.t.")
+                    </span>
+                </td>
+                <td>@context.Travelers</td>
             </RowTemplate>
         </Table>
 

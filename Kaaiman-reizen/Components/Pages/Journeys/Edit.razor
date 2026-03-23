@@ -56,17 +56,26 @@
                     <ValidationMessage For="() => _model.Travelers" />
                 </div>
 
-                <h5>Reisleiders</h5>
-                <p>Gebruik CTRL en SHIFT om meerdere reisleiders te selecteren</p>
-                <select multiple class="form-control mb-3" @onchange="OnLeadersChanged">
-                    @foreach (var leader in _leaders)
-                    {
-                        <option value="@leader.Id"
-                                selected="@_selectedLeaderIds.Contains(leader.Id)">
-                            @leader.Name
-                        </option>
-                    }
-                </select>
+                <div class="mb-3">
+                    <label class="form-label">Boekingsstatus</label>
+                    <InputSelect class="form-control" @bind-Value="_model.BookingStatus">
+                        <option value=1>Bezig</option>
+                        <option value=2>Geweest</option>
+                        <option value=3>Geannuleerd</option>
+                    </InputSelect>
+                    <ValidationMessage For="() => _model.BookingStatus" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Reisleiders</label>
+                    <p>Gebruik CTRL en SHIFT om meerdere reisleiders te selecteren</p>
+                    <select multiple class="form-control mb-3" @onchange="OnLeadersChanged">
+                        @foreach (var leader in _leaders)
+                        {
+                            <option value="@leader.Id">@leader.Name</option>
+                        }
+                    </select>
+                </div>
 
                 <div class="d-flex">
                     <button type="submit" class="btn btn-primary">Opslaan</button>

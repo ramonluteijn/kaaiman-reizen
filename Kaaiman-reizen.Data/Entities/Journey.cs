@@ -17,12 +17,15 @@ public class Journey : IValidatableObject
     public DateTime End { get; set; }
 
     [Required(ErrorMessage = "Aantal busjes is verplicht.")]
-    [Range(1, int.MaxValue, ErrorMessage = "Aantal busjes moet groter of gelijk aan 1 zijn.")]
     public int? Busses { get; set; }
 
     [Required(ErrorMessage = "Aantal reizigers is verplicht.")]
     [Range(1, int.MaxValue, ErrorMessage = "Aantal reizigers moet groter of gelijk aan 1 zijn.")]
     public int? Travelers { get; set; }
+
+    [Required(ErrorMessage = "Boekingsstatus is verplicht.")]
+    [Range(1, 3, ErrorMessage = "Boekingsstatus moet 1, 2 of 3 zijn.")]
+    public int? BookingStatus { get; set; }
 
     public List<TravelLeader> TravelLeaders { get; set; } = new();
 
