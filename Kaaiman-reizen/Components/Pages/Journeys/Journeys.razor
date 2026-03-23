@@ -11,6 +11,8 @@
 
 <div class="card">
     <div class="card-body">
+        <input type="text" id="filterInput" onkeyup="filterList()" placeholder="Zoek op land">
+
         <Table TItem="Journey" Items="_journeys" OnDelete="@OnDelete" Path="journeys" CreateText="Nieuwe reis" EditHrefSelector="@GetEditHref">
             <HeaderContent>
                 <th>Land</th>
@@ -85,3 +87,22 @@
         }
     }
 }
+
+<script>
+    function filterList() {
+      let input = document.getElementById('filterInput');
+      let filter = document.getElementById('filterInput').value.toUpperCase();
+      let list = document.getElementsByTagName("table")[0];
+      let content = list.getElementsByTagName('tbody');
+
+      for (i = 0; i < content.length; i++) {
+        let item = content[i].getElementsByTagName("td")[0];
+        let textValue = item.textContent || item.innerText;
+        if (textValue.toUpperCase().indexOf(filter) > -1) {
+          content[i].style.display = "";
+        } else {
+          content[i].style.display = "none";
+        }
+      }
+    }
+</script>
