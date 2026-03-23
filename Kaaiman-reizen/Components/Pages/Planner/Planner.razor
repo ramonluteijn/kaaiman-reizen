@@ -1,14 +1,5 @@
 @page "/planner"
 @rendermode InteractiveServer
-@using Microsoft.Extensions.Hosting
-@using Microsoft.Extensions.Logging
-@using Kaaiman_reizen.Data.Services
-@using Kaaiman_reizen.Extensions
-@using Kaaiman_reizen.Helpers
-@using Kaaiman_reizen.Models.ViewModels
-@inject ITravelLeaderService LeaderService
-@inject ILogger<Planner> Logger
-@inject IHostEnvironment HostEnvironment
 
 <PageTitle>Planner</PageTitle>
 
@@ -16,54 +7,60 @@
     <MudText Typo="Typo.h5">Planner</MudText>
 
     <MudGrid Spacing="2">
-        <MudItem xs="12" md="8">
-            <MudPaper Elevation="1" Class="pa-6 d-flex align-center justify-center" Style="min-height: 420px; background-color: #f3f4f6;">
-                <MudText Typo="Typo.h6" Color="Color.Secondary">here we will place planner view</MudText>
+        <MudItem xs="12" md="10">
+            <MudPaper Elevation="1" Class="pa-4 planner_calendar">
+                <DataLoader TItem="JourneyViewModel" Items="@_journeys" IsLoading="@_loading" Error="@_error" EmptyMessage="Geen reizen gevonden.">
+                    <ChildContent Context="journeys">
+                        <CalendarView Journeys="journeys" OnJourneyDrop="AssignDraggedLeaderToJourney" />
+                    </ChildContent>
+                </DataLoader>
             </MudPaper>
         </MudItem>
 
-        <MudItem xs="12" md="4">
-            <MudPaper Elevation="1" Class="pa-4" Style="min-height: 420px;">
-                <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-2">
+        <MudItem xs="12" md="2">
+            <MudPaper Elevation="1" Class="pa-4 planner__leaders-panel">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-2">
                     <MudText Typo="Typo.h6">Reisleiders</MudText>
                     <MudChip T="int" Size="Size.Small" Variant="Variant.Outlined">@_leaders.Count</MudChip>
                 </MudStack>
 
                 <DataLoader TItem="TravelLeaderViewModel" Items="@_leaders" IsLoading="@_loading" Error="@_error" EmptyMessage="Geen reisleiders gevonden.">
                     <ChildContent Context="leaders">
-                        <TravelLeaderList Leaders="leaders" />
+                        <TravelLeaderList Leaders="leaders" OnLeaderDragStart="HandleLeaderDragStart" />
                     </ChildContent>
                 </DataLoader>
+<MudDivider Class="my-3" />
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-2">
+    <MudText Typo="Typo.h6">Reizen</MudText>
+    <MudChip T="int" Size="Size.Small" Variant="Variant.Outlined">@_journeys.Count</MudChip>
+</MudStack>
+
+<DataLoader TItem="JourneyViewModel"
+            Items="@_journeys"
+            IsLoading="@_loading"
+            Error="@_error"
+            EmptyMessage="Geen reizen gevonden.">
+    <ChildContent Context="journeys">
+        <MudList T="JourneyViewModel" Dense="true">
+            @foreach (var journey in journeys.OrderBy(j => j.Start))
+            {
+                <MudListItem T="JourneyViewModel">
+                    <MudStack Spacing="0">
+                        <MudText Typo="Typo.body2">@journey.Country</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                            @journey.Start.ToString("dd MMM") - @journey.End.ToString("dd MMM")
+                        </MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                            Reizigers: @(journey.Travelers ?? 0)
+                        </MudText>
+                    </MudStack>
+                </MudListItem>
+            }
+        </MudList>
+    </ChildContent>
+</DataLoader>
             </MudPaper>
         </MudItem>
     </MudGrid>
 </MudStack>
-
-@code {
-    private bool _loading = true;
-    private string? _error;
-    private List<TravelLeaderViewModel> _leaders = [];
-
-    protected override async Task OnInitializedAsync()
-    {
-        _loading = true;
-        _error = null;
-
-        try
-        {
-            var items = await LeaderService.GetTravelLeadersAsync();
-            _leaders = items.ToViewModels().ToList();
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Kon reisleiders niet laden (planner)");
-            _error = $"Kon reisleiders niet laden: {LoadErrorFormatter.Format(ex, HostEnvironment)}";
-            _leaders = [];
-        }
-        finally
-        {
-            _loading = false;
-        }
-    }
-}
-

@@ -7,7 +7,7 @@ public static class TravelLeaderExtensions
 {
     public static TravelLeaderViewModel ToViewModel(this TravelLeader leader)
     {
-        var periods = leader.AvailabilityPeriods;
+        var periods = leader.AvailabilityPeriods ?? new List<AvailabilityPeriod>();
         var availability = periods.Count == 0
             ? "-"
             : string.Join("; ", periods
