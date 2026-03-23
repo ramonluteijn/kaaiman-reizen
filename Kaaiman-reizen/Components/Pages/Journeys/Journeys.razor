@@ -11,13 +11,23 @@
 
 <div class="card">
     <div class="card-body">
-        <input type="text" id="filterInput" onkeyup="filterList()" placeholder="Zoek op land">
-        <input type="checkbox" id="ascendingInput" onchange="sortList()">
-        <select name="sortInput" id="sortInput" onchange="sortList()">
-            <option value="country">Land</option>
-            <option value="busses">Busjes</option>
-            <option value="travelers">Reizigers</option>
-        </select>
+        <div class="row">
+            <div class="col-sm-6">
+                <label class="form-label">Filteren</label>
+                <input class="form-control" type="text" id="filterInput" onkeyup="filterList()" placeholder="Zoek op land">
+            </div>
+
+            <div class="col-sm-6">
+                <label class="form-label">Sorteren</label>
+                <select class="form-control" name="sortInput" id="sortInput" onchange="sortList()">
+                    <option value="country">Land</option>
+                    <option value="busses">Busjes</option>
+                    <option value="travelers">Reizigers</option>
+                </select>
+                <label class="form-label">Oplopend</label>
+                <input type="checkbox" id="ascendingInput" onchange="sortList()">
+            </div>
+        </div>
 
         <Table TItem="Journey" Items="_journeys" OnDelete="@OnDelete" Path="journeys" CreateText="Nieuwe reis" EditHrefSelector="@GetEditHref">
             <HeaderContent>
