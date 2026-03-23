@@ -11,6 +11,27 @@
 
 <div class="card">
     <div class="card-body">
+        <div class="row">
+            <div class="col-sm-6">
+                <label class="form-label">Filteren</label>
+                <input class="form-control" type="text" id="filterInput" onkeyup="filterList()" placeholder="Zoek op reisleider">
+            </div>
+
+            <div class="col-sm-6">
+                <label class="form-label">Sorteren</label>
+                <select class="form-control" name="sortInput" id="sortInput" onchange="sortList()">
+                    <option value="name">naam</option>
+                    <option value="amountOfTrips">Reizen ervaring</option>
+                    <option value="minTrips">Min aantal reizen</option>
+                    <option value="maxTrips">Max aantal reizen</option>
+                    <option value="active">Actief</option>
+
+                </select>
+                <label class="form-label">Oplopend</label>
+                <input type="checkbox" id="ascendingInput" onchange="sortList()">
+            </div>
+        </div>
+
         <Table TItem="TravelLeader" Items="_leaders" OnDelete="@OnDelete" Path="travelleaders" CreateText="Nieuwe reisleider" EditHrefSelector="@GetEditHref">
             <HeaderContent>
                 <th>Naam</th>
@@ -22,18 +43,18 @@
                 <th>Actief</th>
             </HeaderContent>
             <RowTemplate>
-                <td>@context.Name</td>
+                <td id="name">@context.Name</td>
                 <td>@context.PhoneNumber</td>
-                <td>@context.AmountOfTrips</td>
-                <td>@context.MinTrips</td>
-                <td>@context.MaxTrips</td>
+                <td id="amountOfTrips">@context.AmountOfTrips</td>
+                <td id="minTrips">@context.MinTrips</td>
+                <td id="maxTrips">@context.MaxTrips</td>
                 <td>
                     @if (context.AvailabilityPeriods != null && context.AvailabilityPeriods.Any())
                     {
                         @FormatAvailability(context)
                     }
                 </td>
-                <td>
+                <td id="active">
                     <span class="badge @(context.IsActive ? "bg-success" : "bg-danger")">
                         @(context.IsActive ? "Ja" : "Nee")
                     </span>
@@ -106,3 +127,6 @@
         StateHasChanged();
     }
 }
+
+<script src="/js/Filter.js"></script>
+<script src="/js/Sort.js"></script>
