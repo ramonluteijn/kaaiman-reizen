@@ -24,7 +24,7 @@ public class JourneyService : IJourneyService
     {
         return await _db.Journey
             .Include(j => j.TravelLeaders)
-            .OrderBy(j => j.Country)
+            .OrderBy(j => j.Name)
             .ToListAsync(cancellationToken);
     }
 

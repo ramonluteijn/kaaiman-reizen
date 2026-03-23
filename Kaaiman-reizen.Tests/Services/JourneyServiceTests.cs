@@ -27,7 +27,7 @@ namespace Kaaiman_reizen.Tests.Services
 
             var journey = new Journey
             {
-                Country = "Test Country",
+                Name = "Test Country",
                 Start = new DateTime(0001, 1, 1),
                 End = new DateTime(0001, 1, 2),
                 Busses = 1,
@@ -37,7 +37,7 @@ namespace Kaaiman_reizen.Tests.Services
 
             var allJourneys = await service.GetJourneysAsync();
             Assert.Single(allJourneys);
-            Assert.Equal("Test Country", allJourneys.First().Country);
+            Assert.Equal("Test Name", allJourneys.First().Name);
         }
 
         [Fact]
@@ -48,7 +48,7 @@ namespace Kaaiman_reizen.Tests.Services
 
             var journey = new Journey
             {
-                Country = "New Country",
+                Name = "New Country",
                 Start = new DateTime(0001, 1, 1),
                 End = new DateTime(0001, 1, 2),
                 Busses = 1,
@@ -57,11 +57,11 @@ namespace Kaaiman_reizen.Tests.Services
             await service.AddJourneyAsync(journey, new List<int>());
 
             var savedJourney = (await service.GetJourneysAsync()).First();
-            savedJourney.Country = "New Country";
+            savedJourney.Name = "New Country";
             await service.UpdateJourneyAsync(savedJourney, new List<int>());
 
             var updatedJounrey = (await service.GetJourneysAsync()).First();
-            Assert.Equal("New Country", updatedJounrey.Country);
+            Assert.Equal("New Country", updatedJounrey.Name);
         }
 
         [Fact]
@@ -72,7 +72,7 @@ namespace Kaaiman_reizen.Tests.Services
 
             var journey = new Journey
             {
-                Country = "Delete Country",
+                Name = "Delete Country",
                 Start = new DateTime(0001, 1, 1),
                 End = new DateTime(0001, 1, 2),
                 Busses = 1,
@@ -95,7 +95,7 @@ namespace Kaaiman_reizen.Tests.Services
 
             var journey = new Journey
             {
-                Country = "Find Country",
+                Name = "Find Country",
                 Start = new DateTime(0001, 1, 1),
                 End = new DateTime(0001, 1, 2),
                 Busses = 1,
@@ -107,7 +107,7 @@ namespace Kaaiman_reizen.Tests.Services
             var foundJourney = await service.GetJourneyByIdAsync(savedJourney.Id);
 
             Assert.NotNull(foundJourney);
-            Assert.Equal("Find Country", foundJourney.Country);
+            Assert.Equal("Find Country", foundJourney.Name);
         }
 
         [Fact]
@@ -115,7 +115,7 @@ namespace Kaaiman_reizen.Tests.Services
         {
             var journey = new Journey
             {
-                Country = "Invalid Country",
+                Name = "Invalid Country",
                 Start = new DateTime(0001, 1, 2),
                 End = new DateTime(0001, 1, 1),
                 Busses = 1,

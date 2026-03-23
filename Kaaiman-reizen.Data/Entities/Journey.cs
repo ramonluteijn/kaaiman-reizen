@@ -7,8 +7,8 @@ public class Journey : IValidatableObject
 {
     public int Id { get; set; }
 
-    [Required(ErrorMessage = "Land is verplicht.")]
-    public string Country { get; set; } = string.Empty;
+    [Required(ErrorMessage = "Reis is verplicht.")]
+    public string Name { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Start datum is verplicht.")]
     public DateTime Start { get; set; }

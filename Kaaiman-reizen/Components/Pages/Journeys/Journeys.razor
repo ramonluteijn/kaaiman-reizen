@@ -13,7 +13,7 @@
     <div class="card-body">
         <Table TItem="Journey" Items="_journeys" OnDelete="@OnDelete" Path="journeys" CreateText="Nieuwe reis" EditHrefSelector="@GetEditHref">
             <HeaderContent>
-                <th>Land</th>
+                <th>Reis</th>
                 <th>Start datum</th>
                 <th>Eind datum</th>
                 <th>Busjes</th>
@@ -21,7 +21,7 @@
                 <th>Reisleiders</th>
             </HeaderContent>
             <RowTemplate>
-                <td>@context.Country</td>
+                <td>@context.Name</td>
                 <td>@context.Start</td>
                 <td>@context.End</td>
                 <td>@context.Busses</td>
@@ -63,7 +63,7 @@
             return;
 
         //TODO: Make a cool custom confirmation dialog
-        var confirm = await JS.InvokeAsync<bool>("confirm", $"Weet je zeker dat je '{journey.Country}' wilt verwijderen?");
+        var confirm = await JS.InvokeAsync<bool>("confirm", $"Weet je zeker dat je '{journey.Name}' wilt verwijderen?");
         if (!confirm)
             return;
 
