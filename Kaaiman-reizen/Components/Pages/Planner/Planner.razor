@@ -1,33 +1,32 @@
 @page "/planner"
-@rendermode InteractiveServer
 
 <PageTitle>Planner</PageTitle>
 
-<MudStack Spacing="2">
-    <MudText Typo="Typo.h5">Planner</MudText>
+<MudDrawerContainer Class="planner-drawer-container">
+    <MudMainContent>
+        <MudStack Spacing="2">
+            <MudText Typo="Typo.h5">Planner</MudText>
 
-    <MudGrid Spacing="2">
-        <MudItem xs="12" md="12">
-            <MudPaper Elevation="1" Class="pa-4 planner_calendar">
-                <DataLoader TItem="JourneyViewModel" Items="@_journeys" IsLoading="@_loading" Error="@_error" EmptyMessage="Geen reizen gevonden.">
-                    <ChildContent Context="journeys">
-                        <CalendarView 
-                            Journeys="journeys" 
-                            OnJourneyDrop="AssignDraggedLeaderToJourney"
-                            OnJourneyClick="SelectJourney"
-                            />
-                    </ChildContent>
-                </DataLoader>
-            </MudPaper>
-        </MudItem>
-    </MudGrid>
-</MudStack>
+            <MudGrid Spacing="2">
+                <MudItem xs="12" md="12">
+                    <MudPaper Elevation="1" Class="pa-4 planner_calendar">
+                        <DataLoader TItem="JourneyViewModel" Items="@_journeys" IsLoading="@_loading" Error="@_error" EmptyMessage="Geen reizen gevonden.">
+                            <ChildContent Context="journeys">
+                                <CalendarView 
+                                    Journeys="journeys" 
+                                    OnJourneyDrop="AssignDraggedLeaderToJourney"
+                                    OnJourneyClick="SelectJourney"
+                                    />
+                            </ChildContent>
+                        </DataLoader>
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        </MudStack>
+    </MudMainContent>
 
-@if (_isDrawerOpen)
-{
-    <div class="custom-drawer-overlay" @onclick="CloseDrawer"></div>
-    <MudPaper Class="custom-drawer d-flex flex-column" Elevation="4">
-        <div class="d-flex flex-column pa-4 border-b mud-border-lines-default" style="@("background-color: var(--mud-palette-background-grey);")">
+    <MudDrawer @bind-Open="@_isDrawerOpen" Anchor="Anchor.End" Elevation="1" Variant="@DrawerVariant.Temporary" Width="420px" Fixed="false">
+        <MudDrawerHeader Class="d-flex flex-column pa-4 border-b mud-border-lines-default">
             <div class="d-flex justify-space-between align-center w-100">
                 <MudText Typo="Typo.h5" Style="font-weight: 600;">Available Leaders</MudText>
                 <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="CloseDrawer" Size="Size.Small" />
@@ -38,9 +37,9 @@
                     Matching for: @_selectedJourney.Country (@_selectedJourney.Start.ToString("dd MMM") - @_selectedJourney.End.ToString("dd MMM"))
                 </MudText>
             }
-        </div>
+        </MudDrawerHeader>
 
-        <div class="pa-4" style="flex: 1; overflow-y: auto;">
+        <div class="planner-drawer-body pa-4">
             <DataLoader TItem="TravelLeaderViewModel" 
                         Items="@GetAvailableLeaders()" 
                         IsLoading="@_loading" 
@@ -95,5 +94,5 @@
                 All listed leaders are verified and available for the requested dates. Assigning a leader will trigger an automated itinerary process.
             </MudText>
         </div>
-    </MudPaper>
-}
+    </MudDrawer>
+</MudDrawerContainer>

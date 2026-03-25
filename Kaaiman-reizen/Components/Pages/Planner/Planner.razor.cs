@@ -58,8 +58,11 @@ public partial class Planner : ComponentBase
 
     private void SelectJourney(JourneyViewModel journey)
     {
+        Console.WriteLine($"Selected journey: {journey.Id}");
         _selectedJourney = journey;
         _isDrawerOpen = true;
+        Console.WriteLine($"Drawer open: {_isDrawerOpen}");
+        InvokeAsync(StateHasChanged);
     }
 
     private void CloseDrawer()

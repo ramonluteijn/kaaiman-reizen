@@ -1,0 +1,8 @@
+.planner-drawer-container {
+    position: relative;
+}
+
+.planner-drawer-body {
+    height: calc(100vh - 200px);
+    overflow-y: auto;
+}
