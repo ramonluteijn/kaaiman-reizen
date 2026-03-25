@@ -21,6 +21,7 @@
       <ProjectReference Include="..\Kaaiman-reizen.Data\Kaaiman-reizen.Data.csproj" />
     </ItemGroup>
     <ItemGroup>
+      <PackageReference Include="Google.OrTools" Version="9.15.6755" />
       <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="9.0.0" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
         <PrivateAssets>all</PrivateAssets>

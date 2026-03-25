@@ -1,75 +1,44 @@
-﻿@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
 
-<div class="d-flex flex-column vh-100">
-    <div class="border-bottom bg-white p-3">
-        <div class="d-flex justify-content-center">
-            <a href="/">
-                <img src="images/Kaaiman-reizen-logo.webp" class="navbar-brand img-fluid" style="max-height: 50px;" alt="Logo Kaaiman-reizen" />
-            </a>
-        </div>
-    </div>
-
-    <div class="nav-scrollable flex-grow-1 d-flex flex-column overflow-auto" onclick="document.querySelector('.navbar-toggler').click()">
-        <nav class="nav flex-column h-100 flex-nowrap">
-            
-            <div class="nav-item">
-                <NavLink class="nav-link d-flex align-items-center rounded-0" href="" Match="NavLinkMatch.All">
-                    <i class="bi bi-house-door-fill nav-icon me-3"></i> Home
-                </NavLink>
-            </div>
-
-            <AuthorizeView>
-                <NotAuthorized>
-                    <div class="nav-item border-top mt-auto">
-
-                        <NavLink class="nav-link d-flex align-items-center rounded-0 py-3" href="Identity/Account/Login">
-
-                            <i class="bi bi-box-arrow-in-right nav-icon me-3"></i> Inloggen
-
-                        </NavLink>
-
-                    </div>
-                </NotAuthorized>
-            </AuthorizeView>
-     
-            <AuthorizeView Roles="Planner">
-                <div class="nav-item">
-                    <NavLink class="nav-link d-flex align-items-center rounded-0" href="travelleaders">
-                        <i class="bi bi-people-fill nav-icon me-3"></i> Reisleiders
-                    </NavLink>
-                </div>
-
-                <div class="nav-item">
-                    <NavLink class="nav-link d-flex align-items-center rounded-0" href="journeys">
-                        <i class="bi bi-airplane-fill nav-icon me-3"></i> Reizen
-                    </NavLink>
-                </div>
-
-                <div class="nav-item">
-                    <NavLink class="nav-link d-flex align-items-center rounded-0" href="planner">
-                        <i class="bi bi-calendar-check nav-icon me-3"></i> Planner
-                    </NavLink>
-                </div>
-            </AuthorizeView>
-            <AuthorizeView>
-                <Authorized>
-                    <div class="border-top bg-light w-100 m-0 mt-auto p-0">
-            
-                        <div class="border-bottom d-flex align-items-center justify-content-center px-3 py-2">
-                            <i class="bi bi-person-circle text-success me-2"></i>
-                            <small class="text-truncate text-muted">@context.User.Identity?.Name</small>
-                        </div>
-
-                        <form action="Identity/Account/Logout" method="post" class="m-0 p-0">
-                            <AntiforgeryToken />
-                            <input type="hidden" name="ReturnUrl" value="" />
-                            <button type="submit" class="nav-link btn btn-link w-100 d-flex align-items-center rounded-0 border-0 px-3 py-3 text-start shadow-none" style="margin: 0 !important;">
-                                <i class="bi bi-box-arrow-left nav-icon me-3"></i> Uitloggen
-                            </button>
-                        </form>
-                    </div>
-                </Authorized>
-            </AuthorizeView>
-        </nav>
-    </div>
+<div class="d-flex justify-content-center py-4 border-b mud-border-lines-default">
+    <a href="/">
+        <img src="images/Kaaiman-reizen-logo.webp" class="img-fluid" style="max-height: 50px;" alt="Logo Kaaiman-reizen" />
+    </a>
 </div>
+
+<MudNavMenu Margin="Margin.Normal">
+    <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
+
+    <AuthorizeView>
+        <NotAuthorized>
+            <MudNavLink Href="Identity/Account/Login" Icon="@Icons.Material.Filled.Login">Inloggen</MudNavLink>
+        </NotAuthorized>
+    </AuthorizeView>
+
+    <AuthorizeView Roles="Planner">
+        <Authorized>
+            <MudNavLink Href="travelleaders" Icon="@Icons.Material.Filled.People">Reisleiders</MudNavLink>
+            <MudNavLink Href="journeys" Icon="@Icons.Material.Filled.AirplanemodeActive">Reizen</MudNavLink>
+            <MudNavLink Href="planner" Icon="@Icons.Material.Filled.CalendarMonth">Planner</MudNavLink>
+        </Authorized>
+    </AuthorizeView>
+
+    <AuthorizeView>
+        <Authorized>
+            <MudDivider Class="my-2" />
+            <div class="px-4 py-3 d-flex align-center">
+                <MudIcon Icon="@Icons.Material.Filled.AccountCircle" Color="Color.Success" Class="mr-3" />
+                <MudText Typo="Typo.body2" Class="text-muted text-truncate">@context.User.Identity?.Name</MudText>
+            </div>
+            
+            <form action="Identity/Account/Logout" method="post" class="mt-1 w-100">
+                <AntiforgeryToken />
+                <input type="hidden" name="ReturnUrl" value="" />
+                <button type="submit" class="w-100 bg-transparent border-0 d-flex align-center px-4 py-3 text-start mud-nav-link" style="cursor: pointer; outline: none; box-shadow: none; color: var(--mud-palette-action-default);">
+                    <MudIcon Icon="@Icons.Material.Filled.Logout" Class="mr-3" />
+                    <MudText Typo="Typo.body2" Class="mud-nav-link-text">Uitloggen</MudText>
+                </button>
+            </form>
+        </Authorized>
+    </AuthorizeView>
+</MudNavMenu>

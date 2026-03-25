@@ -7,60 +7,93 @@
     <MudText Typo="Typo.h5">Planner</MudText>
 
     <MudGrid Spacing="2">
-        <MudItem xs="12" md="10">
+        <MudItem xs="12" md="12">
             <MudPaper Elevation="1" Class="pa-4 planner_calendar">
                 <DataLoader TItem="JourneyViewModel" Items="@_journeys" IsLoading="@_loading" Error="@_error" EmptyMessage="Geen reizen gevonden.">
                     <ChildContent Context="journeys">
-                        <CalendarView Journeys="journeys" OnJourneyDrop="AssignDraggedLeaderToJourney" />
+                        <CalendarView 
+                            Journeys="journeys" 
+                            OnJourneyDrop="AssignDraggedLeaderToJourney"
+                            OnJourneyClick="SelectJourney"
+                            />
                     </ChildContent>
                 </DataLoader>
-            </MudPaper>
-        </MudItem>
-
-        <MudItem xs="12" md="2">
-            <MudPaper Elevation="1" Class="pa-4 planner__leaders-panel">
-                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-2">
-                    <MudText Typo="Typo.h6">Reisleiders</MudText>
-                    <MudChip T="int" Size="Size.Small" Variant="Variant.Outlined">@_leaders.Count</MudChip>
-                </MudStack>
-
-                <DataLoader TItem="TravelLeaderViewModel" Items="@_leaders" IsLoading="@_loading" Error="@_error" EmptyMessage="Geen reisleiders gevonden.">
-                    <ChildContent Context="leaders">
-                        <TravelLeaderList Leaders="leaders" OnLeaderDragStart="HandleLeaderDragStart" />
-                    </ChildContent>
-                </DataLoader>
-<MudDivider Class="my-3" />
-
-<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-2">
-    <MudText Typo="Typo.h6">Reizen</MudText>
-    <MudChip T="int" Size="Size.Small" Variant="Variant.Outlined">@_journeys.Count</MudChip>
-</MudStack>
-
-<DataLoader TItem="JourneyViewModel"
-            Items="@_journeys"
-            IsLoading="@_loading"
-            Error="@_error"
-            EmptyMessage="Geen reizen gevonden.">
-    <ChildContent Context="journeys">
-        <MudList T="JourneyViewModel" Dense="true">
-            @foreach (var journey in journeys.OrderBy(j => j.Start))
-            {
-                <MudListItem T="JourneyViewModel">
-                    <MudStack Spacing="0">
-                        <MudText Typo="Typo.body2">@journey.Country</MudText>
-                        <MudText Typo="Typo.caption" Color="Color.Secondary">
-                            @journey.Start.ToString("dd MMM") - @journey.End.ToString("dd MMM")
-                        </MudText>
-                        <MudText Typo="Typo.caption" Color="Color.Secondary">
-                            Reizigers: @(journey.Travelers ?? 0)
-                        </MudText>
-                    </MudStack>
-                </MudListItem>
-            }
-        </MudList>
-    </ChildContent>
-</DataLoader>
             </MudPaper>
         </MudItem>
     </MudGrid>
 </MudStack>
+
+@if (_isDrawerOpen)
+{
+    <div class="custom-drawer-overlay" @onclick="CloseDrawer"></div>
+    <MudPaper Class="custom-drawer d-flex flex-column" Elevation="4">
+        <div class="d-flex flex-column pa-4 border-b mud-border-lines-default" style="@("background-color: var(--mud-palette-background-grey);")">
+            <div class="d-flex justify-space-between align-center w-100">
+                <MudText Typo="Typo.h5" Style="font-weight: 600;">Available Leaders</MudText>
+                <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="CloseDrawer" Size="Size.Small" />
+            </div>
+            @if (_selectedJourney != null)
+            {
+                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-1">
+                    Matching for: @_selectedJourney.Country (@_selectedJourney.Start.ToString("dd MMM") - @_selectedJourney.End.ToString("dd MMM"))
+                </MudText>
+            }
+        </div>
+
+        <div class="pa-4" style="flex: 1; overflow-y: auto;">
+            <DataLoader TItem="TravelLeaderViewModel" 
+                        Items="@GetAvailableLeaders()" 
+                        IsLoading="@_loading" 
+                        Error="@_error" 
+                        EmptyMessage="No leaders available for this date.">
+                <ChildContent Context="leaders">
+                    <MudStack Spacing="4">
+                        @foreach(var leader in leaders)
+                        {
+                            <MudPaper Elevation="0" Outlined="true" Class="pa-4 pb-3" Style="border-radius: 12px;">
+                                <div class="d-flex align-center mb-3">
+                                    <MudAvatar Color="Color.Primary" Size="Size.Large" Class="mr-4">
+                                        @(string.IsNullOrEmpty(leader.Name) ? "?" : leader.Name.Substring(0, 1))
+                                    </MudAvatar>
+                                    <div>
+                                        <MudText Typo="Typo.h6" Style="font-weight: 600; line-height: 1;">@leader.Name</MudText>
+                                        <MudText Typo="Typo.caption" Style="font-weight: 500; display: flex; align-items: center;" Class="mt-1" Color="Color.Primary">
+                                            <MudIcon Icon="@Icons.Material.Filled.Star" Size="Size.Small" Class="mr-1" />
+                                            @leader.YearsOfExperience Years Exp &bull; @leader.Availability
+                                        </MudText>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex flex-wrap gap-2 mb-4">
+                                    @if (leader.PreferredDestinations != null)
+                                    {
+                                        @foreach(var kwp in leader.PreferredDestinations.Take(3))
+                                        {
+                                            <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Surface" Style="font-weight: 600;">
+                                                @kwp.Key
+                                            </MudChip>
+                                        }
+                                    }
+                                </div>
+
+                                <MudButton Variant="Variant.Filled" 
+                                           Color="Color.Success" 
+                                           FullWidth="true" 
+                                           Style="text-transform: none; font-weight: 600; border-radius: 8px;"
+                                           OnClick="@(() => AssignLeader(leader))">
+                                    Assign to Trip
+                                </MudButton>
+                            </MudPaper>
+                        }
+                    </MudStack>
+                </ChildContent>
+            </DataLoader>
+        </div>
+
+        <div class="pa-4 border-t mud-border-lines-default" style="@("background-color: var(--mud-palette-background-grey);")">
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Style="font-style: italic;">
+                All listed leaders are verified and available for the requested dates. Assigning a leader will trigger an automated itinerary process.
+            </MudText>
+        </div>
+    </MudPaper>
+}

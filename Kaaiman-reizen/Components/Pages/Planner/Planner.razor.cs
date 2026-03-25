@@ -21,6 +21,9 @@ public partial class Planner : ComponentBase
     private List<JourneyViewModel> _journeys = [];
     
     private TravelLeaderViewModel? _draggedLeader;
+    
+    private JourneyViewModel? _selectedJourney;
+    private bool _isDrawerOpen = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -53,6 +56,54 @@ public partial class Planner : ComponentBase
         }
     }
 
+    private void SelectJourney(JourneyViewModel journey)
+    {
+        _selectedJourney = journey;
+        _isDrawerOpen = true;
+    }
+
+    private void CloseDrawer()
+    {
+        _isDrawerOpen = false;
+    }
+
+    private List<TravelLeaderViewModel> GetAvailableLeaders()
+    {
+        if (_selectedJourney == null) return [];
+        
+        var assignedleaderIds = _selectedJourney.TravelLeaders?.Select(l => l.Id).ToList() ?? new List<int>();
+
+        return _leaders.Where(l => !assignedleaderIds.Contains(l.Id)).ToList();
+    } 
+
+    private async Task AssignLeader(TravelLeaderViewModel leader)
+    {
+        if (_selectedJourney == null) return;
+        
+        if (_selectedJourney.TravelLeaders?.Any(l => l.Id == leader.Id) == true) return;
+
+        try
+        {
+            var entity = await JourneyService.GetJourneyByIdAsync(_selectedJourney.Id);
+            if (entity != null)
+            {
+                var currentLeaderIds = entity.TravelLeaders?.Select(l => l.Id).ToList() ?? new List<int>();
+                if (!currentLeaderIds.Contains(leader.Id))
+                {
+                    currentLeaderIds.Add(leader.Id);
+                    await JourneyService.UpdateJourneyAsync(entity, currentLeaderIds);
+
+                    _selectedJourney.TravelLeaders?.Add(leader);
+                    _isDrawerOpen = false; 
+                    StateHasChanged();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Kan reisleider niet aan reis toewijzen");
+        }
+    }
 
 /// <summary>
 /// Handle the start of a leader drag operation.
@@ -68,7 +119,7 @@ public partial class Planner : ComponentBase
         if (_draggedLeader == null) return;
 
         // Check if already assigned
-        if (journey.TravelLeaders.Any(l => l.Id == _draggedLeader.Id))
+        if (journey.TravelLeaders?.Any(l => l.Id == _draggedLeader.Id) == true)
         {
             _draggedLeader = null;
             return;
@@ -81,14 +132,14 @@ public partial class Planner : ComponentBase
             if (entity != null)
             {
                 // Assign new leader
-                var currentLeaderIds = entity.TravelLeaders.Select(l => l.Id).ToList();
+                var currentLeaderIds = entity.TravelLeaders?.Select(l => l.Id).ToList() ?? new List<int>();
                 if (!currentLeaderIds.Contains(_draggedLeader.Id))
                 {
                     currentLeaderIds.Add(_draggedLeader.Id);
                     await JourneyService.UpdateJourneyAsync(entity, currentLeaderIds);
 
                     // Refresh UI state directly
-                    journey.TravelLeaders.Add(_draggedLeader);
+                    journey.TravelLeaders?.Add(_draggedLeader);
                     StateHasChanged();
                 }
             }

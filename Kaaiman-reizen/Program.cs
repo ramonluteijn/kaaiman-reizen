@@ -3,8 +3,8 @@ using Kaaiman_reizen.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Kaaiman_reizen.Data.Identity;
+using Kaaiman_reizen.Services;
 using MudBlazor.Services;
-
 var builder = WebApplication.CreateBuilder(args);
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -22,6 +22,7 @@ if (string.IsNullOrWhiteSpace(connectionString))
 builder.Services.AddMainContext(connectionString);
 builder.Services.AddDataServices();
 builder.Services.AddMudServices();
+builder.Services.AddScoped<IPlannerDraftService, PlannerDraftService>();
 
 // Add services to the container.
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
