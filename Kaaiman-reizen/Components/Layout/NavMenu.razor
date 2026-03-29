@@ -1,29 +1,75 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">Kaaiman-reizen</a>
+﻿@using Microsoft.AspNetCore.Components.Authorization
+
+<div class="d-flex flex-column vh-100">
+    <div class="border-bottom bg-white p-3">
+        <div class="d-flex justify-content-center">
+            <a href="/">
+                <img src="images/Kaaiman-reizen-logo.webp" class="navbar-brand img-fluid" style="max-height: 50px;" alt="Logo Kaaiman-reizen" />
+            </a>
+        </div>
     </div>
-</div>
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler"/>
+    <div class="nav-scrollable flex-grow-1 d-flex flex-column overflow-auto" onclick="document.querySelector('.navbar-toggler').click()">
+        <nav class="nav flex-column h-100 flex-nowrap">
+            
+            <div class="nav-item">
+                <NavLink class="nav-link d-flex align-items-center rounded-0" href="" Match="NavLinkMatch.All">
+                    <i class="bi bi-house-door-fill nav-icon me-3"></i> Home
+                </NavLink>
+            </div>
 
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="nav flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
+            <AuthorizeView>
+                <NotAuthorized>
+                    <div class="nav-item border-top mt-auto">
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="travelleaders">
-                <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> Reisleiders
-            </NavLink>
-        </div>
+                        <NavLink class="nav-link d-flex align-items-center rounded-0 py-3" href="Identity/Account/Login">
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="journeys">
-                <span class="bi bi-airplane-fill-nav-menu" aria-hidden="true"></span> Reizen
-            </NavLink>
-        </div>
-    </nav>
+                            <i class="bi bi-box-arrow-in-right nav-icon me-3"></i> Inloggen
+
+                        </NavLink>
+
+                    </div>
+                </NotAuthorized>
+            </AuthorizeView>
+     
+            <AuthorizeView Roles="Planner">
+                <div class="nav-item">
+                    <NavLink class="nav-link d-flex align-items-center rounded-0" href="travelleaders">
+                        <i class="bi bi-people-fill nav-icon me-3"></i> Reisleiders
+                    </NavLink>
+                </div>
+
+                <div class="nav-item">
+                    <NavLink class="nav-link d-flex align-items-center rounded-0" href="journeys">
+                        <i class="bi bi-airplane-fill nav-icon me-3"></i> Reizen
+                    </NavLink>
+                </div>
+
+                <div class="nav-item">
+                    <NavLink class="nav-link d-flex align-items-center rounded-0" href="planner">
+                        <i class="bi bi-calendar-check nav-icon me-3"></i> Planner
+                    </NavLink>
+                </div>
+            </AuthorizeView>
+            <AuthorizeView>
+                <Authorized>
+                    <div class="border-top bg-light w-100 m-0 mt-auto p-0">
+            
+                        <div class="border-bottom d-flex align-items-center justify-content-center px-3 py-2">
+                            <i class="bi bi-person-circle text-success me-2"></i>
+                            <small class="text-truncate text-muted">@context.User.Identity?.Name</small>
+                        </div>
+
+                        <form action="Identity/Account/Logout" method="post" class="m-0 p-0">
+                            <AntiforgeryToken />
+                            <input type="hidden" name="ReturnUrl" value="" />
+                            <button type="submit" class="nav-link btn btn-link w-100 d-flex align-items-center rounded-0 border-0 px-3 py-3 text-start shadow-none" style="margin: 0 !important;">
+                                <i class="bi bi-box-arrow-left nav-icon me-3"></i> Uitloggen
+                            </button>
+                        </form>
+                    </div>
+                </Authorized>
+            </AuthorizeView>
+        </nav>
+    </div>
 </div>
