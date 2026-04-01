@@ -1,8 +1,8 @@
 @page "/travelleaders"
 @rendermode InteractiveServer
+@using Kaaiman_reizen.Models.ViewModels
 @using Kaaiman_reizen.Data.Services
 @using Kaaiman_reizen.Data.Entities
-@inject ITravelLeaderService LeaderService
 @inject IJSRuntime JS
 
 <PageTitle>Reisleiders</PageTitle>
@@ -32,7 +32,7 @@
             </div>
         </div>
 
-        <Table TItem="TravelLeader" Items="_leaders" OnDelete="@OnDelete" Path="travelleaders" CreateText="Nieuwe reisleider" EditHrefSelector="@GetEditHref">
+        <Table TItem="TravelLeaderViewModel" Items="_leaders" OnDelete="@OnDelete" Path="travelleaders" CreateText="Nieuwe reisleider" EditHrefSelector="@GetEditHref">
             <HeaderContent>
                 <th>Naam</th>
                 <th>Telefoon</th>
@@ -49,13 +49,10 @@
                 <td id="minTrips">@context.MinTrips</td>
                 <td id="maxTrips">@context.MaxTrips</td>
                 <td>
-                    @if (context.AvailabilityPeriods != null && context.AvailabilityPeriods.Any())
-                    {
-                        @FormatAvailability(context)
-                    }
+                    @context.Availability
                 </td>
-                <td id="active">
-                    <span class="badge @(context.IsActive ? "bg-success" : "bg-danger")">
+                <td>
+                    <span class="badge @(context.IsActive ? "bg-success" : "bg-danger")" style="cursor: pointer;" @onclick="@(() => ToggleActive(context))">
                         @(context.IsActive ? "Ja" : "Nee")
                     </span>
                 </td>

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
@@ -7,7 +7,8 @@
         <RootNamespace>Kaaiman_reizen</RootNamespace>
         <AssemblyName>$(AssemblyName.Replace(' ', '_'))</AssemblyName>
         <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
-    </PropertyGroup>
+      <UserSecretsId>31dc3bed-1e8d-4dbb-b002-b1beada72abb</UserSecretsId>
+  </PropertyGroup>
 
     <!-- Add any DLLs placed in the lib folder to the build and publish output -->
     <ItemGroup>
@@ -20,13 +21,18 @@
       <ProjectReference Include="..\Kaaiman-reizen.Data\Kaaiman-reizen.Data.csproj" />
     </ItemGroup>
     <ItemGroup>
+      <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="9.0.0" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
+      <PackageReference Include="MudBlazor" Version="9.2.0" />
     </ItemGroup>
     <ItemGroup>
       <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
+    </ItemGroup>
+    <ItemGroup>
+      <Folder Include="wwwroot\images\" />
     </ItemGroup>
 
 </Project>

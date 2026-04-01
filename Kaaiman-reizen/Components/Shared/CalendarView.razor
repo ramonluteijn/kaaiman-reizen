@@ -1,0 +1,196 @@
+@using Kaaiman_reizen.Data.Entities
+@using Kaaiman_reizen.Models.ViewModels
+
+<MudPaper Elevation="1" Class="pa-4">
+    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
+        <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft" OnClick="PrevMonth" />
+        <MudText Typo="Typo.h5">@_currentDate.ToString("MMMM yyyy")</MudText>
+        <MudIconButton Icon="@Icons.Material.Filled.ChevronRight" OnClick="NextMonth" />
+    </MudStack>
+
+    <div class="calendar-grid">
+        <div class="calendar-header">Ma</div>
+        <div class="calendar-header">Di</div>
+        <div class="calendar-header">Wo</div>
+        <div class="calendar-header">Do</div>
+        <div class="calendar-header">Vr</div>
+        <div class="calendar-header">Za</div>
+        <div class="calendar-header">Zo</div>
+
+        @foreach (var day in _days)
+        {
+            var isCurrentMonth = day.Date.Month == _currentDate.Month;
+            var isToday = day.Date == DateTime.Today;
+            
+            <div class="calendar-day @(isCurrentMonth ? "" : "other-month") @(isToday ? "today-highlight" : "")">
+                 
+                <div class="day-number">@day.Date.Day</div>
+
+                @foreach (var journey in GetJourneysForDay(day.Date))
+                {
+                    <div class="journey-block mud-theme-primary" 
+                         @onclick="() => OnJourneyClick.InvokeAsync(journey)"
+                         ondragover="event.preventDefault();" 
+                         @ondrop="() => HandleDropOnJourney(journey)"
+                         @ondrop:stopPropagation="true"
+                         @ondragenter="() => HandleDragEnter(journey, day)"
+                         @ondragleave="() => HandleDragLeave(journey, day)"
+                         style="@(IsDropTarget(journey, day) ? "opacity: 0.7; border: 2px dashed #fff;" : "")">
+                         
+                        <div class="text-truncate fw-bold">@journey.Country</div>
+                        <div style="font-size: 0.7rem;">@journey.Start.ToString("dd MMM") - @journey.End.ToString("dd MMM")</div>
+                        
+                        @if (journey.TravelLeaders != null && journey.TravelLeaders.Any())
+                        {
+                            <div class="journey-leaders mt-1">
+                                @foreach (var leader in journey.TravelLeaders)
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Secondary" Class="mr-1 mb-1 px-1">@leader.Name</MudChip>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</MudPaper>
+
+<style>
+    .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 4px;
+    }
+    .calendar-header {
+        text-align: center;
+        font-weight: bold;
+        padding: 8px;
+        background-color: #f3f4f6;
+    }
+    .calendar-day {
+        min-height: 120px;
+        border: 1px solid #e0e0e0;
+        padding: 4px;
+        display: flex;
+        flex-direction: column;
+        background-color: white;
+    }
+    .other-month {
+        background-color: #fafafa;
+        color: #bdbdbd;
+    }
+    .today-highlight {
+        background-color: #f0f8ff;
+        border: 2px solid #1976d2;
+    }
+    .day-number {
+        text-align: right;
+        font-size: 0.85em;
+        margin-bottom: 4px;
+    }
+    .journey-block {
+        border-radius: 4px;
+        padding: 6px;
+        margin-bottom: 4px;
+        font-size: 0.8rem;
+        color: white;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .journey-block:hover {
+        filter: brightness(1.1);
+    }
+    .journey-leaders {
+        display: flex;
+        flex-wrap: wrap;
+    }
+</style>
+
+@code {
+    [Parameter] public IReadOnlyList<JourneyViewModel> Journeys { get; set; } = [];
+    [Parameter] public EventCallback<JourneyViewModel> OnJourneyDrop { get; set; }
+    [Parameter] public EventCallback<JourneyViewModel> OnJourneyClick { get; set; }
+
+    private DateTime _currentDate = DateTime.Today;
+    private List<CalendarDay> _days = new();
+    
+    // For visual drop feedback
+    private JourneyViewModel? _dragTargetJourney;
+    private CalendarDay? _dragTargetDay;
+
+    protected override void OnInitialized()
+    {
+        GenerateCalendar();
+    }
+
+    private void PrevMonth()
+    {
+        _currentDate = _currentDate.AddMonths(-1);
+        GenerateCalendar();
+    }
+
+    private void NextMonth()
+    {
+        _currentDate = _currentDate.AddMonths(1);
+        GenerateCalendar();
+    }
+
+    private void GenerateCalendar()
+    {
+        _days.Clear();
+        var firstDayOfMonth = new DateTime(_currentDate.Year, _currentDate.Month, 1);
+        
+        // Start from Monday
+        var startDay = firstDayOfMonth;
+        while (startDay.DayOfWeek != DayOfWeek.Monday)
+        {
+            startDay = startDay.AddDays(-1);
+        }
+
+        for (int i = 0; i < 42; i++) // 6 weeks
+        {
+            _days.Add(new CalendarDay { Date = startDay.AddDays(i) });
+        }
+    }
+
+    private IEnumerable<JourneyViewModel> GetJourneysForDay(DateTime date)
+    {
+        return Journeys.Where(j => j.Start.Date <= date.Date && j.End.Date >= date.Date);
+    }
+
+    private void HandleDragEnter(JourneyViewModel journey, CalendarDay day)
+    {
+        _dragTargetJourney = journey;
+        _dragTargetDay = day;
+    }
+
+    private void HandleDragLeave(JourneyViewModel journey, CalendarDay day)
+    {
+        if (_dragTargetJourney == journey && _dragTargetDay == day)
+        {
+            _dragTargetJourney = null;
+            _dragTargetDay = null;
+        }
+    }
+
+    private bool IsDropTarget(JourneyViewModel journey, CalendarDay day)
+    {
+        return _dragTargetJourney == journey && _dragTargetDay == day;
+    }
+
+    private async Task HandleDropOnJourney(JourneyViewModel journey)
+    {
+        _dragTargetJourney = null;
+        _dragTargetDay = null;
+        if (OnJourneyDrop.HasDelegate)
+        {
+            await OnJourneyDrop.InvokeAsync(journey);
+        }
+    }
+
+    private class CalendarDay
+    {
+        public DateTime Date { get; set; }
+    }
+}

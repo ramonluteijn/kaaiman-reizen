@@ -58,3 +58,35 @@ h1:focus {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+
+.nav-link,
+.nav-link.active,
+.nav-item > .active {
+    border-radius: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+}
+
+.nav-item {
+    display: flex;
+    width: 100%;
+    padding: 0 !important;
+}
+
+.nav-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    width: 2rem;
+    margin-right: 0.75rem;
+    line-height: 1;
+    vertical-align: middle;
+}
+
+.nav-item form button.nav-link {
+    height: 100%;
+    width: 100%;
+    background: none;
+    color: inherit;
+}

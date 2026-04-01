@@ -1,10 +1,14 @@
-@using Kaaiman_reizen.Data.Enums
 @typeparam TItem
 
 @if (CreateText != null && CreatePath != null)
 {
     <div class="d-flex justify-content-end mb-3">
-        <Button TItem="object" Href="@CreatePath" Type="@ButtonType.Success">@CreateText</Button>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Success"
+                   Href="@CreatePath"
+                   StartIcon="@Icons.Material.Filled.Add">
+            @CreateText
+        </MudButton>
     </div>
 }
 <table class="table">
@@ -46,19 +50,23 @@
                             @if (EditHrefSelector != null)
                             {
                                 <span class="me-2">
-                                    <Button TItem="TItem" Item="item" Type="@ButtonType.Secondary" Href="@EditHrefSelector(item)">
-                                        <i class="bi bi-pencil" aria-hidden="true"></i>
-                                        <span class="visually-hidden">Bewerk</span>
-                                    </Button>
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                   Variant="Variant.Filled"
+                                                   Color="Color.Primary"
+                                                   Size="Size.Small"
+                                                   Href="@EditHrefSelector(item)"
+                                                   Title="Bewerk" />
                                 </span>
                             }
                             @if (OnDelete.HasDelegate)
                             {
                                 <span>
-                                    <Button TItem="TItem" Item="item" Type="@ButtonType.Danger" OnClick="@OnDelete">
-                                        <i class="bi bi-trash" aria-hidden="true"></i>
-                                        <span class="visually-hidden">Verwijderen</span>
-                                    </Button>
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                   Variant="Variant.Filled"
+                                                   Color="Color.Error"
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => OnDelete.InvokeAsync(item))"
+                                                   Title="Verwijder" />
                                 </span>
                             }
                         </td>

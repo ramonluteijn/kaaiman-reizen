@@ -1,10 +1,12 @@
 using Kaaiman_reizen.Data.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Kaaiman_reizen.Data.Identity;
 using System.Collections;
 
 namespace Kaaiman_reizen.Data;
 
-public class MainContext : DbContext
+public class MainContext : IdentityDbContext<ApplicationUser>
 {
     public MainContext(DbContextOptions<MainContext> options) : base(options)
     {
@@ -65,7 +67,11 @@ public class MainContext : DbContext
             new AvailabilityPeriod { Id = 3, TravelLeaderId = 2, Start = new DateOnly(2025, 1, 1), End = new DateOnly(2025, 12, 31) }
         );
         builder.Entity<Journey>().HasData(
-           new Journey { Id = 1, Country = "Italië", Start = new DateTime(2026, 7, 1), End = new DateTime(2026, 7, 14), Busses = 1, Travelers = 10 }
+            new Journey { Id = 1, Country = "Italië", Start = new DateTime(2026, 7, 1), End = new DateTime(2026, 7, 14), Busses = 1, Travelers = 10 },
+            new Journey { Id = 2, Country = "Spanje", Start = new DateTime(2026, 3, 10), End = new DateTime(2026, 3, 20), Busses = 2, Travelers = 15 },
+            new Journey { Id = 3, Country = "Oostenrijk", Start = new DateTime(2026, 3, 25), End = new DateTime(2026, 4, 3), Busses = 1, Travelers = 8 },
+            new Journey { Id = 4, Country = "Griekenland", Start = new DateTime(2026, 4, 5), End = new DateTime(2026, 4, 15), Busses = 3, Travelers = 25 },
+            new Journey { Id = 5, Country = "Kroatië", Start = new DateTime(2026, 4, 28), End = new DateTime(2026, 5, 10), Busses = 2, Travelers = 12 }
         );
     }
 
