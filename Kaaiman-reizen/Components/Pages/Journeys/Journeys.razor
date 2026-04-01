@@ -11,6 +11,24 @@
 
 <div class="card">
     <div class="card-body">
+        <div class="row">
+            <div class="col-sm-6">
+                <label class="form-label">Filteren</label>
+                <input class="form-control" type="text" id="filterInput" onkeyup="filterList()" placeholder="Zoek op land">
+            </div>
+
+            <div class="col-sm-6">
+                <label class="form-label">Sorteren</label>
+                <select class="form-control" name="sortInput" id="sortInput" onchange="sortList()">
+                    <option value="country">Land</option>
+                    <option value="busses">Busjes</option>
+                    <option value="travelers">Reizigers</option>
+                </select>
+                <label class="form-label">Oplopend</label>
+                <input type="checkbox" id="ascendingInput" onchange="sortList()">
+            </div>
+        </div>
+
         <Table TItem="Journey" Items="_journeys" OnDelete="@OnDelete" Path="journeys" CreateText="Nieuwe reis" EditHrefSelector="@GetEditHref">
             <HeaderContent>
                 <th>Land</th>
@@ -21,11 +39,11 @@
                 <th>Reisleiders</th>
             </HeaderContent>
             <RowTemplate>
-                <td>@context.Country</td>
+                <td id="country">@context.Country</td>
                 <td>@context.Start</td>
                 <td>@context.End</td>
-                <td>@context.Busses</td>
-                <td>@context.Travelers</td>
+                <td id="busses">@context.Busses</td>
+                <td id="travelers">@context.Travelers</td>
                 <td>
                     @if (context.TravelLeaders != null && context.TravelLeaders.Any())
                     {
@@ -85,3 +103,6 @@
         }
     }
 }
+
+<script src="/js/Filter.js"></script>
+<script src="/js/Sort.js"></script>

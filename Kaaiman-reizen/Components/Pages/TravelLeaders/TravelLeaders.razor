@@ -11,6 +11,27 @@
 
 <div class="card">
     <div class="card-body">
+        <div class="row">
+            <div class="col-sm-6">
+                <label class="form-label">Filteren</label>
+                <input class="form-control" type="text" id="filterInput" onkeyup="filterList()" placeholder="Zoek op reisleider">
+            </div>
+
+            <div class="col-sm-6">
+                <label class="form-label">Sorteren</label>
+                <select class="form-control" name="sortInput" id="sortInput" onchange="sortList()">
+                    <option value="name">naam</option>
+                    <option value="amountOfTrips">Reizen ervaring</option>
+                    <option value="minTrips">Min aantal reizen</option>
+                    <option value="maxTrips">Max aantal reizen</option>
+                    <option value="active">Actief</option>
+
+                </select>
+                <label class="form-label">Oplopend</label>
+                <input type="checkbox" id="ascendingInput" onchange="sortList()">
+            </div>
+        </div>
+
         <Table TItem="TravelLeaderViewModel" Items="_leaders" OnDelete="@OnDelete" Path="travelleaders" CreateText="Nieuwe reisleider" EditHrefSelector="@GetEditHref">
             <HeaderContent>
                 <th>Naam</th>
@@ -22,11 +43,11 @@
                 <th>Actief</th>
             </HeaderContent>
             <RowTemplate>
-                <td>@context.Name</td>
+                <td id="name">@context.Name</td>
                 <td>@context.PhoneNumber</td>
-                <td>@context.AmountOfTrips</td>
-                <td>@context.MinTrips</td>
-                <td>@context.MaxTrips</td>
+                <td id="amountOfTrips">@context.AmountOfTrips</td>
+                <td id="minTrips">@context.MinTrips</td>
+                <td id="maxTrips">@context.MaxTrips</td>
                 <td>
                     @context.Availability
                 </td>
@@ -45,3 +66,64 @@
     </div>
 </div>
 
+@code {
+    private List<TravelLeader> _leaders = new();
+    
+    private static string GetEditHref(TravelLeader leader)
+    {
+        return $"/travelleaders/edit/{leader.Id}";
+    }
+
+    private string FormatAvailability(TravelLeader leader)
+    {
+        var periods = leader.AvailabilityPeriods ?? new List<AvailabilityPeriod>();
+        return string.Join("; ", periods.OrderBy(p => p.Start)
+            .Select(p => $"{p.Start:dd MMM} – {p.End:dd MMM}"));
+    }
+
+    private async Task OnDelete(TravelLeader? leader)
+    {
+        if (leader == null)
+            return;
+
+        //TODO: Make a cool custom confirmation dialog
+        var confirm = await JS.InvokeAsync<bool>("confirm", $"Weet je zeker dat je '{leader.Name}' wilt verwijderen?");
+        if (!confirm)
+            return;
+
+        await LeaderService.DeleteTravelLeaderAsync(leader.Id);
+        _leaders.RemoveAll(l => l.Id == leader.Id);
+        StateHasChanged();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var items = await LeaderService.GetTravelLeadersAsync();
+            _leaders = items.ToList();
+        }
+        catch
+        {
+            _leaders = new List<TravelLeader>();
+        }
+    }
+
+    private async Task ToggleActive(TravelLeader? leader)
+    {
+        if (leader == null)
+            return;
+
+        leader.IsActive = !leader.IsActive;
+        await LeaderService.UpdateTravelLeaderAsync(leader);
+
+        var idx = _leaders.FindIndex(l => l.Id == leader.Id);
+        if (idx >= 0)
+            _leaders[idx] = leader;
+
+        StateHasChanged();
+    }
+}
+
+<script src="/js/Filter.js"></script>
+<script src="/js/Sort.js"></script>
