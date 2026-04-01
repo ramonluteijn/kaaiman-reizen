@@ -13,3 +13,28 @@
 .card {
   border: none;
 }
+
+.custom-pagination .page-link {
+    color: #000000;
+}
+
+    .custom-pagination .page-link:hover {
+        background-color: #00C08A;
+        border-color: #00C08A;
+        color: white;
+    }
+
+.custom-pagination .page-item.active .page-link {
+    background-color: #00C08A;
+    border-color: #00C08A;
+    color: white;
+}
+
+.custom-pagination .page-item.disabled .page-link {
+    color: #6c757d;
+}
+
+.custom-select:focus {
+    border-color: #00C08A;
+    box-shadow: 0 0 0 0.25rem rgba(0, 192, 138, 0.25);
+}
