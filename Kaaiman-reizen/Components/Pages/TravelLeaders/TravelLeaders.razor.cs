@@ -56,9 +56,8 @@ public partial class TravelLeaders
         ApplySorting(
             _leaders.Where(l =>
                 string.IsNullOrWhiteSpace(_searchTerm) ||
-                l.Name.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                l.PhoneNumber.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase)
-        )
+                l.Name.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase)
+            )
     );
 
     private IEnumerable<TravelLeaderViewModel> ApplySorting(IEnumerable<TravelLeaderViewModel> query)

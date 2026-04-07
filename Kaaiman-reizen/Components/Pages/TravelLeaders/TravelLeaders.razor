@@ -39,15 +39,13 @@
                 </th>
             </HeaderContent>
             <RowTemplate>
-                <td id="name">@context.Name</td>
+                <td>@context.Name</td>
                 <td>@context.PhoneNumber</td>
-                <td id="amountOfTrips">@context.AmountOfTrips</td>
-                <td id="minTrips">@context.MinTrips</td>
-                <td id="maxTrips">@context.MaxTrips</td>
+                <td>@context.AmountOfTrips</td>
+                <td>@context.MinTrips</td>
+                <td>@context.MaxTrips</td>
+                <td>@context.Availability</td>
                 <td>
-                    @context.Availability
-                </td>
-                <td id="active">
                     <span class="badge @(context.IsActive ? "bg-success" : "bg-danger")" style="cursor: pointer;" @onclick="@(() => ToggleActive(context))">
                         @(context.IsActive ? "Ja" : "Nee")
                     </span>
