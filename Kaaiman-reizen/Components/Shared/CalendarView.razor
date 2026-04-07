@@ -20,7 +20,7 @@
         @foreach (var day in _days)
         {
             var isCurrentMonth = day.Date.Month == _currentDate.Month;
-            var isToday = day.Date == DateTime.Today;
+            var isToday = day.Date == DateOnly.FromDateTime(DateTime.Today);
             
             <div class="calendar-day @(isCurrentMonth ? "" : "other-month") @(isToday ? "today-highlight" : "")">
                  
@@ -139,24 +139,20 @@
     private void GenerateCalendar()
     {
         _days.Clear();
-        var firstDayOfMonth = new DateTime(_currentDate.Year, _currentDate.Month, 1);
-        
+        var firstDayOfMonth = new DateOnly(_currentDate.Year, _currentDate.Month, 1);
+
         // Start from Monday
         var startDay = firstDayOfMonth;
         while (startDay.DayOfWeek != DayOfWeek.Monday)
-        {
             startDay = startDay.AddDays(-1);
-        }
 
         for (int i = 0; i < 42; i++) // 6 weeks
-        {
             _days.Add(new CalendarDay { Date = startDay.AddDays(i) });
-        }
     }
 
-    private IEnumerable<JourneyViewModel> GetJourneysForDay(DateTime date)
+    private IEnumerable<JourneyViewModel> GetJourneysForDay(DateOnly date)
     {
-        return Journeys.Where(j => j.Start.Date <= date.Date && j.End.Date >= date.Date);
+        return Journeys.Where(j => j.Start <= date && j.End >= date);
     }
 
     private void HandleDragEnter(JourneyViewModel journey, CalendarDay day)
@@ -191,6 +187,6 @@
 
     private class CalendarDay
     {
-        public DateTime Date { get; set; }
+        public DateOnly Date { get; set; }
     }
 }

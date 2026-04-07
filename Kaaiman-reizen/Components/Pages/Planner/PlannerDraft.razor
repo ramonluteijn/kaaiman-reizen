@@ -1,0 +1,442 @@
+@page "/planner/draft"
+@rendermode InteractiveServer
+@inject IPlannerDraftService DraftService
+
+<PageTitle>Draft Planning</PageTitle>
+
+<MudStack Spacing="4" Class="pa-4">
+    <MudText Typo="Typo.h5">Planner Draft Dashboard</MudText>
+
+    @if (_loading)
+    {
+        <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+    }
+    else if (_request != null)
+    {
+        <!-- Status header -->
+        <MudPaper Elevation="1" Class="pa-4 mb-2"
+                  Style="background-color: var(--mud-palette-background-grey);">
+            <MudGrid>
+                <MudItem xs="12" sm="6" Class="d-flex align-center">
+                    <MudIcon Icon="@Icons.Material.Filled.EventAvailable"
+                             Class="mr-3" Color="Color.Primary" Size="Size.Large" />
+                    <div>
+                        <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Status Planning</MudText>
+                        <MudChip T="string" Color="Color.Warning" Size="Size.Small"
+                                 Variant="Variant.Filled">Concept</MudChip>
+                    </div>
+                </MudItem>
+                <MudItem xs="12" sm="6" Class="d-flex align-center justify-end">
+                    @{
+                        var completed = _request.Leaders.Count(l => l.PreferredDestinations.Any());
+                        var total = _request.Leaders.Count;
+                        var progressColor = completed == total ? Color.Success : Color.Warning;
+                    }
+                    <div class="text-right mr-3">
+                        <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Reisleiders met voorkeur</MudText>
+                        <MudText Typo="Typo.body1"><b>@completed / @total</b></MudText>
+                    </div>
+                    <MudProgressCircular Value="@((double)completed / total * 100)"
+                                         Color="@progressColor" Size="Size.Medium" />
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+
+        <!-- Pre-generation insights -->
+        <MudText Typo="Typo.h6" Class="mt-4 mb-1">Pre-generatie inzichten</MudText>
+        <MudGrid Class="mb-4">
+            <MudItem xs="12" md="4">
+                <MudCard Elevation="2" Style="border-top: 4px solid var(--mud-palette-success); height: 100%;">
+                    <MudCardHeader>
+                        <CardHeaderContent><MudText Typo="Typo.h6">Top 3 Populair</MudText></CardHeaderContent>
+                        <CardHeaderActions><MudIcon Icon="@Icons.Material.Filled.TrendingUp" Color="Color.Success" /></CardHeaderActions>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudList T="string" Dense="true">
+                            @foreach (var item in _topPopular)
+                            {
+                                <MudListItem T="string">
+                                    <div class="d-flex justify-space-between align-center w-100">
+                                        <MudText><b>@item.Country</b></MudText>
+                                        <MudChip T="string" Color="Color.Success" Size="Size.Small">@item.Count geïnteresseerd</MudChip>
+                                    </div>
+                                </MudListItem>
+                            }
+                        </MudList>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+
+            <MudItem xs="12" md="4">
+                <MudCard Elevation="2" Style="border-top: 4px solid var(--mud-palette-error); height: 100%;">
+                    <MudCardHeader>
+                        <CardHeaderContent><MudText Typo="Typo.h6">Minst Populair</MudText></CardHeaderContent>
+                        <CardHeaderActions><MudIcon Icon="@Icons.Material.Filled.TrendingDown" Color="Color.Error" /></CardHeaderActions>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudList T="string" Dense="true">
+                            @foreach (var item in _leastPopular)
+                            {
+                                <MudListItem T="string">
+                                    <div class="d-flex justify-space-between align-center w-100">
+                                        <MudText><b>@item.Country</b></MudText>
+                                        <MudChip T="string" Color="Color.Error" Size="Size.Small">@item.Count geïnteresseerd</MudChip>
+                                    </div>
+                                </MudListItem>
+                            }
+                        </MudList>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+
+            <MudItem xs="12" md="4">
+                <MudCard Elevation="2" Style="border-top: 4px solid var(--mud-palette-info); height: 100%;">
+                    <MudCardHeader>
+                        <CardHeaderContent><MudText Typo="Typo.h6">Flexibele Leiders</MudText></CardHeaderContent>
+                        <CardHeaderActions><MudIcon Icon="@Icons.Material.Filled.People" Color="Color.Info" /></CardHeaderActions>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudList T="string" Dense="true">
+                            @foreach (var leader in _multiInterestLeaders.Take(4))
+                            {
+                                <MudListItem T="string">
+                                    <MudStack Spacing="1">
+                                        <MudText Typo="Typo.body1"><b>@leader.Name</b></MudText>
+                                        <div class="d-flex flex-wrap gap-1">
+                                            @foreach (var pref in leader.PreferredDestinations.OrderBy(p => p.Value))
+                                            {
+                                                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">
+                                                    @pref.Key (#@pref.Value)
+                                                </MudChip>
+                                            }
+                                        </div>
+                                    </MudStack>
+                                </MudListItem>
+                            }
+                        </MudList>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        </MudGrid>
+
+        <!-- Generate button -->
+        <div>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                       OnClick="GenerateDraftAsync" Disabled="@_isGenerating">
+                @if (_isGenerating)
+                {
+                    <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                    <MudText Class="ms-2">Bezig met genereren...</MudText>
+                }
+                else
+                {
+                    <MudText>Genereer Draft Planning</MudText>
+                }
+            </MudButton>
+        </div>
+
+        @if (_isGenerating)
+        {
+            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
+                OR-Tools optimaliseert de planning...
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mt-2" />
+            </MudAlert>
+        }
+        else if (_result != null)
+        {
+            if (_result.IsSuccess)
+            {
+                var totalMatches = _result.JourneyAssignments.Count;
+                var leaderRows = BuildLeaderRows();
+                var inPlanning = leaderRows.Where(r => r.AssignedJourneys.Count > 0).ToList();
+                var notInPlanning = leaderRows.Where(r => r.AssignedJourneys.Count == 0).ToList();
+
+                <MudAlert Severity="Severity.Success" Variant="Variant.Filled" Class="mb-4">
+                    Planning gegenereerd — @totalMatches toewijzingen gevonden.
+                </MudAlert>
+
+                <!-- Happiness score KPIs -->
+                <MudText Typo="Typo.h6" Class="mb-2 mt-2">Tevredenheidsscore</MudText>
+                <MudGrid Class="mb-6">
+                    <MudItem xs="6" sm="3">
+                        <MudPaper Class="pa-4 text-center" Elevation="1"
+                                  Style="border-top: 4px solid var(--mud-palette-success);">
+                            <MudText Typo="Typo.h4"><b>@_result.Rank1Matches</b></MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                Keuze #1 (@(totalMatches > 0 ? Math.Round((double)_result.Rank1Matches / totalMatches * 100) : 0)%)
+                            </MudText>
+                        </MudPaper>
+                    </MudItem>
+                    <MudItem xs="6" sm="3">
+                        <MudPaper Class="pa-4 text-center" Elevation="1"
+                                  Style="border-top: 4px solid var(--mud-palette-info);">
+                            <MudText Typo="Typo.h4"><b>@_result.Rank2Matches</b></MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                Keuze #2 (@(totalMatches > 0 ? Math.Round((double)_result.Rank2Matches / totalMatches * 100) : 0)%)
+                            </MudText>
+                        </MudPaper>
+                    </MudItem>
+                    <MudItem xs="6" sm="3">
+                        <MudPaper Class="pa-4 text-center" Elevation="1"
+                                  Style="border-top: 4px solid var(--mud-palette-warning);">
+                            <MudText Typo="Typo.h4"><b>@_result.Rank3Matches</b></MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                Keuze #3 (@(totalMatches > 0 ? Math.Round((double)_result.Rank3Matches / totalMatches * 100) : 0)%)
+                            </MudText>
+                        </MudPaper>
+                    </MudItem>
+                    <MudItem xs="6" sm="3">
+                        <MudPaper Class="pa-4 text-center" Elevation="1"
+                                  Style="border-top: 4px solid var(--mud-palette-dark);">
+                            <MudText Typo="Typo.h4"><b>@_result.NoPreferenceMatches</b></MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                Geen voorkeur (@(totalMatches > 0 ? Math.Round((double)_result.NoPreferenceMatches / totalMatches * 100) : 0)%)
+                            </MudText>
+                        </MudPaper>
+                    </MudItem>
+                </MudGrid>
+
+                <!-- Assignment cards -->
+                <MudStack Spacing="3">
+                    @foreach (var kvp in _result.JourneyAssignments)
+                    {
+                        var assignment = kvp.Value;
+                        var journey = _request.Journeys.First(j => j.Id == kvp.Key);
+
+                        <MudPaper Class="pa-4" Elevation="1"
+                                  Style="border-left: 4px solid var(--mud-palette-primary);">
+                            <MudGrid>
+                                <MudItem xs="12" sm="5">
+                                    <MudText Typo="Typo.h6">@journey.Country</MudText>
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                        <MudIcon Icon="@Icons.Material.Filled.CalendarMonth"
+                                                 Size="Size.Small" Class="mr-1 mb-n1" />
+                                        @journey.Start.ToString("dd MMM yyyy") - @journey.End.ToString("dd MMM yyyy")
+                                    </MudText>
+                                </MudItem>
+                                <MudItem xs="12" sm="4">
+                                    <MudText Typo="Typo.subtitle1">
+                                        <b>Reisleider:</b> @assignment.LeaderName
+                                    </MudText>
+                                </MudItem>
+                                <MudItem xs="12" sm="3" Class="d-flex align-center justify-end">
+                                    @if (assignment.RankMatched.HasValue)
+                                    {
+                                        <MudChip T="string" Size="Size.Small"
+                                                 Color="@(assignment.RankMatched == 1 ? Color.Success
+                                                         : assignment.RankMatched == 2 ? Color.Info
+                                                         : Color.Warning)">
+                                            Keuze #@assignment.RankMatched
+                                        </MudChip>
+                                    }
+                                    else
+                                    {
+                                        <MudChip T="string" Size="Size.Small">Geen voorkeur</MudChip>
+                                    }
+                                </MudItem>
+                            </MudGrid>
+                        </MudPaper>
+                    }
+                </MudStack>
+
+                <!-- Calendar preview -->
+                <MudText Typo="Typo.h6" Class="mt-6 mb-2">Kalenderoverzicht</MudText>
+                <CalendarView Journeys="BuildCalendarJourneys()" />
+
+                <!-- Leader overview: in and out of planning -->
+                <MudText Typo="Typo.h6" Class="mt-6 mb-2">Reisleiders overzicht</MudText>
+                <MudGrid>
+                    <!-- In de planning -->
+                    <MudItem xs="12" md="6">
+                        <MudText Typo="Typo.subtitle1" Class="mb-2">
+                            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Class="mr-1 mb-n1" Size="Size.Small" />
+                            In de planning (@inPlanning.Count)
+                        </MudText>
+                        <MudStack Spacing="2">
+                            @foreach (var row in inPlanning)
+                            {
+                                <MudPaper Class="pa-3" Elevation="1"
+                                          Style="border-left: 4px solid var(--mud-palette-success);">
+                                    <MudText Typo="Typo.subtitle2"><b>@row.LeaderName</b></MudText>
+                                    <MudStack Spacing="1" Class="mt-1">
+                                        @foreach (var item in row.AssignedJourneys)
+                                        {
+                                            <div class="d-flex align-center gap-2 flex-wrap">
+                                                <MudText Typo="Typo.body2">
+                                                    @item.Journey.Country
+                                                    <span class="text-secondary ms-1">
+                                                        (@item.Journey.Start.ToString("dd MMM") – @item.Journey.End.ToString("dd MMM yyyy"))
+                                                    </span>
+                                                </MudText>
+                                                @if (item.RankMatched.HasValue)
+                                                {
+                                                    <MudChip T="string" Size="Size.Small"
+                                                             Color="@(item.RankMatched == 1 ? Color.Success
+                                                                     : item.RankMatched == 2 ? Color.Info
+                                                                     : Color.Warning)">
+                                                        Keuze #@item.RankMatched
+                                                    </MudChip>
+                                                }
+                                                else
+                                                {
+                                                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">Geen voorkeur</MudChip>
+                                                }
+                                            </div>
+                                        }
+                                    </MudStack>
+                                </MudPaper>
+                            }
+                        </MudStack>
+                    </MudItem>
+
+                    <!-- Niet in de planning -->
+                    <MudItem xs="12" md="6">
+                        <MudText Typo="Typo.subtitle1" Class="mb-2">
+                            <MudIcon Icon="@Icons.Material.Filled.Cancel" Color="Color.Warning" Class="mr-1 mb-n1" Size="Size.Small" />
+                            Niet in de planning (@notInPlanning.Count)
+                        </MudText>
+                        @if (notInPlanning.Count == 0)
+                        {
+                            <MudAlert Severity="Severity.Success" Variant="Variant.Outlined" Dense="true">
+                                Alle reisleiders zijn toegewezen.
+                            </MudAlert>
+                        }
+                        else
+                        {
+                            <MudStack Spacing="2">
+                                @foreach (var row in notInPlanning)
+                                {
+                                    <MudPaper Class="pa-3" Elevation="1"
+                                              Style="border-left: 4px solid var(--mud-palette-warning);">
+                                        <MudText Typo="Typo.subtitle2"><b>@row.LeaderName</b></MudText>
+                                        @if (row.Preferences.Count > 0)
+                                        {
+                                            <div class="d-flex flex-wrap gap-1 mt-1">
+                                                @foreach (var pref in row.Preferences.OrderBy(p => p.Value))
+                                                {
+                                                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">
+                                                        @pref.Key (#@pref.Value)
+                                                    </MudChip>
+                                                }
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-1">Geen voorkeuren opgegeven</MudText>
+                                        }
+                                    </MudPaper>
+                                }
+                            </MudStack>
+                        }
+                    </MudItem>
+                </MudGrid>
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Error" Variant="Variant.Filled">
+                    <b>Genereren mislukt:</b> @_result.ErrorMessage
+                </MudAlert>
+            }
+        }
+    }
+</MudStack>
+
+@code {
+    private PlannerDraftRequest? _request;
+    private PlannerDraftResult? _result;
+    private bool _loading = true;
+    private bool _isGenerating = false;
+
+    private List<(string Country, int Count)> _topPopular = [];
+    private List<(string Country, int Count)> _leastPopular = [];
+    private List<PlannerLeaderInput> _multiInterestLeaders = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        _request = await DraftService.BuildRequestAsync();
+        ComputeInsights();
+        _loading = false;
+    }
+
+    private void ComputeInsights()
+    {
+        if (_request is null) return;
+
+        var allCountries = _request.Journeys.Select(j => j.Country).Distinct();
+
+        var popularity = allCountries
+            .Select(c => (
+                Country: c,
+                Count: _request.Leaders.Count(l => l.PreferredDestinations.ContainsKey(c))
+            ))
+            .ToList();
+
+        _topPopular = popularity.OrderByDescending(p => p.Count).Take(3).ToList();
+        _leastPopular = popularity.OrderBy(p => p.Count).Take(3).ToList();
+        _multiInterestLeaders = _request.Leaders
+            .Where(l => l.PreferredDestinations.Count > 1)
+            .OrderByDescending(l => l.PreferredDestinations.Count)
+            .ToList();
+    }
+
+    private async Task GenerateDraftAsync()
+    {
+        if (_request is null) return;
+        _isGenerating = true;
+        _result = null;
+        StateHasChanged();
+        await Task.Delay(50);
+        _result = await Task.Run(() => DraftService.GenerateDraft(_request));
+        _isGenerating = false;
+    }
+
+    private record LeaderPlanningRow(
+        int LeaderId,
+        string LeaderName,
+        List<(PlannerJourneyInput Journey, int? RankMatched)> AssignedJourneys,
+        Dictionary<string, int> Preferences
+    );
+
+    private List<LeaderPlanningRow> BuildLeaderRows()
+    {
+        if (_request is null || _result is null || !_result.IsSuccess)
+            return [];
+
+        return _request.Leaders.Select(leader => new LeaderPlanningRow(
+            leader.Id,
+            leader.Name,
+            _result.JourneyAssignments
+                .Where(kvp => kvp.Value.LeaderId == leader.Id)
+                .Select(kvp => (
+                    Journey: _request.Journeys.First(j => j.Id == kvp.Key),
+                    RankMatched: kvp.Value.RankMatched
+                ))
+                .ToList(),
+            leader.PreferredDestinations
+        )).ToList();
+    }
+
+    private IReadOnlyList<JourneyViewModel> BuildCalendarJourneys()
+    {
+        if (_request is null || _result is null || !_result.IsSuccess)
+            return [];
+
+        return _request.Journeys.Select(j =>
+        {
+            var leaders = new List<TravelLeaderViewModel>();
+            if (_result.JourneyAssignments.TryGetValue(j.Id, out var assignment))
+            {
+                leaders.Add(new TravelLeaderViewModel { Id = assignment.LeaderId, Name = assignment.LeaderName });
+            }
+
+            return new JourneyViewModel
+            {
+                Id = j.Id,
+                Country = j.Country,
+                Start = j.Start,
+                End = j.End,
+                TravelLeaders = leaders
+            };
+        }).ToList();
+    }
+}

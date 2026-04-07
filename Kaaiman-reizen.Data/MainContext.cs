@@ -57,14 +57,14 @@ public class MainContext : IdentityDbContext<ApplicationUser>
             new PreferredDestination { Id = 2, TravelLeaderId = 1, Rank = 2, Destination = "Griekenland" },
             new PreferredDestination { Id = 3, TravelLeaderId = 1, Rank = 3, Destination = "Kroatië" },
             new PreferredDestination { Id = 4, TravelLeaderId = 2, Rank = 1, Destination = "Spanje" },
-            new PreferredDestination { Id = 5, TravelLeaderId = 2, Rank = 2, Destination = "Portugal" },
-            new PreferredDestination { Id = 6, TravelLeaderId = 2, Rank = 3, Destination = "Marokko" }
+            new PreferredDestination { Id = 5, TravelLeaderId = 2, Rank = 2, Destination = "Oostenrijk" },
+            new PreferredDestination { Id = 6, TravelLeaderId = 2, Rank = 3, Destination = "Griekenland" }
         );
-        // Seed availability periods for examples
+        // Jan is available for spring (Griekenland, Kroatië) and summer (Italië)
+        // Maria is available for the early spring trips (Spanje, Oostenrijk) and into summer
         builder.Entity<AvailabilityPeriod>().HasData(
-            new AvailabilityPeriod { Id = 1, TravelLeaderId = 1, Start = new DateOnly(2025, 4, 29), End = new DateOnly(2025, 5, 3) },
-            new AvailabilityPeriod { Id = 2, TravelLeaderId = 1, Start = new DateOnly(2025, 5, 30), End = new DateOnly(2025, 6, 14) },
-            new AvailabilityPeriod { Id = 3, TravelLeaderId = 2, Start = new DateOnly(2025, 1, 1), End = new DateOnly(2025, 12, 31) }
+            new AvailabilityPeriod { Id = 1, TravelLeaderId = 1, Start = new DateOnly(2026, 4, 1), End = new DateOnly(2026, 7, 31) },
+            new AvailabilityPeriod { Id = 2, TravelLeaderId = 2, Start = new DateOnly(2026, 3, 1), End = new DateOnly(2026, 5, 31) }
         );
         builder.Entity<Journey>().HasData(
             new Journey { Id = 1, Country = "Italië", Start = new DateTime(2026, 7, 1), End = new DateTime(2026, 7, 14), Busses = 1, Travelers = 10 },

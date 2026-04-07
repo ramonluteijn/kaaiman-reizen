@@ -1,4 +1,4 @@
-﻿@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
 
 <div class="d-flex flex-column vh-100">
     <div class="border-bottom bg-white p-3">
@@ -48,6 +48,12 @@
                 <div class="nav-item">
                     <NavLink class="nav-link d-flex align-items-center rounded-0" href="planner">
                         <i class="bi bi-calendar-check nav-icon me-3"></i> Planner
+                    </NavLink>
+                </div>
+
+                <div class="nav-item">
+                    <NavLink class="nav-link d-flex align-items-center rounded-0" href="planner/draft">
+                        <i class="bi bi-magic nav-icon me-3"></i> Draft Planning
                     </NavLink>
                 </div>
             </AuthorizeView>
