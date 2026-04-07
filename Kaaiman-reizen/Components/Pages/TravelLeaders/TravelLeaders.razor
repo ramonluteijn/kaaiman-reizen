@@ -11,27 +11,6 @@
 
 <div class="card">
     <div class="card-body">
-        <div class="row">
-            <div class="col-sm-6">
-                <label class="form-label">Filteren</label>
-                <input class="form-control" type="text" id="filterInput" onkeyup="filterList()" placeholder="Zoek op reisleider">
-            </div>
-
-            <div class="col-sm-6">
-                <label class="form-label">Sorteren</label>
-                <select class="form-control" name="sortInput" id="sortInput" onchange="sortList()">
-                    <option value="name">naam</option>
-                    <option value="amountOfTrips">Reizen ervaring</option>
-                    <option value="minTrips">Min aantal reizen</option>
-                    <option value="maxTrips">Max aantal reizen</option>
-                    <option value="active">Actief</option>
-
-                </select>
-                <label class="form-label">Oplopend</label>
-                <input type="checkbox" id="ascendingInput" onchange="sortList()">
-            </div>
-        </div>
-
         <Table TItem="TravelLeaderViewModel" Items="_leaders" OnDelete="@OnDelete" Path="travelleaders" CreateText="Nieuwe reisleider" EditHrefSelector="@GetEditHref">
             <HeaderContent>
                 <th>Naam</th>
@@ -65,6 +44,3 @@
         }
     </div>
 </div>
-
-<script src="/js/Filter.js"></script>
-<script src="/js/Sort.js"></script>
