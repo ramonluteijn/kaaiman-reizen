@@ -11,8 +11,8 @@ public static class JourneyExtensions
         {
             Id = journey.Id,
             Country = journey.Country,
-            Start = DateOnly.FromDateTime(journey.Start),
-            End = DateOnly.FromDateTime(journey.End),
+            Start = journey.Start,
+            End = journey.End,
             Busses = journey.Busses,
             Travelers = journey.Travelers,
             TravelLeaders = journey.TravelLeaders?.Select(l => l.ToViewModel()).ToList() ?? []

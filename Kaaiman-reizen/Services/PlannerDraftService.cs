@@ -39,8 +39,8 @@ public class PlannerDraftService : IPlannerDraftService
                 {
                     Id = j.Id,
                     Country = j.Country,
-                    Start = DateOnly.FromDateTime(j.Start),
-                    End = DateOnly.FromDateTime(j.End),
+                    Start = j.Start,
+                    End = j.End
                 })
                 .ToList(),
         };
