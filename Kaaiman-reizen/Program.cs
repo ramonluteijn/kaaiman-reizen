@@ -1,9 +1,12 @@
 using Kaaiman_reizen.Components;
 using Kaaiman_reizen.Data;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Identity;
 using Kaaiman_reizen.Data.Identity;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
+using Azure.Identity;
+using Kaaiman_reizen.Helpers;
+using Azure.Extensions.AspNetCore.Configuration.Secrets;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,6 +43,32 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddRazorPages();
+
+// Add Azure keyvault secrets
+var keyVaultUri = builder.Configuration["KeyVault:VaultUri"];
+if (string.IsNullOrWhiteSpace(keyVaultUri) is false)
+    builder.Configuration.AddAzureKeyVault(new Uri(keyVaultUri), new DefaultAzureCredential());
+
+// Add OAUTH for providers Google and Microsoft
+var google = builder.Configuration.GetSection("Authentication:Google");
+var microsoft = builder.Configuration.GetSection("Authentication:Microsoft");
+
+builder.Services.AddAuthentication()
+                .AddGoogle(options =>
+                {
+                    options.ClientId = google["ClientId"]!;
+                    options.ClientSecret = google["ClientSecret"]!;
+                    options.CallbackPath = "/login-google";
+                    options.Events.OnTicketReceived = ExternalLoginHandler.HandleExternalLogin;
+                })
+                .AddMicrosoftAccount(options => {
+                    options.ClientId = microsoft["ClientId"]!;
+                    options.ClientSecret = microsoft["ClientSecret"]!;
+                    options.CallbackPath = "/login-microsoft";
+                    options.AuthorizationEndpoint = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize";
+                    options.TokenEndpoint = "https://login.microsoftonline.com/common/oauth2/v2.0/token";
+                    options.Events.OnTicketReceived = ExternalLoginHandler.HandleExternalLogin;
+                });
 
 var app = builder.Build();
 
