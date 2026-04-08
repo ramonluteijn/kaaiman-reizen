@@ -31,6 +31,7 @@
     </ItemGroup>
     <ItemGroup>
       <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
+      <PackageReference Include="Google.OrTools" Version="9.15.6755" />
     </ItemGroup>
     <ItemGroup>
       <Folder Include="wwwroot\images\" />

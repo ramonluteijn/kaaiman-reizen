@@ -59,16 +59,14 @@ h1:focus {
     text-align: start;
 }
 
-/* Sloop de automatische ronde hoeken en marges van Blazor */
 .nav-link,
 .nav-link.active,
 .nav-item > .active {
-    border-radius: 0 !important; /* Weg met die rondingen */
-    margin: 0 !important; /* Weg met de kieren */
+    border-radius: 0 !important;
+    margin: 0 !important;
     border: none !important;
 }
 
-/* Zorg dat het hele blok de kleur krijgt, niet alleen een klein eilandje */
 .nav-item {
     display: flex;
     width: 100%;

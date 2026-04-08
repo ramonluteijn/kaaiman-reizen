@@ -1,5 +1,6 @@
 using Kaaiman_reizen.Components;
 using Kaaiman_reizen.Data;
+using Kaaiman_reizen.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Kaaiman_reizen.Data.Identity;
@@ -32,6 +33,7 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
 
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddAuthorization();
+builder.Services.AddScoped<IPlannerDraftService, PlannerDraftService>();
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultScheme = IdentityConstants.ApplicationScheme;
