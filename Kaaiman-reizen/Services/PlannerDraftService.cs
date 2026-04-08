@@ -97,7 +97,6 @@ public class PlannerDraftService : IPlannerDraftService
                 var journey = journeys[j];
                 bool available = leader.AvailabilityPeriods.Any(
                     p => p.Start <= journey.Start && p.End >= journey.End);
-
                 if (!available)
                     model.Add(x[l, j] == 0);
             }
