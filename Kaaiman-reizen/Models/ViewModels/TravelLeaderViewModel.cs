@@ -1,3 +1,4 @@
+using Kaaiman_reizen.Data.Entities;
 namespace Kaaiman_reizen.Models.ViewModels;
 
 public sealed class TravelLeaderViewModel
@@ -14,4 +15,18 @@ public sealed class TravelLeaderViewModel
     
     // Key = Country/Destination string, Value = Rank (1, 2, or 3)
     public Dictionary<string, int> PreferredDestinations { get; set; } = new();
+
+    public TravelLeader ToEntity()
+    {
+        return new TravelLeader
+        {
+            Id = this.Id,
+            Name = this.Name,
+            PhoneNumber = this.PhoneNumber,
+            AmountOfTrips = this.AmountOfTrips,
+            MinTrips = this.MinTrips,
+            MaxTrips = this.MaxTrips,
+            IsActive = this.IsActive,
+        };
+    }
 }

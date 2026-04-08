@@ -1,45 +1,50 @@
-﻿namespace Kaaiman_reizen.Data.Rules;
+﻿using Kaaiman_reizen.Data.Entities;
+namespace Kaaiman_reizen.Data.Rules;
 
 public static class CheckRules
 {
     public sealed record JourneyWindow(DateTime Start, DateTime End);
+    private const int MinimumGapDays = 3; // min days between journeys
+    private const int RequiredExperience = 3; // min number of trips for experience requirement
     
-    private const int MinimumGapDays = 3;
-
-
     public sealed record PlannerRuleResult(
         bool NoOverlap,
         bool HasMinimumGap,
-        MinMaxJourneysResult MinMaxResult)
+        bool HasExperience,
+        MinMaxJourneysResult MinMaxResult
+    )
     {
-        public bool IsEligible => NoOverlap && HasMinimumGap && !MinMaxResult.ExceedsMaxAfterAssignment && MinMaxResult.IsWithinLimitsAfterAssignment;
+        public bool IsEligible => 
+            NoOverlap && 
+            HasMinimumGap && 
+            HasExperience &&
+            !MinMaxResult.ExceedsMaxAfterAssignment && 
+            MinMaxResult.IsWithinLimitsAfterAssignment;
     }
 
     public static PlannerRuleResult EvaluateForPlanner(
         IEnumerable<JourneyWindow> existingJourneys,
-        DateTime candidateStart,
-        DateTime candidateEnd,
-        int? minTrips,
-        int? maxTrips)
+        Journey journey,
+        TravelLeader leader
+    )
     {
         var windows = existingJourneys.ToList();
         
         return new PlannerRuleResult(
-            NoOverlap: !windows.Any(j => JourneysOverlap.Check(j.Start, j.End, candidateStart, candidateEnd)),
-            HasMinimumGap: windows.All(j => HasMinimumGapDays.Check(j.Start, j.End, candidateStart, candidateEnd, MinimumGapDays)),
-            MinMaxResult: MinMaxJourneys.Evaluate(windows.Count, minTrips, maxTrips)
+            NoOverlap: !windows.Any(j => JourneysOverlap.Check(j.Start, j.End, journey.Start, journey.End)),
+            HasMinimumGap: windows.All(j => HasMinimumGapDays.Check(j.Start, j.End, journey.Start, journey.End, MinimumGapDays)),
+            HasExperience: windows.All(j => HasExperience.Check(RequiredExperience, journey.Country, leader.AmountOfTrips)),
+            MinMaxResult: MinMaxJourneys.Evaluate(windows.Count, leader.MinTrips, leader.MinTrips)
         );
     }
 
     public static bool CanAssignForPlanner(
         IEnumerable<JourneyWindow> existingJourneys,
-        DateTime candidateStart,
-        DateTime candidateEnd,
-        int? minTrips,
-        int? maxTrips,
+        Journey journey,
+        TravelLeader leader,
         out string? reason)
     {
-        var result = EvaluateForPlanner(existingJourneys, candidateStart, candidateEnd, minTrips, maxTrips);
+        var result = EvaluateForPlanner(existingJourneys, journey, leader);
 
         if (!result.NoOverlap)
         {
@@ -56,6 +61,12 @@ public static class CheckRules
         if (result.MinMaxResult.ExceedsMaxAfterAssignment)
         {
             reason = "Deze reisleider zit aan het maximum aantal reizen.";
+            return false;
+        }
+
+        if (!result.HasExperience)
+        {
+            reason = "Deze reisleider heeft onvoldoende ervaring voor deze bestemming.";
             return false;
         }
 

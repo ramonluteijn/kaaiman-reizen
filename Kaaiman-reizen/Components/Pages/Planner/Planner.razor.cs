@@ -92,11 +92,10 @@ public partial class Planner : ComponentBase
                     .ToList();
 
                 var evaluation = CheckRules.EvaluateForPlanner(
-                    leaderJourneys.Select(j => new CheckRules.JourneyWindow(j.Start, j.End)),
-                    selectedJourney.Start,
-                    selectedJourney.End,
-                    leader.MinTrips,
-                    leader.MaxTrips);
+                    leaderJourneys.Select(j => new CheckRules.JourneyWindow(j.Start, j.End)), 
+                    selectedJourney.ToEntity(),
+                    leader.ToEntity()
+                );
 
                 return new LeaderCandidateDto(
                     Leader: leader,
@@ -118,7 +117,7 @@ public partial class Planner : ComponentBase
         return candidates;
     }
     
-    private bool IsLeaderEligibleForJourney(int leaderId, int journeyId, DateTime journeyStart, DateTime journeyEnd, out string? reason)
+    private bool IsLeaderEligibleForJourney(int leaderId, int journeyId, JourneyViewModel journey, out string? reason)
     {
         var leader = _leaders.FirstOrDefault(l => l.Id == leaderId);
         if (leader == null)
@@ -133,10 +132,8 @@ public partial class Planner : ComponentBase
 
         return CheckRules.CanAssignForPlanner(
             leaderJourneys.Select(j => new CheckRules.JourneyWindow(j.Start, j.End)),
-            journeyStart,
-            journeyEnd,
-            leader.MinTrips,
-            leader.MaxTrips,
+            journey.ToEntity(),
+            leader.ToEntity(),
             out reason);
     }
 
@@ -146,7 +143,7 @@ public partial class Planner : ComponentBase
         
         if (_selectedJourney.TravelLeaders?.Any(l => l.Id == leader.Id) == true) return;
 
-        if (!IsLeaderEligibleForJourney(leader.Id, _selectedJourney.Id, _selectedJourney.Start, _selectedJourney.End, out var blockReason))
+        if (!IsLeaderEligibleForJourney(leader.Id, _selectedJourney.Id, _selectedJourney, out var blockReason))
         {
             _error = blockReason;
             return;
@@ -196,7 +193,7 @@ public partial class Planner : ComponentBase
             return;
         }
 
-        if (!IsLeaderEligibleForJourney(_draggedLeader.Id, journey.Id, journey.Start, journey.End, out var blockReason))
+        if (!IsLeaderEligibleForJourney(_draggedLeader.Id, journey.Id, journey, out var blockReason))
         {
             _error = blockReason;
             _draggedLeader = null;
