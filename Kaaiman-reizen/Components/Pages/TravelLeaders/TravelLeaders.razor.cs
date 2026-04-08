@@ -26,6 +26,9 @@ public partial class TravelLeaders
     private bool _loading = true;
     private string? _error;
     private List<TravelLeaderViewModel> _leaders = [];
+    private string _searchTerm = string.Empty;
+    private string _sortColumn = "Name";
+    private bool _sortAscending = true;
 
     protected override async Task OnInitializedAsync()
     {
@@ -47,6 +50,44 @@ public partial class TravelLeaders
         {
             _loading = false;
         }
+    }
+
+    private IEnumerable<TravelLeaderViewModel> FilteredLeaders => 
+        ApplySorting(
+            _leaders.Where(l =>
+                string.IsNullOrWhiteSpace(_searchTerm) ||
+                l.Name.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase)
+            )
+    );
+
+    private IEnumerable<TravelLeaderViewModel> ApplySorting(IEnumerable<TravelLeaderViewModel> query)
+    {
+        return _sortColumn switch
+        {
+            "Name" => _sortAscending ? query.OrderBy(x => x.Name) : query.OrderByDescending(x => x.Name),
+            "Experience" => _sortAscending ? query.OrderBy(x => x.AmountOfTrips) : query.OrderByDescending(x => x.AmountOfTrips),
+            "Minimum" => _sortAscending ? query.OrderBy(x => x.MinTrips) : query.OrderByDescending(x => x.MinTrips),
+            "Maximum" => _sortAscending ? query.OrderBy(x => x.MaxTrips) : query.OrderByDescending(x => x.MaxTrips),
+            "Active" => _sortAscending ? query.OrderBy(x => x.IsActive) : query.OrderByDescending(x => x.IsActive),
+            _ => query
+        };
+    }
+
+    private void SortBy(string column)
+    {
+        if (_sortColumn == column) _sortAscending = !_sortAscending;
+        else
+        {
+            _sortColumn = column;
+            _sortAscending = true;
+        }
+    }
+
+    private string GetSortIcon(string column)
+    {
+        if (_sortColumn != column) return "";
+
+        return _sortAscending ? "↑" : "↓";
     }
 
     private async Task OnDelete(TravelLeaderViewModel leader)
