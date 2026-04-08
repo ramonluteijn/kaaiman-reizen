@@ -3,7 +3,7 @@ namespace Kaaiman_reizen.Data.Rules;
 
 public static class CheckRules
 {
-    public sealed record JourneyWindow(DateTime Start, DateTime End);
+    public sealed record JourneyWindow(DateOnly Start, DateOnly End);
     private const int MinimumGapDays = 3; // min days between journeys
     private const int RequiredExperience = 3; // min number of trips for experience requirement
     

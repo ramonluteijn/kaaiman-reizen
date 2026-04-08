@@ -2,7 +2,7 @@
 
 public static class JourneysOverlap
 {
-    public static bool Check(DateTime firstStart, DateTime firstEnd, DateTime secondStart, DateTime secondEnd)
+    public static bool Check(DateOnly firstStart, DateOnly firstEnd, DateOnly secondStart, DateOnly secondEnd)
     {
         return firstStart < secondEnd && secondStart < firstEnd;
     }

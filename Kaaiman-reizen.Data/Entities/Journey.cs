@@ -10,10 +10,10 @@ public class Journey : IValidatableObject
     public string Country { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Start datum is verplicht.")]
-    public DateTime Start { get; set; }
+    public DateOnly Start { get; set; }
 
     [Required(ErrorMessage = "Eind datum is verplicht.")]
-    public DateTime End { get; set; }
+    public DateOnly End { get; set; }
 
     [Required(ErrorMessage = "Aantal busjes is verplicht.")]
     [Range(1, int.MaxValue, ErrorMessage = "Aantal busjes moet groter of gelijk aan 1 zijn.")]

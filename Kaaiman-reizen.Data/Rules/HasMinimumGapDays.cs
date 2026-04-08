@@ -2,10 +2,11 @@
 
 public static class HasMinimumGapDays
 {
-    public static bool Check(DateTime existingStart,
-        DateTime existingEnd,
-        DateTime candidateStart,
-        DateTime candidateEnd,
+    public static bool Check(
+        DateOnly existingStart,
+        DateOnly existingEnd,
+        DateOnly candidateStart,
+        DateOnly candidateEnd,
         int minimumGapDays)
     {
         if (JourneysOverlap.Check(existingStart, existingEnd, candidateStart, candidateEnd))
@@ -14,8 +15,8 @@ public static class HasMinimumGapDays
         }
 
         var gap = candidateStart >= existingEnd
-            ? (candidateStart.Date - existingEnd.Date).TotalDays
-            : (existingStart.Date - candidateEnd.Date).TotalDays;
+            ? (candidateStart.ToDateTime(TimeOnly.MinValue) - existingEnd.ToDateTime(TimeOnly.MinValue)).TotalDays
+            : (existingStart.ToDateTime(TimeOnly.MinValue) - candidateEnd.ToDateTime(TimeOnly.MinValue)).TotalDays;
 
         return gap >= minimumGapDays;
     }
