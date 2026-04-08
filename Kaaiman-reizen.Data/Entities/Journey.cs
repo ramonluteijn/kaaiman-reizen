@@ -23,6 +23,10 @@ public class Journey : IValidatableObject
     [Range(1, int.MaxValue, ErrorMessage = "Aantal reizigers moet groter of gelijk aan 1 zijn.")]
     public int? Travelers { get; set; }
 
+    /// <summary>How many travel leaders must be assigned to this journey. Defaults to 1.</summary>
+    [Range(1, int.MaxValue, ErrorMessage = "RequiredLeaders moet minimaal 1 zijn.")]
+    public int RequiredLeaders { get; set; } = 1;
+
     public List<TravelLeader> TravelLeaders { get; set; } = new();
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)

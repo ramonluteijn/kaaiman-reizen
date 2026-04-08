@@ -17,7 +17,7 @@ public class PlannerDraftService : IPlannerDraftService
 
     public async Task<PlannerDraftRequest> BuildRequestAsync(CancellationToken ct = default)
     {
-        var leaders = await _leaderService.GetTravelLeadersAsync(ct);
+        var leaders  = await _leaderService.GetTravelLeadersAsync(ct);
         var journeys = await _journeyService.GetJourneysAsync(ct);
 
         return new PlannerDraftRequest
@@ -37,10 +37,11 @@ public class PlannerDraftService : IPlannerDraftService
             Journeys = journeys
                 .Select(j => new PlannerJourneyInput
                 {
-                    Id = j.Id,
-                    Country = j.Country,
-                    Start = j.Start,
-                    End = j.End
+                    Id              = j.Id,
+                    Country         = j.Country,
+                    Start           = j.Start,
+                    End             = j.End,
+                    RequiredLeaders = j.RequiredLeaders   // ← carry through
                 })
                 .ToList(),
         };
@@ -48,52 +49,47 @@ public class PlannerDraftService : IPlannerDraftService
 
     public PlannerDraftResult GenerateDraft(PlannerDraftRequest request)
     {
-        var result = new PlannerDraftResult();
+        var result  = new PlannerDraftResult();
         var leaders = request.Leaders;
         var journeys = request.Journeys;
 
         int L = leaders.Count;
         int J = journeys.Count;
 
-        //:: TODO: Make a button in so the planner can add new reisleiders or reizen.
         if (L == 0)
         {
-            result.IsSuccess = false;
+            result.IsSuccess  = false;
             result.ErrorMessage = "Geen reisleiders of geen actieve reisleiders";
             return result;
         }
         if (J == 0)
         {
-            result.IsSuccess = false;
+            result.IsSuccess  = false;
             result.ErrorMessage = "Geen reizen gevonden";
             return result;
         }
 
         var model = new CpModel();
 
-        //:: CREATES A 2D BOOLEAN ARRAY (LEADERS, TRAVELS)
+        //:: CREATES A 2D BOOLEAN ARRAY (LEADERS × JOURNEYS)
         var x = new BoolVar[L, J];
         for (int l = 0; l < L; l++)
-        {
             for (int j = 0; j < J; j++)
-            {
                 x[l, j] = model.NewBoolVar($"x_{l}_{j}");
-            }
-        }
 
-        // Constraint A: each journey must have exactly one leader
+        // Constraint A: each journey must have exactly RequiredLeaders leaders assigned
         for (int j = 0; j < J; j++)
         {
-            var vars = Enumerable.Range(0, L).Select(l => (ILiteral)x[l, j]).ToList();
-            model.AddExactlyOne(vars);
+            var vars = Enumerable.Range(0, L).Select(l => (ILiteral)x[l, j]).Cast<BoolVar>().ToList();
+            model.Add(LinearExpr.Sum(vars) == journeys[j].RequiredLeaders);
         }
 
-        // Constraint B: constraint blocks if leader is not available
+        // Constraint B: block leader if not available for the full journey dates
         for (int l = 0; l < L; l++)
         {
             for (int j = 0; j < J; j++)
             {
-                var leader = leaders[l];
+                var leader  = leaders[l];
                 var journey = journeys[j];
                 bool available = leader.AvailabilityPeriods.Any(
                     p => p.Start <= journey.Start && p.End >= journey.End);
@@ -105,11 +101,11 @@ public class PlannerDraftService : IPlannerDraftService
         // Constraint C: each leader can be assigned at most MaxTrips journeys
         for (int l = 0; l < L; l++)
         {
-            var vars = Enumerable.Range(0, J).Select(j => (ILiteral)x[l, j]).ToList();
-            model.Add(LinearExpr.Sum(vars.Cast<BoolVar>()) <= leaders[l].MaxTrips);
+            var vars = Enumerable.Range(0, J).Select(j => x[l, j]).ToList();
+            model.Add(LinearExpr.Sum(vars) <= leaders[l].MaxTrips);
         }
 
-        // Constraint D: a leader cannot have two overlapping journeys at the same time.
+        // Constraint D: a leader cannot have two overlapping journeys
         for (int l = 0; l < L; l++)
         {
             for (int j1 = 0; j1 < J; j1++)
@@ -120,16 +116,12 @@ public class PlannerDraftService : IPlannerDraftService
                     var b = journeys[j2];
                     bool overlaps = a.Start < b.End && b.Start < a.End;
                     if (overlaps)
-                    {
                         model.Add(x[l, j1] + x[l, j2] <= 1);
-                    }
                 }
             }
         }
 
-        // Constraint E: Minimize total preference cost
-        // gives the highest points if no preference.
-        // It creates a plan with the lowest points.
+        // Objective: minimize total preference cost (rank 1 = cheapest, no preference = 10)
         var obj = LinearExpr.NewBuilder();
         for (int l = 0; l < L; l++)
         {
@@ -141,49 +133,41 @@ public class PlannerDraftService : IPlannerDraftService
             }
         }
 
-        // Constraint F: Fairness — penalize leaving an eligible leader unassigned.
-        // A leader is "eligible" if their availability covers at least one journey.
-        // For each such leader we introduce a boolean "assigned[l]":
-        //   - It can only be 1 when at least one journey is assigned (sum >= assigned[l])
-        //   - The solver receives a reward of -UnassignedPenalty in the objective for setting it to 1
-        // This makes the solver prefer distributing work over piling assignments on fewer leaders,
-        // as long as the fairness gain (15) outweighs any preference-cost difference (max 10-1 = 9).
+        // Fairness: penalise leaving an eligible leader unassigned
         const int UnassignedPenalty = 15;
         for (int l = 0; l < L; l++)
         {
             bool eligible = Enumerable.Range(0, J).Any(j =>
                 leaders[l].AvailabilityPeriods.Any(
                     p => p.Start <= journeys[j].Start && p.End >= journeys[j].End));
-
             if (!eligible) continue;
 
             var assignedVar = model.NewBoolVar($"assigned_{l}");
-            var rowVars = Enumerable.Range(0, J).Select(j => x[l, j]).ToList();
-
-            // assignedVar can only be 1 if the leader has at least one journey assigned
+            var rowVars     = Enumerable.Range(0, J).Select(j => x[l, j]).ToList();
             model.Add(LinearExpr.Sum(rowVars) >= assignedVar);
-
-            // Reward the solver for assigning this leader (= penalize leaving them idle)
             obj.AddTerm(assignedVar, -UnassignedPenalty);
         }
 
         model.Minimize(obj);
 
-        // Pre-solve diagnostic: find journeys with no available leader at all.
-        // If any exist the solver will always return Infeasible, so we report it clearly.
-        var journeysWithoutLeader = journeys
-            .Where(j => !leaders.Any(l => l.AvailabilityPeriods.Any(
-                p => p.Start <= j.Start && p.End >= j.End)))
+        // Pre-solve diagnostic: check that each journey has enough available leaders
+        var journeysWithoutEnoughLeaders = journeys
+            .Where(j =>
+            {
+                int eligible = leaders.Count(l => l.AvailabilityPeriods.Any(
+                    p => p.Start <= j.Start && p.End >= j.End));
+                return eligible < j.RequiredLeaders;
+            })
             .ToList();
 
-        if (journeysWithoutLeader.Any())
+        if (journeysWithoutEnoughLeaders.Any())
         {
-            var names = string.Join(", ", journeysWithoutLeader.Select(j =>
-                $"{j.Country} ({j.Start:dd MMM} – {j.End:dd MMM yyyy})"));
-            result.IsSuccess = false;
+            var names = string.Join(", ", journeysWithoutEnoughLeaders.Select(j =>
+                $"{j.Country} ({j.Start:dd MMM}–{j.End:dd MMM yyyy}, vereist: {j.RequiredLeaders})"));
+            result.IsSuccess    = false;
             result.ErrorMessage =
-                $"Geen enkele reisleider is beschikbaar voor de volgende {journeysWithoutLeader.Count} rei(s)zen: {names}. " +
-                "Controleer of de beschikbaarheidsperiodes van de reisleiders overeenkomen met de reisdatums.";
+                $"Niet genoeg reisleiders beschikbaar voor: {names}. " +
+                "Controleer beschikbaarheidsperiodes of verhoog het aantal actieve reisleiders.";
             return result;
         }
 
@@ -194,37 +178,41 @@ public class PlannerDraftService : IPlannerDraftService
         if (status == CpSolverStatus.Optimal || status == CpSolverStatus.Feasible)
         {
             result.IsSuccess = true;
+
+            // Collect ALL assigned leaders per journey into a list
             for (int j = 0; j < J; j++)
             {
+                var assignments = new List<JourneyAssignmentResult>();
                 for (int l = 0; l < L; l++)
                 {
                     if (solver.Value(x[l, j]) == 1L)
                     {
-                        var leader = leaders[l];
+                        var leader  = leaders[l];
                         var journey = journeys[j];
+                        int? rankMatched = leader.PreferredDestinations
+                            .TryGetValue(journey.Country, out int r) ? r : null;
 
-                        int? rankMatched = leader.PreferredDestinations.TryGetValue(journey.Country, out int rank) ? rank : null;
-                        result.JourneyAssignments[journey.Id] = new JourneyAssignmentResult
+                        assignments.Add(new JourneyAssignmentResult
                         {
-                            LeaderId = leader.Id,
-                            LeaderName = leader.Name,
+                            LeaderId    = leader.Id,
+                            LeaderName  = leader.Name,
                             RankMatched = rankMatched
-                        };
+                        });
                     }
                 }
+                if (assignments.Count > 0)
+                    result.JourneyAssignments[journeys[j].Id] = assignments;
             }
         }
         else
         {
-            // Solver returned Infeasible/Unknown after passing the pre-check.
-            // This means constraints conflict in a more complex way (e.g. not enough
-            // leaders to cover all journeys given MaxTrips and overlap rules).
             var availableSlots = leaders.Sum(l => l.MaxTrips);
-            result.IsSuccess = false;
+            var totalRequired  = journeys.Sum(j => j.RequiredLeaders);
+            result.IsSuccess    = false;
             result.ErrorMessage =
                 $"De planning kon niet worden opgesteld. " +
-                $"Er zijn {J} reizen maar slechts {availableSlots} beschikbare plaatsen over alle reisleiders ({L}) samen. " +
-                "Mogelijke oorzaken: te weinig reisleiders, te lage MaxTrips instellingen, of te veel overlappende reizen voor dezelfde leiders.";
+                $"Er zijn {totalRequired} benodigde reisleider-slots maar slechts {availableSlots} beschikbare plaatsen. " +
+                "Mogelijke oorzaken: te weinig reisleiders, te lage MaxTrips-instellingen, of te veel overlappende reizen.";
         }
 
         return result;

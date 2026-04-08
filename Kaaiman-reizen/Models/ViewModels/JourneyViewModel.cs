@@ -10,19 +10,21 @@ public sealed class JourneyViewModel
     public DateOnly End { get; init; }
     public int? Busses { get; init; }
     public int? Travelers { get; init; }
+    public int RequiredLeaders { get; init; } = 1;
     public List<TravelLeaderViewModel> TravelLeaders { get; init; } = [];
 
     public Journey ToEntity()
     {
         return new Journey
         {
-            Id = this.Id,
-            Country = this.Country,
-            Start = this.Start,
-            End = this.End,
-            Busses = this.Busses,
-            Travelers = this.Travelers,
-            TravelLeaders = this.TravelLeaders.Select(tl => tl.ToEntity()).ToList()
+            Id              = this.Id,
+            Country         = this.Country,
+            Start           = this.Start,
+            End             = this.End,
+            Busses          = this.Busses,
+            Travelers       = this.Travelers,
+            RequiredLeaders = this.RequiredLeaders,
+            TravelLeaders   = this.TravelLeaders.Select(tl => tl.ToEntity()).ToList()
         };
     }
 }

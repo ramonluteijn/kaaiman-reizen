@@ -26,6 +26,8 @@ public class PlannerJourneyInput
     public string Country { get; set; } = string.Empty;
     public DateOnly Start { get; set; }
     public DateOnly End { get; set; }
+    /// <summary>How many leaders the solver must assign to this journey.</summary>
+    public int RequiredLeaders { get; set; } = 1;
 }
 
 public class PlannerDraftResult
@@ -33,13 +35,14 @@ public class PlannerDraftResult
     public bool IsSuccess { get; set; }
     public string? ErrorMessage { get; set; } = string.Empty;
 
-    public Dictionary<int, JourneyAssignmentResult> JourneyAssignments { get; set; } = [];
+    /// <summary>Maps journey ID → list of all assigned leaders (may be more than one).</summary>
+    public Dictionary<int, List<JourneyAssignmentResult>> JourneyAssignments { get; set; } = [];
 
-    // Computed to keep in sync with JourneyAssignments.
-    public int Rank1Matches        => JourneyAssignments.Values.Count(a => a.RankMatched == 1);
-    public int Rank2Matches        => JourneyAssignments.Values.Count(a => a.RankMatched == 2);
-    public int Rank3Matches        => JourneyAssignments.Values.Count(a => a.RankMatched == 3);
-    public int NoPreferenceMatches => JourneyAssignments.Values.Count(a => a.RankMatched == null);
+    // KPI computed props — flatten list-of-lists
+    public int Rank1Matches        => JourneyAssignments.Values.SelectMany(l => l).Count(a => a.RankMatched == 1);
+    public int Rank2Matches        => JourneyAssignments.Values.SelectMany(l => l).Count(a => a.RankMatched == 2);
+    public int Rank3Matches        => JourneyAssignments.Values.SelectMany(l => l).Count(a => a.RankMatched == 3);
+    public int NoPreferenceMatches => JourneyAssignments.Values.SelectMany(l => l).Count(a => a.RankMatched == null);
 }
 
 public class JourneyAssignmentResult
