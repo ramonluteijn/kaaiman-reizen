@@ -1,5 +1,4 @@
 @page "/planner/draft"
-@namespace Kaaiman_reizen.Components.Pages.Planner
 @rendermode InteractiveServer
 
 <PageTitle>Draft Planning</PageTitle>
@@ -108,7 +107,8 @@
                         <MudStack Spacing="2">
                             @foreach (var row in inPlanning)
                             {
-                                <MudPaper Class="pa-3" Elevation="1">
+                                <MudPaper Class="pa-3" Elevation="1"
+                                          Style="border-left: 4px solid var(--mud-palette-success);">
                                     <MudText Typo="Typo.subtitle2"><b>@row.LeaderName</b></MudText>
                                     <MudStack Spacing="1" Class="mt-1">
                                         @foreach (var item in row.AssignedJourneys)
@@ -158,7 +158,8 @@
                             <MudStack Spacing="2">
                                 @foreach (var row in notInPlanning)
                                 {
-                                    <MudPaper Class="pa-3" Elevation="1">
+                                    <MudPaper Class="pa-3" Elevation="1"
+                                              Style="border-left: 4px solid var(--mud-palette-warning);">
                                         <MudText Typo="Typo.subtitle2"><b>@row.LeaderName</b></MudText>
                                         @if (row.Preferences.Count > 0)
                                         {
@@ -191,3 +192,4 @@
         }
     }
 </MudStack>
+
