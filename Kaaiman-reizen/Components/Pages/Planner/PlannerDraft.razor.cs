@@ -1,18 +1,28 @@
 using Kaaiman_reizen.Models.Planner;
 using Kaaiman_reizen.Models.ViewModels;
 using Kaaiman_reizen.Services;
+using Kaaiman_reizen.Data.Services;
 using Microsoft.AspNetCore.Components;
+using MudBlazor;
 
 namespace Kaaiman_reizen.Components.Pages.Planner;
 
 public partial class PlannerDraft : ComponentBase
 {
+    [SupplyParameterFromQuery(Name = "versionId")]
+    public int? VersionId { get; set; }
+
     [Inject] private IPlannerDraftService DraftService { get; set; } = default!;
+    [Inject] private IPlanningService PlanningService { get; set; } = default!;
+    [Inject] private ISnackbar Snackbar { get; set; } = default!;
 
     private PlannerDraftRequest? _request;
     private PlannerDraftResult?  _result;
     private bool _loading     = true;
     private bool _isGenerating = false;
+    private bool _isSaving = false;
+    private string? _saveMessage;
+    private Severity _saveMessageSeverity = Severity.Info;
     private List<(string Country, int Count)> _topPopular       = [];
     private List<(string Country, int Count)> _leastPopular     = [];
     private List<PlannerLeaderInput>          _multiInterestLeaders = [];
@@ -27,6 +37,7 @@ public partial class PlannerDraft : ComponentBase
     {
         _request = await DraftService.BuildRequestAsync();
         ComputeInsights();
+        await LoadLatestDraftAsync();
         _loading = false;
     }
 
@@ -58,10 +69,135 @@ public partial class PlannerDraft : ComponentBase
         if (_request is null) return;
         _isGenerating = true;
         _result       = null;
+        _saveMessage  = null;
         StateHasChanged();
         await Task.Delay(50);
         _result       = await Task.Run(() => DraftService.GenerateDraft(_request));
         _isGenerating = false;
+    }
+
+    private async Task LoadLatestDraftAsync()
+    {
+        if (_request is null)
+        {
+            return;
+        }
+
+        Kaaiman_reizen.Data.Entities.PlanningVersion? selectedDraft = null;
+
+        if (VersionId is int versionId)
+        {
+            selectedDraft = await PlanningService.GetPlanningVersionByIdAsync(versionId);
+            if (selectedDraft is null || selectedDraft.IsPublished)
+            {
+                _saveMessage = $"Concept met id {versionId} is niet gevonden. Laatste concept is geladen.";
+                _saveMessageSeverity = Severity.Warning;
+                Snackbar.Add(_saveMessage, _saveMessageSeverity);
+                selectedDraft = null;
+            }
+        }
+
+        selectedDraft ??= await PlanningService.GetLatestDraftAsync();
+        if (selectedDraft is null)
+        {
+            return;
+        }
+
+        _result = MapToDraftResult(selectedDraft);
+        _saveMessage = $"Concept geladen van {selectedDraft.CreatedAt.ToLocalTime():dd-MM-yyyy HH:mm}.";
+        _saveMessageSeverity = Severity.Info;
+    }
+
+    private async Task SaveDraftAsync()
+    {
+        await SavePlanningAsync(isPublished: false);
+    }
+
+    private async Task PublishPlanningAsync()
+    {
+        await SavePlanningAsync(isPublished: true);
+    }
+
+    private async Task SavePlanningAsync(bool isPublished)
+    {
+        if (_request is null || _result is null || !_result.IsSuccess)
+        {
+            return;
+        }
+
+        _isSaving = true;
+        _saveMessage = null;
+
+        try
+        {
+            var assignments = _result.JourneyAssignments.ToDictionary(
+                pair => pair.Key,
+                pair => (IReadOnlyCollection<int>)pair.Value.Select(assignment => assignment.LeaderId).ToList());
+
+            string planningName = isPublished
+                ? $"Published planning {DateTime.Now:yyyy-MM-dd HH:mm}"
+                : $"Draft planning {DateTime.Now:yyyy-MM-dd HH:mm}";
+
+            await PlanningService.SavePlanningAsync(planningName, isPublished, assignments);
+
+            _saveMessage = isPublished
+                ? "Planning is gepubliceerd. Andere gebruikers zien nu deze versie."
+                : "Conceptplanning is opgeslagen.";
+            _saveMessageSeverity = isPublished ? Severity.Success : Severity.Info;
+
+            Snackbar.Add(_saveMessage, _saveMessageSeverity);
+        }
+        catch (Exception)
+        {
+            _saveMessage = isPublished
+                ? "Publiceren is mislukt."
+                : "Opslaan van het concept is mislukt.";
+            _saveMessageSeverity = Severity.Error;
+
+            Snackbar.Add(_saveMessage, Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private PlannerDraftResult MapToDraftResult(Kaaiman_reizen.Data.Entities.PlanningVersion planningVersion)
+    {
+        var result = new PlannerDraftResult
+        {
+            IsSuccess = true
+        };
+
+        foreach (var journeyGroup in planningVersion.Assignments.GroupBy(assignment => assignment.JourneyId))
+        {
+            var journey = _request!.Journeys.FirstOrDefault(item => item.Id == journeyGroup.Key);
+            if (journey is null)
+            {
+                continue;
+            }
+
+            result.JourneyAssignments[journeyGroup.Key] = journeyGroup
+                .Select(assignment =>
+                {
+                    var leader = _request.Leaders.FirstOrDefault(item => item.Id == assignment.TravelLeaderId);
+                    int? rank = leader is not null &&
+                                leader.PreferredDestinations.TryGetValue(journey.Country, out var matchedRank)
+                        ? matchedRank
+                        : null;
+
+                    return new JourneyAssignmentResult
+                    {
+                        LeaderId = assignment.TravelLeaderId,
+                        LeaderName = assignment.TravelLeader.Name,
+                        RankMatched = rank
+                    };
+                })
+                .OrderBy(item => item.LeaderName)
+                .ToList();
+        }
+
+        return result;
     }
 
     // ── Leader overview rows ────────────────────────────────────

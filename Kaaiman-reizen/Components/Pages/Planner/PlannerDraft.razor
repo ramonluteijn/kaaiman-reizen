@@ -28,6 +28,13 @@
             </MudButton>
         </div>
 
+        @if (!string.IsNullOrWhiteSpace(_saveMessage))
+        {
+            <MudAlert Severity="@_saveMessageSeverity" Variant="Variant.Outlined" Dense="true">
+                @_saveMessage
+            </MudAlert>
+        }
+
         @if (_isGenerating)
         {
             <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
@@ -47,6 +54,38 @@
                 <MudAlert Severity="Severity.Success" Variant="Variant.Filled" Class="mb-4">
                     Planning gegenereerd — @totalMatches toewijzingen gevonden.
                 </MudAlert>
+
+                <div class="d-flex flex-wrap gap-2 mb-4">
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Primary"
+                               Disabled="@_isSaving"
+                               OnClick="SaveDraftAsync">
+                        @if (_isSaving)
+                        {
+                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                            <MudText Class="ms-2">Bezig met opslaan...</MudText>
+                        }
+                        else
+                        {
+                            <MudText>Opslaan als concept</MudText>
+                        }
+                    </MudButton>
+
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Success"
+                               Disabled="@_isSaving"
+                               OnClick="PublishPlanningAsync">
+                        @if (_isSaving)
+                        {
+                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                            <MudText Class="ms-2">Bezig met opslaan...</MudText>
+                        }
+                        else
+                        {
+                            <MudText>Publiceer planning</MudText>
+                        }
+                    </MudButton>
+                </div>
 
                 <!-- Assignment cards: one card per journey, leaders listed inside -->
                 <MudStack Spacing="3">

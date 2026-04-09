@@ -16,6 +16,8 @@ public class MainContext : IdentityDbContext<ApplicationUser>
     public DbSet<PreferredDestination> PreferredDestinations { get; set; }
     public DbSet<AvailabilityPeriod> AvailabilityPeriods { get; set; }
     public DbSet<Journey> Journey { get; set; }
+    public DbSet<PlanningVersion> PlanningVersions { get; set; }
+    public DbSet<PlanningAssignment> PlanningAssignments { get; set; }
 
 
     protected override void OnModelCreating(ModelBuilder builder)
@@ -92,5 +94,23 @@ public class MainContext : IdentityDbContext<ApplicationUser>
         builder.Entity<Journey>()
            .HasMany(a => a.TravelLeaders)
            .WithMany(r => r.Journeys);
+
+        builder.Entity<PlanningAssignment>()
+            .HasOne(assignment => assignment.PlanningVersion)
+            .WithMany(version => version.Assignments)
+            .HasForeignKey(assignment => assignment.PlanningVersionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<PlanningAssignment>()
+            .HasOne(assignment => assignment.Journey)
+            .WithMany()
+            .HasForeignKey(assignment => assignment.JourneyId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<PlanningAssignment>()
+            .HasOne(assignment => assignment.TravelLeader)
+            .WithMany()
+            .HasForeignKey(assignment => assignment.TravelLeaderId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

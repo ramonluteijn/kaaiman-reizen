@@ -75,7 +75,7 @@
     {
         try
         {
-            var items = await JourneyService.GetJourneysAsync();
+            var items = await JourneyService.GetJourneysWithPublishedPlanningAsync();
             _journeys = items.ToList();
         }
         catch
