@@ -1,4 +1,5 @@
 ﻿@page "/Account/Register"
+@layout AuthLayout
 
 @using System.ComponentModel.DataAnnotations
 @using System.Text
@@ -16,42 +17,48 @@
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
 
-<PageTitle>Register</PageTitle>
+<PageTitle>Registreren</PageTitle>
 
-<h1>Register</h1>
+<div class="d-flex justify-content-center align-items-center container mb-5" style="min-height: 80vh;">
+    <div class="col-12 col-md-8 col-lg-5">
+        <div class="card rounded-4 border-0 shadow-lg">
+            <div class="card-body p-5">
+                
+                <img src="images/Kaaiman-reizen-logo.webp" class="navbar-brand img-fluid mb-5" style="max-height: 50px;" alt="Logo Kaaiman-reizen" />
 
-<div class="row">
-    <div class="col-lg-6">
-        <StatusMessage Message="@Message" />
-        <EditForm Model="Input" method="post" OnValidSubmit="RegisterUser" FormName="register">
-            <DataAnnotationsValidator />
-            <h2>Create a new account.</h2>
-            <hr />
-            <ValidationSummary class="text-danger" role="alert" />
-            <div class="form-floating mb-3">
-                <InputText @bind-Value="Input.Email" id="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
-                <label for="Input.Email">Email</label>
-                <ValidationMessage For="() => Input.Email" class="text-danger" />
+                <StatusMessage Message="@Message" />
+
+                <EditForm Model="Input" method="post" OnValidSubmit="RegisterUser" FormName="register" class="mt-5">
+                    <DataAnnotationsValidator />
+
+                    <div class="form-floating mb-5">
+                        <InputText @bind-Value="Input.Email" class="form-control rounded-3" autocomplete="username" aria-required="true" />
+                        <label>E-mailadres</label>
+                        <ValidationMessage For="() => Input.Email" class="text-danger" />
+                    </div>
+
+                    <div class="form-floating mb-5">
+                        <InputText type="password" @bind-Value="Input.Password" class="form-control rounded-3" autocomplete="new-password" aria-required="true" />
+                        <label>Wachtwoord</label>
+                        <ValidationMessage For="() => Input.Password" class="text-danger" />
+                    </div>
+
+                    <div class="form-floating mb-5">
+                        <InputText type="password" @bind-Value="Input.ConfirmPassword" class="form-control rounded-3" autocomplete="new-password" aria-required="true" />
+                        <label>Bevestig wachtwoord</label>
+                        <ValidationMessage For="() => Input.ConfirmPassword" class="text-danger" />
+                    </div>
+
+                    <button type="submit" class="w-100 btn btn-dark btn-lg rounded-3 mb-5 mt-5 py-2">Account aanmaken</button>
+                </EditForm>
+
+                <ExternalLoginPicker />
+                
+                <div class="mt-5 pt-5 text-center">
+                    <p class="mb-0">Heb je al een account? <a href="Account/Login" class="text-decoration-none fw-bold">Log in</a></p>
+                </div>
             </div>
-            <div class="form-floating mb-3">
-                <InputText type="password" @bind-Value="Input.Password" id="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
-                <label for="Input.Password">Password</label>
-                <ValidationMessage For="() => Input.Password" class="text-danger" />
-            </div>
-            <div class="form-floating mb-3">
-                <InputText type="password" @bind-Value="Input.ConfirmPassword" id="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
-                <label for="Input.ConfirmPassword">Confirm Password</label>
-                <ValidationMessage For="() => Input.ConfirmPassword" class="text-danger" />
-            </div>
-            <button type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
-        </EditForm>
-    </div>
-    <div class="col-lg-4 col-lg-offset-2">
-        <section>
-            <h3>Use another service to register.</h3>
-            <hr />
-            <ExternalLoginPicker />
-        </section>
+        </div>
     </div>
 </div>
 
@@ -59,17 +66,12 @@
     private IEnumerable<IdentityError>? identityErrors;
 
     [SupplyParameterFromForm]
-    private InputModel Input { get; set; } = default!;
+    private InputModel Input { get; set; } = new();
 
     [SupplyParameterFromQuery]
     private string? ReturnUrl { get; set; }
 
-    private string? Message => identityErrors is null ? null : $"Error: {string.Join(", ", identityErrors.Select(error => error.Description))}";
-
-    protected override void OnInitialized()
-    {
-        Input ??= new();
-    }
+    private string? Message => identityErrors is null ? null : $"Fout: {string.Join(", ", identityErrors.Select(error => error.Description))}";
 
     public async Task RegisterUser(EditContext editContext)
     {
@@ -86,7 +88,7 @@
             return;
         }
 
-        Logger.LogInformation("User created a new account with password.");
+        Logger.LogInformation("Gebruiker heeft een nieuw account aangemaakt.");
 
         var userId = await UserManager.GetUserIdAsync(user);
         var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
@@ -118,8 +120,8 @@
         }
         catch
         {
-            throw new InvalidOperationException($"Can't create an instance of '{nameof(ApplicationUser)}'. " +
-                $"Ensure that '{nameof(ApplicationUser)}' is not an abstract class and has a parameterless constructor.");
+            throw new InvalidOperationException($"Kan geen instantie aanmaken van '{nameof(ApplicationUser)}'. " +
+                $"Zorg dat '{nameof(ApplicationUser)}' geen abstracte klasse is en een parameterloze constructor heeft.");
         }
     }
 
@@ -127,27 +129,24 @@
     {
         if (!UserManager.SupportsUserEmail)
         {
-            throw new NotSupportedException("The default UI requires a user store with email support.");
+            throw new NotSupportedException("De standaard UI vereist een user store met e-mailondersteuning.");
         }
         return (IUserEmailStore<ApplicationUser>)UserStore;
     }
 
     private sealed class InputModel
     {
-        [Required]
-        [EmailAddress]
-        [Display(Name = "Email")]
+        [Required(ErrorMessage = "Vul een e-mailadres in...")]
+        [EmailAddress(ErrorMessage = "Vul een geldig e-mailadres in...")]
         public string Email { get; set; } = "";
 
-        [Required]
-        [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
+        [Required(ErrorMessage = "Vul een wachtwoord in...")]
+        [StringLength(100, ErrorMessage = "Het wachtwoord moet minstens {2} en maximaal {1} tekens lang zijn...", MinimumLength = 6)]
         [DataType(DataType.Password)]
-        [Display(Name = "Password")]
         public string Password { get; set; } = "";
 
         [DataType(DataType.Password)]
-        [Display(Name = "Confirm password")]
-        [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
+        [Compare("Password", ErrorMessage = "Wachtwoorden komen niet overeen...")]
         public string ConfirmPassword { get; set; } = "";
     }
 }

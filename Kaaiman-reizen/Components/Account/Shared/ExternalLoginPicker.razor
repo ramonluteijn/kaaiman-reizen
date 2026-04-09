@@ -21,7 +21,7 @@ else
         <div class="external-buttons-container">
             @foreach (var provider in externalLogins)
             {
-                <button type="submit" class="btn external-btn-half" name="provider" value="@provider.Name" title="Log in met @provider.DisplayName">
+                <button type="submit" class="btn external-btn-half" name="provider" value="@provider.Name" title="Ga verder met @provider.DisplayName">
                     <span class="provider-icon">
                         @if (provider.Name.ToLower().Contains("google"))
                         {
