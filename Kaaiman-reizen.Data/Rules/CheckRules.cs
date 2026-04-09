@@ -46,27 +46,17 @@ public static class CheckRules
     {
         var result = EvaluateForPlanner(existingJourneys, journey, leader);
 
-        if (!result.NoOverlap)
+        var rules = new List<(bool Condition, string Reason)>
         {
-            reason = "Deze reisleider is al ingepland op een overlappende reis.";
-            return false;
-        }
+            (result.NoOverlap, "Deze reisleider is al ingepland op een overlappende reis."),
+            (result.HasMinimumGap, $"Deze reisleider moet minimaal {MinimumGapDays} dagen tussen reizen hebben."),
+            (!result.MinMaxResult.ExceedsMaxAfterAssignment, "Deze reisleider zit aan het maximum aantal reizen."),
+            (result.HasExperience, "Deze reisleider heeft onvoldoende ervaring voor deze bestemming.")
+        };
 
-        if (!result.HasMinimumGap)
+        foreach (var rule in rules.Where(rule => !rule.Condition))
         {
-            reason = $"Deze reisleider moet minimaal {MinimumGapDays} dagen tussen reizen hebben.";
-            return false;
-        }
-
-        if (result.MinMaxResult.ExceedsMaxAfterAssignment)
-        {
-            reason = "Deze reisleider zit aan het maximum aantal reizen.";
-            return false;
-        }
-
-        if (!result.HasExperience)
-        {
-            reason = "Deze reisleider heeft onvoldoende ervaring voor deze bestemming.";
+            reason = rule.Reason;
             return false;
         }
 

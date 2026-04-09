@@ -7,6 +7,7 @@ public enum Countries
     Andorra,
     Armenie,
     Azerbeidzjan,
+    Belarus,
     Belgie,
     BosnieEnHerzegovina,
     Bulgarije,
@@ -50,6 +51,15 @@ public enum Countries
     Turkije,
     Vaticaanstad,
     VerenigdKoninkrijk,
+    Wit_Rusland,
     Zweden,
     Zwitserland
+}
+
+public static class CountryMappings
+{
+    public static readonly Dictionary<string, Countries> AlternativeCountryNames = new()
+    {
+        { "Wit-Rusland", Countries.Wit_Rusland }
+    };
 }
