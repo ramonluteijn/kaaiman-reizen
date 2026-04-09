@@ -23,7 +23,7 @@ public partial class TravelLeaders
     [Inject]
     private IHostEnvironment HostEnvironment { get; set; } = default!;
 
-    private bool _loading = true;
+    protected bool _loading = true;
     private string? _error;
     private List<TravelLeaderViewModel> _leaders = [];
     private string _searchTerm = string.Empty;
@@ -102,7 +102,7 @@ public partial class TravelLeaders
             parameters);
 
         var result = await dialog.Result;
-        if (result.Canceled)
+        if (result?.Canceled != false)
             return;
 
         await LeaderService.DeleteTravelLeaderAsync(leader.Id);

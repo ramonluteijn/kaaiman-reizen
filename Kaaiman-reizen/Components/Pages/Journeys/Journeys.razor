@@ -1,7 +1,7 @@
 @page "/journeys"
-@rendermode InteractiveServer
 @using Kaaiman_reizen.Data.Services
 @using Kaaiman_reizen.Data.Entities
+@rendermode InteractiveServer
 @inject IJourneyService JourneyService
 @inject IJSRuntime JS
 
@@ -135,7 +135,7 @@
     {
         try
         {
-            var items = await JourneyService.GetJourneysAsync();
+            var items = await JourneyService.GetJourneysWithPublishedPlanningAsync();
             _journeys = items.ToList();
         }
         catch

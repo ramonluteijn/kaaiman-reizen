@@ -2,108 +2,259 @@
 @using Kaaiman_reizen.Models.ViewModels
 
 <MudPaper Elevation="1" Class="pa-4">
-    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
-        <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft" OnClick="PrevMonth" />
-        <MudText Typo="Typo.h5">@_currentDate.ToString("MMMM yyyy")</MudText>
-        <MudIconButton Icon="@Icons.Material.Filled.ChevronRight" OnClick="NextMonth" />
-    </MudStack>
-
-    <div class="calendar-grid">
-        <div class="calendar-header">Ma</div>
-        <div class="calendar-header">Di</div>
-        <div class="calendar-header">Wo</div>
-        <div class="calendar-header">Do</div>
-        <div class="calendar-header">Vr</div>
-        <div class="calendar-header">Za</div>
-        <div class="calendar-header">Zo</div>
-
-        @foreach (var day in _days)
-        {
-            var isCurrentMonth = day.Date.Month == _currentDate.Month;
-            var isToday = day.Date == DateTime.Today;
-            
-            <div class="calendar-day @(isCurrentMonth ? "" : "other-month") @(isToday ? "today-highlight" : "")">
-                 
-                <div class="day-number">@day.Date.Day</div>
-
-                @foreach (var journey in GetJourneysForDay(day.Date))
+    <div class="cal-nav-block">
+        <div class="cal-nav-row">
+            <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft" OnClick="PrevMonth" />
+            <div class="cal-nav-center">
+                <MudText Typo="Typo.h5">@_currentDate.ToString("MMMM yyyy")</MudText>
+                @if (Journeys.Any())
                 {
-                    <div class="journey-block mud-theme-primary" 
-                         @onclick="() => OnJourneyClick.InvokeAsync(journey)"
-                         ondragover="event.preventDefault();" 
-                         @ondrop="() => HandleDropOnJourney(journey)"
-                         @ondrop:stopPropagation="true"
-                         @ondragenter="() => HandleDragEnter(journey, day)"
-                         @ondragleave="() => HandleDragLeave(journey, day)"
-                         style="@(IsDropTarget(journey, day) ? "opacity: 0.7; border: 2px dashed #fff;" : "")">
-                         
-                        <div class="text-truncate fw-bold">@journey.Country</div>
-                        <div style="font-size: 0.7rem;">@journey.Start.ToString("dd MMM") - @journey.End.ToString("dd MMM")</div>
-                        
-                        @if (journey.TravelLeaders != null && journey.TravelLeaders.Any())
+                    <div class="cal-pills-bar">
+                        @foreach (var group in Journeys
+                            .OrderBy(j => j.Start)
+                            .GroupBy(j => new { j.Start.Year, j.Start.Month }))
                         {
-                            <div class="journey-leaders mt-1">
-                                @foreach (var leader in journey.TravelLeaders)
-                                {
-                                    <MudChip T="string" Size="Size.Small" Color="Color.Secondary" Class="mr-1 mb-1 px-1">@leader.Name</MudChip>
-                                }
+                            var monthDate = new DateOnly(group.Key.Year, group.Key.Month, 1);
+                            var isActive  = _currentDate.Year == group.Key.Year && _currentDate.Month == group.Key.Month;
+
+                            <div class="cal-pill-group">
+                                <button class="cal-month-pill @(isActive ? "cal-pill-active" : "")"
+                                        @onclick="() => GoToMonth(monthDate)">
+                                    @monthDate.ToString("MMM yyyy")
+                                </button>
+                                <div class="cal-pill-chips">
+                                    @foreach (var j in group)
+                                    {
+                                        <span class="cal-journey-chip" @onclick="() => GoToMonth(j.Start)">
+                                            @j.Country
+                                        </span>
+                                    }
+                                </div>
                             </div>
                         }
                     </div>
                 }
             </div>
-        }
+            <MudIconButton Icon="@Icons.Material.Filled.ChevronRight" OnClick="NextMonth" />
+        </div>
     </div>
+
+    <!-- Day name headers -->
+    <div class="cal-header-row">
+        <div class="cal-header">Ma</div>
+        <div class="cal-header">Di</div>
+        <div class="cal-header">Wo</div>
+        <div class="cal-header">Do</div>
+        <div class="cal-header">Vr</div>
+        <div class="cal-header">Za</div>
+        <div class="cal-header">Zo</div>
+    </div>
+
+    <!-- 6 week rows -->
+    @for (int w = 0; w < 6; w++)
+    {
+        var weekDays   = _days.Skip(w * 7).Take(7).ToList();
+        var weekStart  = weekDays[0].Date;
+        var weekEnd    = weekDays[6].Date;
+
+        // Journeys that are visible at all in this week
+        var weekJourneys = Journeys
+            .Where(j => j.Start <= weekEnd && j.End >= weekStart)
+            .ToList();
+
+        <div class="cal-week">
+            <!-- Row 1: day number cells, one per column -->
+            @foreach (var day in weekDays)
+            {
+                var isCurrentMonth = day.Date.Month == _currentDate.Month;
+                var isToday        = day.Date == DateOnly.FromDateTime(DateTime.Today);
+                <div class="cal-day-cell @(isCurrentMonth ? "" : "other-month") @(isToday ? "today-highlight" : "")">
+                    <div class="day-number">@day.Date.Day</div>
+                </div>
+            }
+
+            <!-- Row 2+: journey bars spanning their columns within this week.
+                 A journey that starts before this week begins at column 1 (clipped left).
+                 A journey that ends after this week ends at column 7 (clipped right).
+                 border-radius is removed on the clipped side to signal continuation. -->
+            @foreach (var journey in weekJourneys)
+            {
+                var clippedStart   = journey.Start < weekStart ? weekStart : journey.Start;
+                var clippedEnd     = journey.End   > weekEnd   ? weekEnd   : journey.End;
+                var startCol       = GetDayColumn(clippedStart);
+                var spanCols       = clippedEnd.DayNumber - clippedStart.DayNumber + 1;
+                var continuesLeft  = journey.Start < weekStart;
+                var continuesRight = journey.End   > weekEnd;
+
+                var radius = $"{(continuesLeft  ? "0" : "6px")} " +
+                             $"{(continuesRight ? "0" : "6px")} " +
+                             $"{(continuesRight ? "0" : "6px")} " +
+                             $"{(continuesLeft  ? "0" : "6px")}";
+
+                var color = GetJourneyColor(journey.Id);
+
+                <div class="cal-journey-span"
+                     style="grid-column: @startCol / span @spanCols;
+                            background: @color;
+                            border-radius: @radius;
+                            @(continuesLeft  ? "margin-left:0;padding-left:4px;" : "")
+                            @(continuesRight ? "margin-right:0;padding-right:4px;" : "")"
+                     @onclick="() => OnJourneyClick.InvokeAsync(journey)"
+                     ondragover="event.preventDefault();"
+                     @ondrop="() => HandleDropOnJourney(journey)"
+                     @ondrop:stopPropagation="true">
+
+                    <span class="journey-span-country">@journey.Country</span>
+
+                    @if (journey.TravelLeaders != null && journey.TravelLeaders.Any())
+                    {
+                        <span class="journey-span-leader"> · @journey.TravelLeaders.First().Name</span>
+                    }
+                </div>
+            }
+        </div>
+    }
 </MudPaper>
 
 <style>
-    .calendar-grid {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
+    /* ── Nav block: arrow | [title + pills] | arrow ── */
+    .cal-nav-block {
+        margin-bottom: 12px;
+    }
+    .cal-nav-row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+    }
+    .cal-nav-center {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        flex: 1;
+        padding: 4px 0;
+    }
+
+    /* ── Month-pill jump bar ── */
+    .cal-pills-bar {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+    }
+    .cal-pill-group {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
         gap: 4px;
     }
-    .calendar-header {
+    .cal-month-pill {
+        padding: 4px 13px;
+        border: 1px solid #cbd5e1;
+        border-radius: 20px;
+        background: #f8fafc;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #475569;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+    .cal-month-pill:hover { background: #e2e8f0; }
+    .cal-pill-active {
+        background: #1976d2;
+        border-color: #1976d2;
+        color: #fff;
+    }
+    .cal-pill-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        padding-left: 4px;
+    }
+    .cal-journey-chip {
+        padding: 2px 8px;
+        background: #e0f2fe;
+        color: #0369a1;
+        border-radius: 10px;
+        font-size: 0.73rem;
+        cursor: pointer;
+        transition: background 0.15s;
+    }
+    .cal-journey-chip:hover { background: #bae6fd; }
+
+    /* Header row — same 7-column grid as the week rows */
+    .cal-header-row {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        margin-bottom: 2px;
+    }
+    .cal-header {
         text-align: center;
         font-weight: bold;
         padding: 8px;
         background-color: #f3f4f6;
     }
-    .calendar-day {
-        min-height: 120px;
-        border: 1px solid #e0e0e0;
-        padding: 4px;
-        display: flex;
-        flex-direction: column;
-        background-color: white;
+
+    /* One week = a 7-column grid.
+       Row 1 holds the 7 day-number cells (grid-row: 1 set inline).
+       Rows 2+ are filled automatically by journey bars via CSS grid auto-placement. */
+    .cal-week {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        grid-auto-rows: auto;
+        border-bottom: 1px solid #e0e0e0;
+        padding-bottom: 4px;
     }
-    .other-month {
-        background-color: #fafafa;
+
+    /* Day number cells are always in the first row */
+    .cal-day-cell {
+        grid-row: 1;
+        height: 48px;
+        padding: 6px 4px 2px;
+        border-right: 1px solid #f0f0f0;
+        background: white;
+    }
+    .cal-day-cell.other-month {
+        background: #fafafa;
         color: #bdbdbd;
     }
-    .today-highlight {
-        background-color: #f0f8ff;
-        border: 2px solid #1976d2;
+    .cal-day-cell.today-highlight {
+        background: #f0f8ff;
+        border-top: 3px solid #1976d2;
     }
     .day-number {
         text-align: right;
-        font-size: 0.85em;
-        margin-bottom: 4px;
+        font-size: 0.8em;
     }
-    .journey-block {
-        border-radius: 4px;
-        padding: 6px;
-        margin-bottom: 4px;
-        font-size: 0.8rem;
-        color: white;
+
+    /* Journey bars — span their columns and auto-stack below day cells */
+    .cal-journey-span {
+        margin: 4px 1px;
+        padding: 0 12px;
+        font-size: 0.82rem;
+        color: #333333;
         cursor: pointer;
-        transition: all 0.2s ease;
-    }
-    .journey-block:hover {
-        filter: brightness(1.1);
-    }
-    .journey-leaders {
+        overflow: hidden;
+        white-space: nowrap;
         display: flex;
-        flex-wrap: wrap;
+        align-items: center;
+        height: 60px;
+        transition: filter 0.15s ease;
+    }
+    .cal-journey-span:hover {
+        filter: brightness(1.12);
+    }
+    .journey-span-country {
+        font-weight: 600;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .journey-span-leader {
+        font-size: 0.75rem;
+        opacity: 0.88;
+        margin-left: 2px;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 </style>
 
@@ -111,17 +262,27 @@
     [Parameter] public IReadOnlyList<JourneyViewModel> Journeys { get; set; } = [];
     [Parameter] public EventCallback<JourneyViewModel> OnJourneyDrop { get; set; }
     [Parameter] public EventCallback<JourneyViewModel> OnJourneyClick { get; set; }
+    [Parameter] public DateOnly? JumpToDate { get; set; }
 
     private DateTime _currentDate = DateTime.Today;
     private List<CalendarDay> _days = new();
-    
+
     // For visual drop feedback
     private JourneyViewModel? _dragTargetJourney;
-    private CalendarDay? _dragTargetDay;
 
     protected override void OnInitialized()
     {
         GenerateCalendar();
+    }
+
+    // When JumpToDate changes from the parent, snap the calendar to that month.
+    protected override void OnParametersSet()
+    {
+        if (JumpToDate.HasValue)
+        {
+            _currentDate = JumpToDate.Value.ToDateTime(TimeOnly.MinValue);
+            GenerateCalendar();
+        }
     }
 
     private void PrevMonth()
@@ -136,53 +297,61 @@
         GenerateCalendar();
     }
 
+    private void GoToMonth(DateOnly date)
+    {
+        _currentDate = date.ToDateTime(TimeOnly.MinValue);
+        GenerateCalendar();
+    }
+
     private void GenerateCalendar()
     {
         _days.Clear();
-        var firstDayOfMonth = new DateTime(_currentDate.Year, _currentDate.Month, 1);
-        
+        var firstDayOfMonth = new DateOnly(_currentDate.Year, _currentDate.Month, 1);
+
         // Start from Monday
         var startDay = firstDayOfMonth;
         while (startDay.DayOfWeek != DayOfWeek.Monday)
-        {
             startDay = startDay.AddDays(-1);
-        }
 
         for (int i = 0; i < 42; i++) // 6 weeks
-        {
             _days.Add(new CalendarDay { Date = startDay.AddDays(i) });
-        }
     }
 
-    private IEnumerable<JourneyViewModel> GetJourneysForDay(DateTime date)
+    private IEnumerable<JourneyViewModel> GetJourneysForDay(DateOnly date)
     {
-        return Journeys.Where(j => j.Start.Date <= date.Date && j.End.Date >= date.Date);
+        return Journeys.Where(j => j.Start <= date && j.End >= date);
     }
 
-    private void HandleDragEnter(JourneyViewModel journey, CalendarDay day)
+    // Monday = col 1 … Sunday = col 7 (matches the CSS grid columns)
+    private static int GetDayColumn(DateOnly date)
+        => date.DayOfWeek == DayOfWeek.Sunday ? 7 : (int)date.DayOfWeek;
+
+    private static readonly string[] JourneyColors =
+    [
+        "#FFB596", "#BDE0FE", "#CDEAC0", "#DCC6E0",
+        "#FFE29A", "#F9C5D5", "#C7EDE6", "#FFD6A5"
+    ];
+
+    private static string GetJourneyColor(int journeyId)
+        => JourneyColors[Math.Abs(journeyId) % JourneyColors.Length];
+
+    private void HandleDragEnter(JourneyViewModel journey)
     {
         _dragTargetJourney = journey;
-        _dragTargetDay = day;
     }
 
-    private void HandleDragLeave(JourneyViewModel journey, CalendarDay day)
+    private void HandleDragLeave(JourneyViewModel journey)
     {
-        if (_dragTargetJourney == journey && _dragTargetDay == day)
-        {
+        if (_dragTargetJourney == journey)
             _dragTargetJourney = null;
-            _dragTargetDay = null;
-        }
     }
 
-    private bool IsDropTarget(JourneyViewModel journey, CalendarDay day)
-    {
-        return _dragTargetJourney == journey && _dragTargetDay == day;
-    }
+    private bool IsDropTarget(JourneyViewModel journey)
+        => _dragTargetJourney == journey;
 
     private async Task HandleDropOnJourney(JourneyViewModel journey)
     {
         _dragTargetJourney = null;
-        _dragTargetDay = null;
         if (OnJourneyDrop.HasDelegate)
         {
             await OnJourneyDrop.InvokeAsync(journey);
@@ -191,6 +360,6 @@
 
     private class CalendarDay
     {
-        public DateTime Date { get; set; }
+        public DateOnly Date { get; set; }
     }
 }
