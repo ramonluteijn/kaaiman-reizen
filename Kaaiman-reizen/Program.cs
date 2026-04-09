@@ -4,6 +4,7 @@ using Kaaiman_reizen.Components.Account;
 using Kaaiman_reizen.Data;
 using Kaaiman_reizen.Data.Identity;
 using Kaaiman_reizen.Helpers;
+using Kaaiman_reizen.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -26,6 +27,10 @@ builder.Services.AddDataServices();
 builder.Services.AddMudServices();
 builder.Services.AddRazorPages();
 
+// Registreer deze service slechts 1x en BUITEN de authenticatie-blokken
+builder.Services.AddScoped<IPlannerDraftService, PlannerDraftService>();
+
+// De authBuilder zorgt voor de koppeling met je cookies en externe logins (Google/Microsoft)
 var authBuilder = builder.Services.AddAuthentication(options =>
 {
     options.DefaultScheme = IdentityConstants.ApplicationScheme;

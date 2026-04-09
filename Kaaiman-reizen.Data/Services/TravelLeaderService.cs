@@ -54,11 +54,21 @@ public class TravelLeaderService : ITravelLeaderService
 
     public async Task UpdateTravelLeaderAsync(Entities.TravelLeader leader, CancellationToken cancellationToken = default)
     {
+        // Explicitly remove old child records so they don't accumulate as orphans.
+        // EF Core's Update() inserts new child entities (Id=0) but never deletes the old ones.
+        var oldPeriods = await _db.AvailabilityPeriods
+            .Where(a => a.TravelLeaderId == leader.Id)
+            .ToListAsync(cancellationToken);
+        _db.AvailabilityPeriods.RemoveRange(oldPeriods);
+
+        var oldPrefs = await _db.PreferredDestinations
+            .Where(p => p.TravelLeaderId == leader.Id)
+            .ToListAsync(cancellationToken);
+        _db.PreferredDestinations.RemoveRange(oldPrefs);
+
         var tracked = _db.ChangeTracker.Entries<Entities.TravelLeader>().FirstOrDefault(e => e.Entity.Id == leader.Id);
         if (tracked != null)
-        {
             tracked.State = EntityState.Detached;
-        }
 
         _db.TravelLeader.Update(leader);
         await _db.SaveChangesAsync(cancellationToken);

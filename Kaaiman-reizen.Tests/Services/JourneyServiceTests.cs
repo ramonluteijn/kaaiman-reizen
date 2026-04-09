@@ -28,8 +28,8 @@ namespace Kaaiman_reizen.Tests.Services
             var journey = new Journey
             {
                 Country = "Test Country",
-                Start = new DateTime(0001, 1, 1),
-                End = new DateTime(0001, 1, 2),
+                Start = new DateOnly(0001, 1, 1),
+                End = new DateOnly(0001, 1, 2),
                 Busses = 1,
                 Travelers = 1,
             };
@@ -49,8 +49,8 @@ namespace Kaaiman_reizen.Tests.Services
             var journey = new Journey
             {
                 Country = "New Country",
-                Start = new DateTime(0001, 1, 1),
-                End = new DateTime(0001, 1, 2),
+                Start = new DateOnly(0001, 1, 1),
+                End = new DateOnly(0001, 1, 2),
                 Busses = 1,
                 Travelers = 1,
             };
@@ -73,8 +73,8 @@ namespace Kaaiman_reizen.Tests.Services
             var journey = new Journey
             {
                 Country = "Delete Country",
-                Start = new DateTime(0001, 1, 1),
-                End = new DateTime(0001, 1, 2),
+                Start = new DateOnly(0001, 1, 1),
+                End = new DateOnly(0001, 1, 2),
                 Busses = 1,
                 Travelers = 1,
             }; 
@@ -96,8 +96,8 @@ namespace Kaaiman_reizen.Tests.Services
             var journey = new Journey
             {
                 Country = "Find Country",
-                Start = new DateTime(0001, 1, 1),
-                End = new DateTime(0001, 1, 2),
+                Start = new DateOnly(0001, 1, 1),
+                End = new DateOnly(0001, 1, 2),
                 Busses = 1,
                 Travelers = 1,
             }; 
@@ -116,8 +116,8 @@ namespace Kaaiman_reizen.Tests.Services
             var journey = new Journey
             {
                 Country = "Invalid Country",
-                Start = new DateTime(0001, 1, 2),
-                End = new DateTime(0001, 1, 1),
+                Start = new DateOnly(0001, 1, 2),
+                End = new DateOnly(0001, 1, 1),
                 Busses = 1,
                 Travelers = 1,
             };
