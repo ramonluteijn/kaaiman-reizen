@@ -3,8 +3,8 @@
 
 <PageTitle>Draft Planning</PageTitle>
 
-<MudStack Spacing="4" Class="pa-4">
-    <MudText Typo="Typo.h5">Planner Draft Dashboard</MudText>
+<MudStack Spacing="4" Class="pa-4 pd-page">
+    <MudText Typo="Typo.h5">Planner</MudText>
 
     @if (_loading)
     {
@@ -12,23 +12,75 @@
     }
     else if (_request != null)
     {
-        <!-- Generate button -->
-        <div>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary"
-                       OnClick="GenerateDraftAsync" Disabled="@_isGenerating">
-                @if (_isGenerating)
-                {
-                    <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-                    <MudText Class="ms-2">Bezig met genereren...</MudText>
-                }
-                else
-                {
-                    <MudText>Genereer Draft Planning</MudText>
-                }
-            </MudButton>
-        </div>
+        @if (_showEntryModal)
+        {
+            <div class="pd-entry-overlay">
+                <MudPaper Class="pd-entry-modal" Elevation="8">
+                    <div class="pd-entry-header">
+                        <MudText Typo="Typo.h6">Planning Action</MudText>
+                    </div>
+                    <div class="pd-entry-choices">
+                        <MudPaper Class="pa-4 pd-choice-card">
+                            <MudText Typo="Typo.subtitle1" Class="pd-block-title">Generate New Draft</MudText>
+                            <MudText Typo="Typo.body2" Class="mt-1 mb-4">
+                                Let the system generate a fresh planning from the current journeys and leader data.
+                            </MudText>
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       Size="Size.Medium"
+                                       Class="pd-action-btn"
+                                       Disabled="@_entryActionInProgress"
+                                       OnClick="GenerateNewPlanningFromModalAsync">
+                                Generate Draft
+                            </MudButton>
+                        </MudPaper>
 
-        @if (!string.IsNullOrWhiteSpace(_saveMessage))
+                        <MudPaper Class="pa-4 pd-choice-card">
+                            <MudText Typo="Typo.subtitle1" Class="pd-block-title">Continue Existing Draft</MudText>
+                            <MudText Typo="Typo.body2" Class="mt-1 mb-3">
+                                Select one of the saved draft plannings below. Latest edited is pre-selected.
+                            </MudText>
+
+                            @if (_availableDrafts.Count > 0)
+                            {
+                                <div class="pd-draft-list mb-4">
+                                    @foreach (var draft in _availableDrafts)
+                                    {
+                                        var isSelected = _selectedDraftId == draft.Id;
+                                        <button type="button"
+                                                class="pd-draft-item @(isSelected ? "pd-draft-item--selected" : "")"
+                                                @onclick="() => _selectedDraftId = draft.Id">
+                                            <span class="pd-draft-name">@draft.Name</span>
+                                            <span class="pd-draft-date">@draft.CreatedAt.ToLocalTime().ToString("dd-MM-yyyy HH:mm")</span>
+                                        </button>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mb-4">
+                                    Er zijn nog geen opgeslagen conceptplanningen.
+                                </MudAlert>
+                            }
+
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Default"
+                                       Class="pd-continue-btn"
+                                       Size="Size.Medium"
+                                       Disabled="@(_entryActionInProgress || _selectedDraftId is null)"
+                                       OnClick="ResumeSelectedDraftAsync">
+                                Continue
+                            </MudButton>
+                        </MudPaper>
+                    </div>
+                </MudPaper>
+            </div>
+        }
+
+        @if (!_showEntryModal)
+        {
+        @if (!string.IsNullOrWhiteSpace(_saveMessage)
+             && !_saveMessage.StartsWith("Concept geladen", System.StringComparison.OrdinalIgnoreCase))
         {
             <MudAlert Severity="@_saveMessageSeverity" Variant="Variant.Outlined" Dense="true">
                 @_saveMessage
@@ -46,102 +98,11 @@
         {
             if (_result.IsSuccess)
             {
-                var totalMatches = _result.JourneyAssignments.Values.SelectMany(l => l).Count();
                 var leaderRows   = BuildLeaderRows();
                 var inPlanning   = leaderRows.Where(r => r.AssignedJourneys.Count > 0).ToList();
                 var notInPlanning = leaderRows.Where(r => r.AssignedJourneys.Count == 0).ToList();
 
-                <MudAlert Severity="Severity.Success" Variant="Variant.Filled" Class="mb-4">
-                    Planning gegenereerd — @totalMatches toewijzingen gevonden.
-                </MudAlert>
-
-                <div class="d-flex flex-wrap gap-2 mb-4">
-                    <MudButton Variant="Variant.Outlined"
-                               Color="Color.Primary"
-                               Disabled="@_isSaving"
-                               OnClick="SaveDraftAsync">
-                        @if (_isSaving)
-                        {
-                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-                            <MudText Class="ms-2">Bezig met opslaan...</MudText>
-                        }
-                        else
-                        {
-                            <MudText>Opslaan als concept</MudText>
-                        }
-                    </MudButton>
-
-                    <MudButton Variant="Variant.Filled"
-                               Color="Color.Success"
-                               Disabled="@_isSaving"
-                               OnClick="PublishPlanningAsync">
-                        @if (_isSaving)
-                        {
-                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-                            <MudText Class="ms-2">Bezig met opslaan...</MudText>
-                        }
-                        else
-                        {
-                            <MudText>Publiceer planning</MudText>
-                        }
-                    </MudButton>
-                </div>
-
-                <!-- Assignment cards: one card per journey, leaders listed inside -->
-                <MudStack Spacing="3">
-                    @foreach (var kvp in _result.JourneyAssignments)
-                    {
-                        var journeyAssignments = kvp.Value;
-                        var journey = _request.Journeys.First(j => j.Id == kvp.Key);
-
-                        <MudPaper Class="pa-4" Elevation="1">
-                            <MudGrid>
-                                <MudItem xs="12" sm="5">
-                                    <MudText Typo="Typo.h6">@journey.Country</MudText>
-                                    <MudText Typo="Typo.body2" Color="Color.Secondary">
-                                        <MudIcon Icon="@Icons.Material.Filled.CalendarMonth"
-                                                 Size="Size.Small" Class="mr-1 mb-n1" />
-                                        @journey.Start.ToString("dd MMM yyyy") – @journey.End.ToString("dd MMM yyyy")
-                                    </MudText>
-                                    @if (journey.RequiredLeaders > 1)
-                                    {
-                                        <MudChip T="string" Size="Size.Small" Class="mt-1"
-                                                 Color="Color.Info" Variant="Variant.Outlined">
-                                            Vereist: @journey.RequiredLeaders reisleiders
-                                        </MudChip>
-                                    }
-                                </MudItem>
-                                <MudItem xs="12" sm="7">
-                                    <MudStack Spacing="1">
-                                        @foreach (var assignment in journeyAssignments)
-                                        {
-                                            <div class="d-flex align-center gap-2 flex-wrap">
-                                                <MudText Typo="Typo.subtitle2">@assignment.LeaderName</MudText>
-                                                @if (assignment.RankMatched.HasValue)
-                                                {
-                                                    <MudChip T="string" Size="Size.Small"
-                                                             Color="@(assignment.RankMatched == 1 ? Color.Success
-                                                                     : assignment.RankMatched == 2 ? Color.Info
-                                                                     : Color.Warning)">
-                                                        Keuze #@assignment.RankMatched
-                                                    </MudChip>
-                                                }
-                                                else
-                                                {
-                                                    <MudChip T="string" Size="Size.Small">Geen voorkeur</MudChip>
-                                                }
-                                            </div>
-                                        }
-                                    </MudStack>
-                                </MudItem>
-                            </MudGrid>
-                        </MudPaper>
-                    }
-                </MudStack>
-
                 <!-- Calendar preview -->
-                <MudText Typo="Typo.h6" Class="mt-6 mb-2">Kalenderoverzicht</MudText>
-
                 <CalendarView Journeys="BuildCalendarJourneys()"
                               OnJourneyClick="HandleJourneyClick" />
 
@@ -232,6 +193,40 @@
                         }
                     </MudItem>
                 </MudGrid>
+
+                <div class="pd-bottom-actions">
+                    <div class="d-flex flex-wrap gap-2">
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Primary"
+                                   Disabled="@_isSaving"
+                                   OnClick="SaveDraftAsync">
+                            @if (_isSaving)
+                            {
+                                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                <MudText Class="ms-2">Bezig met opslaan...</MudText>
+                            }
+                            else
+                            {
+                                <MudText>Opslaan als concept</MudText>
+                            }
+                        </MudButton>
+
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   Disabled="@_isSaving"
+                                   OnClick="PublishPlanningAsync">
+                            @if (_isSaving)
+                            {
+                                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                <MudText Class="ms-2">Bezig met opslaan...</MudText>
+                            }
+                            else
+                            {
+                                <MudText>Publiceer planning</MudText>
+                            }
+                        </MudButton>
+                    </div>
+                </div>
             }
             else
             {
@@ -239,6 +234,7 @@
                     <b>Genereren mislukt:</b> @_result.ErrorMessage
                 </MudAlert>
             }
+        }
         }
     }
 </MudStack>
@@ -395,177 +391,3 @@
     }
 </aside>
 
-<style>
-    /* ── Overlay ──────────────────────────────────────────────── */
-    .jd-overlay {
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.35);
-        z-index: 1200;
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.25s ease;
-    }
-    .jd-overlay--visible {
-        opacity: 1;
-        pointer-events: all;
-    }
-
-    /* ── Drawer panel ─────────────────────────────────────────── */
-    .jd-drawer {
-        position: fixed;
-        top: 0;
-        right: 0;
-        height: 100vh;
-        width: 380px;
-        max-width: 92vw;
-        background: #ffffff;
-        box-shadow: -4px 0 28px rgba(0, 0, 0, 0.14);
-        z-index: 1201;
-        display: flex;
-        flex-direction: column;
-        transform: translateX(100%);
-        transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-        border-radius: 16px 0 0 16px;
-    }
-    .jd-drawer--open { transform: translateX(0); }
-
-    /* ── Header ───────────────────────────────────────────────── */
-    .jd-header {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        padding: 20px 20px 16px;
-        gap: 12px;
-        flex-shrink: 0;
-    }
-    .jd-header-text { display: flex; flex-direction: column; gap: 4px; }
-    .jd-header-title { font-size: 1.2rem; font-weight: 700; color: #1a1a2e; line-height: 1.2; }
-    .jd-header-dates { font-size: 0.82rem; color: #64748b; }
-    .jd-close-btn {
-        flex-shrink: 0; width: 34px; height: 34px; border: none; border-radius: 50%;
-        background: #f1f5f9; cursor: pointer; display: flex; align-items: center;
-        justify-content: center; transition: background 0.15s;
-    }
-    .jd-close-btn:hover { background: #e2e8f0; }
-    .jd-close-btn .material-icons { font-size: 1.1rem; color: #475569; }
-
-    /* ── Divider ──────────────────────────────────────────────── */
-    .jd-divider { height: 1px; background: #e2e8f0; margin: 0 20px; flex-shrink: 0; }
-
-    /* ── Body (scrollable) ────────────────────────────────────── */
-    .jd-body { padding: 18px 20px; flex: 1; overflow-y: auto; min-height: 0; }
-
-    /* ── Section headers ──────────────────────────────────────── */
-    .jd-section-header {
-        display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
-    }
-    .jd-section-label {
-        font-size: 0.75rem; font-weight: 700; letter-spacing: 0.07em;
-        text-transform: uppercase; color: #94a3b8; margin: 0;
-    }
-
-    /* ── Required-leaders badge ───────────────────────────────── */
-    .jd-required-badge {
-        display: inline-flex; align-items: center; gap: 2px;
-        padding: 2px 9px; border-radius: 20px; font-size: 0.75rem; font-weight: 700;
-    }
-    .jd-required-badge--ok  { background: #dcfce7; color: #166534; }
-    .jd-required-badge--gap { background: #fef9c3; color: #713f12; }
-
-    /* ── Count badge (candidates) ─────────────────────────────── */
-    .jd-count-badge {
-        display: inline-flex; align-items: center; justify-content: center;
-        width: 20px; height: 20px; border-radius: 50%;
-        background: #e2e8f0; color: #475569; font-size: 0.7rem; font-weight: 700;
-    }
-
-    /* ── Assigned leader list ─────────────────────────────────── */
-    .jd-leader-list { display: flex; flex-direction: column; gap: 8px; }
-    .jd-leader-card {
-        display: flex; align-items: center; gap: 12px; padding: 12px 14px;
-        border-radius: 12px; background: #f8fafc; border: 1px solid #e2e8f0;
-    }
-    .jd-avatar {
-        width: 40px; height: 40px; border-radius: 50%;
-        background: linear-gradient(135deg, #1976d2, #42a5f5);
-        color: #fff; font-size: 1rem; font-weight: 700;
-        display: flex; align-items: center; justify-content: center;
-        flex-shrink: 0; text-transform: uppercase;
-    }
-    .jd-avatar--sm { width: 32px; height: 32px; font-size: 0.85rem; }
-    .jd-leader-name { flex: 1; font-weight: 600; font-size: 0.92rem; color: #1e293b; }
-
-    /* ── Remove button ────────────────────────────────────────── */
-    .jd-remove-btn {
-        display: flex; align-items: center; gap: 4px; padding: 5px 10px;
-        border: 1.5px solid #ef4444; border-radius: 8px; background: transparent;
-        color: #ef4444; font-size: 0.75rem; font-weight: 600;
-        cursor: pointer; transition: background 0.15s, color 0.15s; white-space: nowrap;
-    }
-    .jd-remove-btn:hover { background: #ef4444; color: #fff; }
-    .jd-remove-btn .material-icons { font-size: 0.95rem; }
-
-    /* ── No-leader / empty state ──────────────────────────────── */
-    .jd-no-leader {
-        display: flex; align-items: center; gap: 10px; padding: 12px 14px;
-        border-radius: 12px; background: #fffbeb; border: 1px solid #fde68a;
-        color: #92400e; font-size: 0.85rem; font-weight: 500;
-    }
-    .jd-no-leader-icon { color: #f59e0b; font-size: 1.2rem; }
-
-    /* ── Candidate list ───────────────────────────────────────── */
-    .jd-alt-list { display: flex; flex-direction: column; gap: 8px; }
-    .jd-alt-row {
-        display: flex; align-items: flex-start; justify-content: space-between;
-        gap: 10px; padding: 12px 14px; border-radius: 12px;
-        background: #f8fafc; border: 1px solid #e2e8f0;
-        transition: background 0.12s;
-    }
-    .jd-alt-row--assigned { background: #f0fdf4; border-color: #bbf7d0; }
-    .jd-alt-row-main { display: flex; align-items: flex-start; gap: 10px; flex: 1; min-width: 0; }
-    .jd-alt-info { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
-    .jd-alt-name { font-weight: 600; font-size: 0.88rem; color: #334155; }
-    .jd-alt-badges { display: flex; flex-wrap: wrap; gap: 4px; }
-
-    /* ── Preference rank badges ───────────────────────────────── */
-    .jd-pref-badge {
-        padding: 2px 8px; border-radius: 20px; font-size: 0.7rem;
-        font-weight: 700; white-space: nowrap;
-    }
-    .jd-pref-badge--1    { background: #dcfce7; color: #166534; }
-    .jd-pref-badge--2    { background: #dbeafe; color: #1e40af; }
-    .jd-pref-badge--3    { background: #fef9c3; color: #713f12; }
-    .jd-pref-badge--none { background: #f1f5f9; color: #94a3b8; }
-
-    /* ── Warning chips ────────────────────────────────────────── */
-    .jd-warn-chip {
-        display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px;
-        border-radius: 10px; font-size: 0.7rem; font-weight: 600;
-    }
-    .jd-warn-chip--conflict { background: #fef3c7; color: #92400e; }
-    .jd-warn-chip--maxtrips { background: #fee2e2; color: #991b1b; }
-
-    /* ── Assign button ────────────────────────────────────────── */
-    .jd-assign-btn {
-        flex-shrink: 0; width: 32px; height: 32px; border: none;
-        border-radius: 8px; background: #dcfce7; color: #16a34a;
-        cursor: pointer; display: flex; align-items: center; justify-content: center;
-        transition: background 0.15s, color 0.15s;
-    }
-    .jd-assign-btn:hover { background: #16a34a; color: #fff; }
-    .jd-assign-btn .material-icons { font-size: 1.1rem; }
-    /* Locked state — limit reached */
-    .jd-assign-btn--disabled {
-        background: #f1f5f9; color: #cbd5e1; cursor: not-allowed;
-        pointer-events: none;
-    }
-
-    /* ── Already-assigned checkmark ──────────────────────────── */
-    .jd-already-check {
-        flex-shrink: 0; width: 32px; height: 32px; border-radius: 8px;
-        background: #f0fdf4; color: #16a34a;
-        display: flex; align-items: center; justify-content: center;
-    }
-    .jd-already-check .material-icons { font-size: 1.1rem; }
-</style>

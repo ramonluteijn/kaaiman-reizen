@@ -1,16 +1,46 @@
 @inherits LayoutComponentBase
 @using MudBlazor
-<MudThemeProvider />
+<MudThemeProvider Theme="_theme" />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
-<div class="d-flex">
-        <NavMenu />
-    <MudMainContent>
-        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-4 px-4 pb-16">
+<div class="layout-shell d-flex">
+    <NavMenu />
+    <div class="content-region flex-grow-1">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="content-panel">
             @Body
         </MudContainer>
-    </MudMainContent>
     </div>
+</div>
+
+<style>
+    .layout-shell {
+        min-height: 100vh;
+        background: #f4f6f8;
+    }
+
+    .content-region {
+        padding: 16px;
+    }
+
+    .content-panel {
+        background: #ffffff;
+        border: 1px solid #e8ecef;
+        border-radius: 18px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+        padding: 20px;
+        min-height: calc(100vh - 32px);
+    }
+</style>
+
+@code {
+    private readonly MudTheme _theme = new()
+    {
+        PaletteLight = new PaletteLight
+        {
+            Primary = "#00796B"
+        }
+    };
+}
