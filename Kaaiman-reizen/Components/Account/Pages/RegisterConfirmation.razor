@@ -1,4 +1,5 @@
 ﻿@page "/Account/RegisterConfirmation"
+@layout AuthLayout
 
 @using System.Text
 @using Kaaiman_reizen.Components.Account
@@ -11,23 +12,57 @@
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
 
-<PageTitle>Register confirmation</PageTitle>
+<PageTitle>Registratie bevestigen</PageTitle>
 
-<h1>Register confirmation</h1>
+<div class="d-flex justify-content-center align-items-center container mb-5" style="min-height: 85vh;">
+    <div class="col-12 col-md-8 col-lg-6">
+        <div class="card rounded-4 border-0 shadow-lg">
+            <div class="card-body p-5 text-center">
+                
+                @* Logo met extra witruimte *@
+                <div class="mb-5 pb-3">
+                    <img src="images/Kaaiman-reizen-logo.webp" class="navbar-brand img-fluid" style="max-height: 50px;" alt="Logo Kaaiman-reizen" />
+                </div>
 
-<StatusMessage Message="@statusMessage" />
+                <StatusMessage Message="@statusMessage" />
 
-@if (emailConfirmationLink is not null)
-{
-    <p>
-        This app does not currently have a real email sender registered, see <a href="https://aka.ms/aspaccountconf">these docs</a> for how to configure a real email sender.
-        Normally this would be emailed: <a href="@emailConfirmationLink">Click here to confirm your account</a>
-    </p>
-}
-else
-{
-    <p role="alert">Please check your email to confirm your account.</p>
-}
+                @if (emailConfirmationLink is not null)
+                {
+                    @* Sectie voor als je nog geen echte e-mailserver hebt *@
+                    <div class="mb-5">
+                        <h2 class="h4 fw-bold mb-3">Bijna klaar!</h2>
+                        <p class="text-muted mb-5">
+                            Omdat er momenteel geen actieve e-mailserver is ingesteld, kun je je account bevestigen door op de onderstaande knop te klikken.
+                        </p>
+                        
+                        <div class="py-3">
+                            <a href="@emailConfirmationLink" class="btn btn-dark btn-lg rounded-3 px-5 py-3 shadow-sm">
+                                Bevestig mijn account
+                            </a>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    @* Sectie voor als er wel een e-mailserver is *@
+                    <div class="mb-5">
+                        <h2 class="h4 fw-bold mb-3">Check je e-mail</h2>
+                        <p class="text-muted mb-5">
+                            Er is een bevestigingsmail naar je onderweg. Klik op de link in de mail om je registratie te voltooien.
+                        </p>
+                    </div>
+                }
+
+                @* Footer met separator en spacing *@
+                <div class="border-top mt-5 pt-5">
+                    <p class="text-muted mb-0">
+                        Hulp nodig? <a href="Account/Login" class="text-decoration-none fw-bold text-dark">Terug naar inloggen</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 @code {
     private string? emailConfirmationLink;
@@ -54,11 +89,10 @@ else
         if (user is null)
         {
             HttpContext.Response.StatusCode = StatusCodes.Status404NotFound;
-            statusMessage = "Error finding user for unspecified email";
+            statusMessage = "Fout: Gebruiker niet gevonden.";
         }
         else if (EmailSender is IdentityNoOpEmailSender)
         {
-            // Once you add a real email sender, you should remove this code that lets you confirm the account
             var userId = await UserManager.GetUserIdAsync(user);
             var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
             code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
