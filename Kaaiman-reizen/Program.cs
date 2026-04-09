@@ -1,60 +1,61 @@
+using Azure.Identity;
 using Kaaiman_reizen.Components;
+using Kaaiman_reizen.Components.Account;
 using Kaaiman_reizen.Data;
 using Kaaiman_reizen.Data.Identity;
+using Kaaiman_reizen.Helpers;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
-using Azure.Identity;
-using Kaaiman_reizen.Helpers;
-using Azure.Extensions.AspNetCore.Configuration.Secrets;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var keyVaultUri = builder.Configuration["KeyVault:VaultUri"];
+
+if (string.IsNullOrWhiteSpace(keyVaultUri) is false)
+    builder.Configuration.AddAzureKeyVault(new Uri(keyVaultUri), new DefaultAzureCredential());
+
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
 if (string.IsNullOrWhiteSpace(connectionString))
-{
-    throw new InvalidOperationException(
-        "Connection string 'DefaultConnection' is missing or empty.\n\n" +
-        "Configure it using User Secrets (recommended for local development):\n" +
-        "  cd Kaaiman-reizen\n" +
-        "  dotnet user-secrets init\n" +
-        "  dotnet user-secrets set \"ConnectionStrings:DefaultConnection\" \"Server=localhost;Database=kaaiman_reizen;Uid=root;Pwd=;\"\n\n" +
-        "Alternatively set it in Kaaiman-reizen/appsettings.Development.json (not recommended to commit because of security reasons)."
-    );
-}
+    throw new InvalidOperationException("Connection string 'DefaultConnection' is missing.");
+
 builder.Services.AddMainContext(connectionString);
 builder.Services.AddDataServices();
 builder.Services.AddMudServices();
+builder.Services.AddRazorPages();
 
-// Add services to the container.
-builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
-    .AddEntityFrameworkStores<MainContext>()
-    .AddDefaultTokenProviders()
-    .AddDefaultUI();
-
-builder.Services.AddCascadingAuthenticationState();
-builder.Services.AddAuthorization();
-builder.Services.AddAuthentication(options =>
+var authBuilder = builder.Services.AddAuthentication(options =>
 {
     options.DefaultScheme = IdentityConstants.ApplicationScheme;
     options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
 });
 
-builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
-builder.Services.AddRazorPages();
+authBuilder.AddIdentityCookies();
 
-// Add Azure keyvault secrets
-var keyVaultUri = builder.Configuration["KeyVault:VaultUri"];
-if (string.IsNullOrWhiteSpace(keyVaultUri) is false)
-    builder.Configuration.AddAzureKeyVault(new Uri(keyVaultUri), new DefaultAzureCredential());
+// Add services to the container.
+builder.Services.AddIdentityCore<ApplicationUser>(options =>
+{
+    options.SignIn.RequireConfirmedAccount = true;
+})
+    .AddRoles<IdentityRole>()
+    .AddEntityFrameworkStores<MainContext>()
+    .AddSignInManager()
+    .AddDefaultTokenProviders();
+
+builder.Services.AddCascadingAuthenticationState();
+builder.Services.AddScoped<IdentityUserAccessor>();
+builder.Services.AddScoped<IdentityRedirectManager>();
+builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
+
+builder.Services.AddAuthorization();
 
 // Add OAUTH for providers Google and Microsoft
 var google = builder.Configuration.GetSection("Authentication:Google");
 var microsoft = builder.Configuration.GetSection("Authentication:Microsoft");
 
-builder.Services.AddAuthentication()
-                .AddGoogle(options =>
+authBuilder.AddGoogle(options =>
                 {
                     options.ClientId = google["ClientId"]!;
                     options.ClientSecret = google["ClientSecret"]!;
@@ -70,6 +71,9 @@ builder.Services.AddAuthentication()
                     options.Events.OnTicketReceived = ExternalLoginHandler.HandleExternalLogin;
                 });
 
+builder.Services.AddRazorComponents()
+    .AddInteractiveServerComponents();
+
 var app = builder.Build();
 
 // Seed roles for Identity framework
@@ -78,7 +82,7 @@ using var scope = app.Services.CreateScope();
 var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
-List<string> roles = new () { "Planner", "Reisleider" };
+List<string> roles = new() { "Planner", "Reisleider" };
 
 foreach (var role in roles)
 {
@@ -87,7 +91,7 @@ foreach (var role in roles)
 }
 
 // Create one account for each role
-Dictionary<string, string> users = new ()
+Dictionary<string, string> users = new()
 {
     { "planner@kaaiman.nl", "Planner" },
     { "reisleider@kaaiman.nl", "Reisleider" }
@@ -114,19 +118,22 @@ foreach (var user in users)
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 app.UseHttpsRedirection();
-
 app.UseStaticFiles();
-app.UseAntiforgery();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.UseAntiforgery();
+
 app.MapStaticAssets();
+
+app.MapAdditionalIdentityEndpoints();
+
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
