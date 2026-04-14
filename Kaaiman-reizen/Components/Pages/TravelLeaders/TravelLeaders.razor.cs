@@ -5,6 +5,7 @@ using Kaaiman_reizen.Helpers;
 using Kaaiman_reizen.Models.ViewModels;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Hosting;
+using Microsoft.JSInterop;
 using MudBlazor;
 
 namespace Kaaiman_reizen.Components.Pages.TravelLeaders;
@@ -90,19 +91,17 @@ public partial class TravelLeaders
         return _sortAscending ? "↑" : "↓";
     }
 
-    private async Task OnDelete(TravelLeaderViewModel leader)
+    private async Task OnDelete(TravelLeaderViewModel? leader)
     {
+        if (leader == null)
+            return;
+        
         var parameters = new DialogParameters<DeleteTravelLeaderDialog>
         {
             { x => x.LeaderName, leader.Name }
         };
-
-        var dialog = await DialogService.ShowAsync<DeleteTravelLeaderDialog>(
-            "Reisleider verwijderen",
-            parameters);
-
-        var result = await dialog.Result;
-        if (result?.Canceled != false)
+        var confirm = await JS.InvokeAsync<bool>("confirm", $"Weet je zeker dat je reisleider '{leader.Name}' wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.");
+        if (!confirm)
             return;
 
         await LeaderService.DeleteTravelLeaderAsync(leader.Id);
