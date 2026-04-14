@@ -1,0 +1,23 @@
+<MudDialog>
+    <DialogContent>
+        <MudText Typo="Typo.body1">
+            Weet je zeker dat je <strong>@LeaderName</strong> wilt verwijderen?
+        </MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Annuleren</MudButton>
+        <MudButton Color="Color.Error" Variant="Variant.Filled" OnClick="Submit">Verwijderen</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter]
+    public string LeaderName { get; set; } = string.Empty;
+
+    private void Submit() => MudDialog.Close(DialogResult.Ok(true));
+
+    private void Cancel() => MudDialog.Cancel();
+}

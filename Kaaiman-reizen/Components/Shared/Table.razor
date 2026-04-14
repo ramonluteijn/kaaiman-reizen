@@ -1,10 +1,14 @@
-@using Kaaiman_reizen.Data.Enums
 @typeparam TItem
 
 @if (CreateText != null && CreatePath != null)
 {
     <div class="d-flex justify-content-end mb-3">
-        <Button TItem="object" Href="@CreatePath" Type="@ButtonType.Success">@CreateText</Button>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Href="@CreatePath"
+                   StartIcon="@Icons.Material.Filled.Add">
+            @CreateText
+        </MudButton>
     </div>
 }
 <table class="table">
@@ -26,9 +30,9 @@
     </tr>
     </thead>
     <tbody>
-    @if (Items != null)
+    @if (PaginatedItems != null)
     {
-        foreach (var item in Items)
+        foreach (var item in PaginatedItems)
         {
             <tr>
                 @if (RowTemplate != null)
@@ -46,19 +50,23 @@
                             @if (EditHrefSelector != null)
                             {
                                 <span class="me-2">
-                                    <Button TItem="TItem" Item="item" Type="@ButtonType.Secondary" Href="@EditHrefSelector(item)">
-                                        <i class="bi bi-pencil" aria-hidden="true"></i>
-                                        <span class="visually-hidden">Bewerk</span>
-                                    </Button>
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                   Variant="Variant.Filled"
+                                                   Color="Color.Primary"
+                                                   Size="Size.Small"
+                                                   Href="@EditHrefSelector(item)"
+                                                   Title="Bewerk" />
                                 </span>
                             }
                             @if (OnDelete.HasDelegate)
                             {
                                 <span>
-                                    <Button TItem="TItem" Item="item" Type="@ButtonType.Danger" OnClick="@OnDelete">
-                                        <i class="bi bi-trash" aria-hidden="true"></i>
-                                        <span class="visually-hidden">Verwijderen</span>
-                                    </Button>
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                   Variant="Variant.Filled"
+                                                   Color="Color.Error"
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => OnDelete.InvokeAsync(item))"
+                                                   Title="Verwijder" />
                                 </span>
                             }
                         </td>
@@ -69,7 +77,105 @@
     </tbody>
 </table>
 
+@if (Items != null && Items.Any())
+{
+    <div class="d-flex justify-content-between align-items-center mt-3">
+        <div class="d-flex align-items-center">
+            <span class="me-2 text-muted small">Aantal per pagina:</span>
+            <select class="form-select form-select-sm custom-select" style="width: auto;" @bind="ItemsPerPage">
+                @if (PageSizeOptions != null)
+                {
+                    foreach (var size in PageSizeOptions)
+                    {
+                        <option value="@size">@size</option>
+                    }
+                }
+                @if (ShowAllOption)
+                {
+                    <option value="-1">@AllOptionText</option>
+                }
+            </select>
+            <span class="ms-3 text-muted small">
+                Totaal: @Items.Count() items
+            </span>
+        </div>
+
+        @if (TotalPages > 1)
+        {
+            <nav>
+                <ul class="pagination pagination-sm mb-0 custom-pagination">
+                    <li class="page-item @(CurrentPage <= 1 ? "disabled" : "")">
+                        <button class="page-link" @onclick="() => CurrentPage--" disabled="@(CurrentPage <= 1)">Vorige</button>
+                    </li>
+                    @for (int i = 1; i <= TotalPages; i++)
+                    {
+                        var pageNumber = i;
+                        if (pageNumber == 1 || pageNumber == TotalPages || Math.Abs(pageNumber - CurrentPage) <= 2)
+                        {
+                            <li class="page-item @(CurrentPage == pageNumber ? "active" : "")">
+                                <button class="page-link" @onclick="() => CurrentPage = pageNumber">@pageNumber</button>
+                            </li>
+                        }
+                        else if (Math.Abs(pageNumber - CurrentPage) == 3)
+                        {
+                            <li class="page-item disabled"><span class="page-link">...</span></li>
+                        }
+                    }
+                    <li class="page-item @(CurrentPage >= TotalPages ? "disabled" : "")">
+                        <button class="page-link" @onclick="() => CurrentPage++" disabled="@(CurrentPage >= TotalPages)">Volgende</button>
+                    </li>
+                </ul>
+            </nav>
+        }
+    </div>
+}
+
 @code {
+    private int _currentPage = 1;
+    private int _itemsPerPage;
+
+    protected override void OnInitialized()
+    {
+        _itemsPerPage = PageSizeOptions != null && PageSizeOptions.Length > 0 ? PageSizeOptions[0] : 10;
+    }
+
+    public int CurrentPage
+    {
+        get => _currentPage;
+        set => _currentPage = value;
+    }
+
+    public int ItemsPerPage
+    {
+        get => _itemsPerPage;
+        set
+        {
+            _itemsPerPage = value;
+            _currentPage = 1;
+        }
+    }
+
+    private IEnumerable<TItem>? PaginatedItems
+    {
+        get
+        {
+            if (Items == null) return null;
+            if (ItemsPerPage == -1) return Items;
+            return Items.Skip((CurrentPage - 1) * ItemsPerPage).Take(ItemsPerPage);
+        }
+    }
+
+    private int TotalPages => (Items != null && ItemsPerPage > 0) ? (int)Math.Ceiling(Items.Count() / (double)ItemsPerPage) : 1;
+
+    [Parameter]
+    public int[] PageSizeOptions { get; set; } = new[] { 10, 25, 50 };
+
+    [Parameter]
+    public bool ShowAllOption { get; set; } = true;
+
+    [Parameter]
+    public string AllOptionText { get; set; } = "Alles";
+
     [Parameter]
     public IEnumerable<TItem>? Items { get; set; }
 

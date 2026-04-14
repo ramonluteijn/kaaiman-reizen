@@ -1,10 +1,8 @@
 @page "/travelleaders/create"
 @rendermode InteractiveServer
 @using Kaaiman_reizen.Data.Entities
-@using Kaaiman_reizen.Data.Enums
 @using Kaaiman_reizen.Data.Services
-@inject ITravelLeaderService LeaderService
-@inject NavigationManager Navigation
+
 
 <PageTitle>Nieuwe reisleider</PageTitle>
 
@@ -55,6 +53,21 @@
                 <label class="form-check-label">Actief</label>
             </div>
 
+            <h5>Voorkeurs bestemmingen</h5>
+            <p class="text-muted small">Vul maximaal 3 landen in die de reisleider het liefst begeleidt (keuze 1 = sterkste voorkeur).</p>
+            <div class="mb-3">
+                <label class="form-label">Keuze 1</label>
+                <InputText class="form-control" @bind-Value="_preferred[0]" placeholder="bijv. Italië" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Keuze 2</label>
+                <InputText class="form-control" @bind-Value="_preferred[1]" placeholder="bijv. Spanje" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Keuze 3</label>
+                <InputText class="form-control" @bind-Value="_preferred[2]" placeholder="bijv. Griekenland" />
+            </div>
+
             <h5>Beschikbaarheid (periode)</h5>
             @for (int i = 0; i < _periods.Count; i++)
             {
@@ -70,71 +83,43 @@
                         <InputDate @bind-Value="period.End" class="form-control" />
                     </div>
                     <div class="col-md-2">
-                        <button type="button" class="btn btn-outline-danger" @onclick="() => RemovePeriod(idx)">Verwijder</button>
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Error"
+                                   StartIcon="@Icons.Material.Filled.Delete"
+                                   OnClick="@(EventCallback.Factory.Create(this, () => RemovePeriod(idx)))">
+                            Verwijder
+                        </MudButton>
                     </div>
                 </div>
             }
 
             <div class="mb-3">
-                <button type="button" class="btn btn-sm btn-secondary" @onclick="AddPeriod">+ Periode toevoegen</button>
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Secondary"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="AddPeriod">
+                    Periode toevoegen
+                </MudButton>
             </div>
 
             <div class="d-flex">
-                <button type="submit" class="btn btn-primary">Opslaan</button>
+                <MudButton ButtonType="ButtonType.Submit"
+                           Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Save">
+                    Opslaan
+                </MudButton>
                 <span class="ms-2">
-                    <Button TItem="object" Type="ButtonType.Secondary" OnClickNoArg="EventCallback.Factory.Create(this, Cancel)">Annuleren</Button>
+                    <MudButton Variant="Variant.Text"
+                               Color="Color.Secondary"
+                               StartIcon="@Icons.Material.Filled.Close"
+                               OnClick="Cancel">
+                        Annuleren
+                    </MudButton>
                 </span>
             </div>
         </EditForm>
     </div>
 </div>
 
-@code {
-    private TravelLeader _model = new();
-    private string[] _preferred = new string[3];
-    private List<PeriodModel> _periods = new();
 
-    private class PeriodModel
-    {
-        public DateTime? Start { get; set; }
-        public DateTime? End { get; set; }
-    }
-
-    private void AddPeriod()
-    {
-        _periods.Add(new PeriodModel());
-    }
-
-    private void RemovePeriod(int index)
-    {
-        if (index >= 0 && index < _periods.Count)
-            _periods.RemoveAt(index);
-    }
-
-    private void Cancel()
-    {
-        Navigation.NavigateTo("/travelleaders");
-    }
-
-    private async Task HandleValidSubmit()
-    {
-        // map preferred destinations
-        _model.PreferredDestinations = new List<PreferredDestination>();
-        for (int i = 0; i < 3; i++)
-        {
-            if (!string.IsNullOrWhiteSpace(_preferred[i]))
-            {
-                _model.PreferredDestinations.Add(new PreferredDestination { Rank = i + 1, Destination = _preferred[i] });
-            }
-        }
-
-        // map availability periods
-        _model.AvailabilityPeriods = _periods
-            .Where(p => p.Start.HasValue && p.End.HasValue)
-            .Select(p => new AvailabilityPeriod { Start = DateOnly.FromDateTime(p.Start!.Value), End = DateOnly.FromDateTime(p.End!.Value) })
-            .ToList();
-
-        await LeaderService.AddTravelLeaderAsync(_model);
-        Navigation.NavigateTo("/travelleaders");
-    }
-}

@@ -1,0 +1,35 @@
+@using Kaaiman_reizen.Models.ViewModels
+
+<MudList T="TravelLeaderViewModel" Dense="true">
+    @foreach (var leader in Leaders)
+    {
+        <MudListItem T="TravelLeaderViewModel" 
+                     draggable="true" 
+                     ondragover="event.preventDefault();"
+                     @ondragstart="@(() => HandleDragStart(leader))"
+                     Style="cursor: grab;">
+            <MudStack Spacing="0">
+                <MudText Typo="Typo.body2">@leader.Name</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                    @leader.Availability
+                </MudText>
+            </MudStack>
+        </MudListItem>
+    }
+</MudList>
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyList<TravelLeaderViewModel> Leaders { get; set; } = [];
+
+    [Parameter]
+    public EventCallback<TravelLeaderViewModel> OnLeaderDragStart { get; set; }
+
+    private async Task HandleDragStart(TravelLeaderViewModel leader)
+    {
+        if (OnLeaderDragStart.HasDelegate)
+        {
+            await OnLeaderDragStart.InvokeAsync(leader);
+        }
+    }
+}

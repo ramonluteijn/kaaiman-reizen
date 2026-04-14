@@ -1,8 +1,8 @@
 @page "/travelleaders"
 @rendermode InteractiveServer
+@using Kaaiman_reizen.Models.ViewModels
 @using Kaaiman_reizen.Data.Services
 @using Kaaiman_reizen.Data.Entities
-@inject ITravelLeaderService LeaderService
 @inject IJSRuntime JS
 
 <PageTitle>Reisleiders</PageTitle>
@@ -11,15 +11,32 @@
 
 <div class="card">
     <div class="card-body">
-        <Table TItem="TravelLeader" Items="_leaders" OnDelete="@OnDelete" Path="travelleaders" CreateText="Nieuwe reisleider" EditHrefSelector="@GetEditHref">
+        <div class="mb-3">
+            <input class="form-control"
+                   placeholder="Zoek op naam..."
+                   @bind="_searchTerm"
+                   @bind:event="oninput" />
+        </div>
+
+            <Table TItem="TravelLeaderViewModel" Items="FilteredLeaders" OnDelete="@OnDelete" Path="travelleaders" CreateText="Nieuwe reisleider" EditHrefSelector="@GetEditHref">
             <HeaderContent>
-                <th>Naam</th>
+                <th @onclick='() => SortBy("Name")'>
+                    Naam @(GetSortIcon("Name"))
+                </th>
                 <th>Telefoon</th>
-                <th>Reizen ervaring</th>
-                <th>Min aantal reizen</th>
-                <th>Max aantal reizen</th>
+                <th @onclick='() => SortBy("Experience")'>
+                    Reizen Ervaring @(GetSortIcon("Experience"))
+                </th>
+                <th @onclick='() => SortBy("Minimum")'>
+                    Minimaal Aantal Reizen @(GetSortIcon("Minimum"))
+                </th>
+                <th @onclick='() => SortBy("Maximum")'>
+                    Maximaal Aantal Reizen @(GetSortIcon("Maximum"))
+                </th>
                 <th>Beschikbaar</th>
-                <th>Actief</th>
+                <th @onclick='() => SortBy("Active")'>
+                    Actief @(GetSortIcon("Active"))
+                </th>
             </HeaderContent>
             <RowTemplate>
                 <td>@context.Name</td>
@@ -27,14 +44,9 @@
                 <td>@context.AmountOfTrips</td>
                 <td>@context.MinTrips</td>
                 <td>@context.MaxTrips</td>
+                <td>@context.Availability</td>
                 <td>
-                    @if (context.AvailabilityPeriods != null && context.AvailabilityPeriods.Any())
-                    {
-                        @FormatAvailability(context)
-                    }
-                </td>
-                <td>
-                    <span class="badge @(context.IsActive ? "bg-success" : "bg-danger")">
+                    <span class="badge @(context.IsActive ? "bg-success" : "bg-danger")" style="cursor: pointer;" @onclick="@(() => ToggleActive(context))">
                         @(context.IsActive ? "Ja" : "Nee")
                     </span>
                 </td>
@@ -47,62 +59,3 @@
         }
     </div>
 </div>
-
-@code {
-    private List<TravelLeader> _leaders = new();
-    
-    private static string GetEditHref(TravelLeader leader)
-    {
-        return $"/travelleaders/edit/{leader.Id}";
-    }
-
-    private string FormatAvailability(TravelLeader leader)
-    {
-        var periods = leader.AvailabilityPeriods ?? new List<AvailabilityPeriod>();
-        return string.Join("; ", periods.OrderBy(p => p.Start)
-            .Select(p => $"{p.Start:dd MMM} – {p.End:dd MMM}"));
-    }
-
-    private async Task OnDelete(TravelLeader? leader)
-    {
-        if (leader == null)
-            return;
-
-        //TODO: Make a cool custom confirmation dialog
-        var confirm = await JS.InvokeAsync<bool>("confirm", $"Weet je zeker dat je '{leader.Name}' wilt verwijderen?");
-        if (!confirm)
-            return;
-
-        await LeaderService.DeleteTravelLeaderAsync(leader.Id);
-        _leaders.RemoveAll(l => l.Id == leader.Id);
-        StateHasChanged();
-    }
-
-    protected override async Task OnInitializedAsync()
-    {
-        try
-        {
-            var items = await LeaderService.GetTravelLeadersAsync();
-            _leaders = items.ToList();
-        }
-        catch
-        {
-            _leaders = new List<TravelLeader>();
-        }
-    }
-
-    private async Task ToggleActive(TravelLeader? leader)
-    {
-        if (leader == null)
-            return;
-
-        leader.IsActive = !leader.IsActive;
-        await LeaderService.UpdateTravelLeaderAsync(leader);
-
-        var idx = _leaders.FindIndex(l => l.Id == leader.Id);
-        if (idx >= 0)
-            _leaders[idx] = leader;
-
-        StateHasChanged();
-    }
-}

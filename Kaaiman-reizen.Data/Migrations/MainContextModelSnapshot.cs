@@ -64,22 +64,15 @@ namespace Kaaiman_reizen.Data.Migrations
                         new
                         {
                             Id = 1,
-                            End = new DateOnly(2025, 5, 3),
-                            Start = new DateOnly(2025, 4, 29),
+                            End = new DateOnly(2026, 7, 31),
+                            Start = new DateOnly(2026, 4, 1),
                             TravelLeaderId = 1
                         },
                         new
                         {
                             Id = 2,
-                            End = new DateOnly(2025, 6, 14),
-                            Start = new DateOnly(2025, 5, 30),
-                            TravelLeaderId = 1
-                        },
-                        new
-                        {
-                            Id = 3,
-                            End = new DateOnly(2025, 12, 31),
-                            Start = new DateOnly(2025, 1, 1),
+                            End = new DateOnly(2026, 5, 31),
+                            Start = new DateOnly(2026, 3, 1),
                             TravelLeaderId = 2
                         });
                 });
@@ -105,8 +98,14 @@ namespace Kaaiman_reizen.Data.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<DateTime>("Start")
-                        .HasColumnType("datetime(6)");
+                    b.Property<DateOnly>("End")
+                        .HasColumnType("date");
+
+                    b.Property<int>("RequiredLeaders")
+                        .HasColumnType("int");
+
+                    b.Property<DateOnly>("Start")
+                        .HasColumnType("date");
 
                     b.Property<int>("Travelers")
                         .HasColumnType("int");
@@ -118,14 +117,99 @@ namespace Kaaiman_reizen.Data.Migrations
                     b.HasData(
                         new
                         {
-                            Id = 1,
-                            BookingStatus = 2,
+                            Id = 2,
+                            Busses = 2,
+                            Name = "Spanje",
+                            End = new DateOnly(2026, 3, 20),
+                            RequiredLeaders = 1,
+                            Start = new DateOnly(2026, 3, 10),
+                            Travelers = 15,
+                            BookingStatus = 2
+                        },
+                        new
+                        {
+                            Id = 3,
                             Busses = 1,
-                            End = new DateTime(2026, 7, 14, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Name = "Italië",
-                            Start = new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Travelers = 10
+                            Name = "Oostenrijk",
+                            End = new DateOnly(2026, 4, 3),
+                            RequiredLeaders = 1,
+                            Start = new DateOnly(2026, 3, 25),
+                            Travelers = 8,
+                            BookingStatus = 1
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Busses = 3,
+                            Name = "Griekenland",
+                            End = new DateOnly(2026, 4, 15),
+                            RequiredLeaders = 2,
+                            Start = new DateOnly(2026, 4, 5),
+                            Travelers = 25,
+                            BookingStatus = 0
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Busses = 2,
+                            Name = "Kroatië",
+                            End = new DateOnly(2026, 5, 10),
+                            RequiredLeaders = 1,
+                            Start = new DateOnly(2026, 4, 28),
+                            Travelers = 12,
+                            BookingStatus = 2
                         });
+                });
+
+            modelBuilder.Entity("Kaaiman_reizen.Data.Entities.PlanningAssignment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("JourneyId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PlanningVersionId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TravelLeaderId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("JourneyId");
+
+                    b.HasIndex("PlanningVersionId");
+
+                    b.HasIndex("TravelLeaderId");
+
+                    b.ToTable("PlanningAssignments");
+                });
+
+            modelBuilder.Entity("Kaaiman_reizen.Data.Entities.PlanningVersion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PlanningVersions");
                 });
 
             modelBuilder.Entity("Kaaiman_reizen.Data.Entities.PreferredDestination", b =>
@@ -184,14 +268,14 @@ namespace Kaaiman_reizen.Data.Migrations
                         new
                         {
                             Id = 5,
-                            Destination = "Portugal",
+                            Destination = "Oostenrijk",
                             Rank = 2,
                             TravelLeaderId = 2
                         },
                         new
                         {
                             Id = 6,
-                            Destination = "Marokko",
+                            Destination = "Griekenland",
                             Rank = 3,
                             TravelLeaderId = 2
                         });
@@ -258,6 +342,202 @@ namespace Kaaiman_reizen.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Kaaiman_reizen.Data.Identity.ApplicationUser", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<int>("AccessFailedCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("LockoutEnabled")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<DateTimeOffset?>("LockoutEnd")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("NormalizedEmail")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<string>("NormalizedUserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<string>("PasswordHash")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("longtext");
+
+                    b.Property<bool>("PhoneNumberConfirmed")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("SecurityStamp")
+                        .HasColumnType("longtext");
+
+                    b.Property<bool>("TwoFactorEnabled")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("UserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedEmail")
+                        .HasDatabaseName("EmailIndex");
+
+                    b.HasIndex("NormalizedUserName")
+                        .IsUnique()
+                        .HasDatabaseName("UserNameIndex");
+
+                    b.ToTable("AspNetUsers", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<string>("NormalizedName")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedName")
+                        .IsUnique()
+                        .HasDatabaseName("RoleNameIndex");
+
+                    b.ToTable("AspNetRoles", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClaimType")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("ClaimValue")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("RoleId")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("AspNetRoleClaims", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClaimType")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("ClaimValue")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AspNetUserClaims", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
+                {
+                    b.Property<string>("LoginProvider")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("ProviderKey")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("ProviderDisplayName")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("LoginProvider", "ProviderKey");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AspNetUserLogins", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("RoleId")
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("UserId", "RoleId");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("AspNetUserRoles", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("LoginProvider")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("Value")
+                        .HasColumnType("longtext");
+
+                    b.HasKey("UserId", "LoginProvider", "Name");
+
+                    b.ToTable("AspNetUserTokens", (string)null);
+                });
+
             modelBuilder.Entity("JourneyTravelLeader", b =>
                 {
                     b.HasOne("Kaaiman_reizen.Data.Entities.Journey", null)
@@ -284,6 +564,33 @@ namespace Kaaiman_reizen.Data.Migrations
                     b.Navigation("TravelLeader");
                 });
 
+            modelBuilder.Entity("Kaaiman_reizen.Data.Entities.PlanningAssignment", b =>
+                {
+                    b.HasOne("Kaaiman_reizen.Data.Entities.Journey", "Journey")
+                        .WithMany()
+                        .HasForeignKey("JourneyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Kaaiman_reizen.Data.Entities.PlanningVersion", "PlanningVersion")
+                        .WithMany("Assignments")
+                        .HasForeignKey("PlanningVersionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Kaaiman_reizen.Data.Entities.TravelLeader", "TravelLeader")
+                        .WithMany()
+                        .HasForeignKey("TravelLeaderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Journey");
+
+                    b.Navigation("PlanningVersion");
+
+                    b.Navigation("TravelLeader");
+                });
+
             modelBuilder.Entity("Kaaiman_reizen.Data.Entities.PreferredDestination", b =>
                 {
                     b.HasOne("Kaaiman_reizen.Data.Entities.TravelLeader", "TravelLeader")
@@ -293,6 +600,62 @@ namespace Kaaiman_reizen.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("TravelLeader");
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
+                {
+                    b.HasOne("Kaaiman_reizen.Data.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
+                {
+                    b.HasOne("Kaaiman_reizen.Data.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Kaaiman_reizen.Data.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
+                {
+                    b.HasOne("Kaaiman_reizen.Data.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Kaaiman_reizen.Data.Entities.PlanningVersion", b =>
+                {
+                    b.Navigation("Assignments");
                 });
 
             modelBuilder.Entity("Kaaiman_reizen.Data.Entities.TravelLeader", b =>

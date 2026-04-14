@@ -8,6 +8,17 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <Folder Include="Dtos\" />
+      <Folder Include="Services\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Azure.Identity" Version="1.20.0" />
+      <PackageReference Include="Azure.Security" Version="1.1.0" />
+      <PackageReference Include="Azure.Security.KeyVault.Secrets" Version="4.9.0" />
+      <PackageReference Include="Microsoft.AspNetCore.Authentication" Version="2.3.9" />
+      <PackageReference Include="Microsoft.AspNetCore.Authentication.MicrosoftAccount" Version="10.0.5" />
+      <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.0" />
       <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
         <PrivateAssets>all</PrivateAssets>

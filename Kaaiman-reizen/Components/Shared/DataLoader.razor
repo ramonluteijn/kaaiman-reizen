@@ -1,0 +1,38 @@
+@typeparam TItem
+
+@if (IsLoading)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" Class="mb-3" />
+    <MudText Typo="Typo.body2" Color="Color.Secondary">Laden...</MudText>
+}
+else if (!string.IsNullOrWhiteSpace(Error))
+{
+    <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">
+        <MudText Typo="Typo.body2" Style="white-space: pre-wrap; word-break: break-word;">@Error</MudText>
+    </MudAlert>
+}
+else if (Items.Count == 0)
+{
+    <MudText Typo="Typo.body2" Color="Color.Secondary">@EmptyMessage</MudText>
+}
+else
+{
+    @ChildContent(Items)
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyList<TItem> Items { get; set; } = [];
+
+    [Parameter, EditorRequired]
+    public RenderFragment<IReadOnlyList<TItem>> ChildContent { get; set; } = null!;
+
+    [Parameter]
+    public bool IsLoading { get; set; }
+
+    [Parameter]
+    public string? Error { get; set; }
+
+    [Parameter]
+    public string EmptyMessage { get; set; } = "Geen resultaten gevonden.";
+}

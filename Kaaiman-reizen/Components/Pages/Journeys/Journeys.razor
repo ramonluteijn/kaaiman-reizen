@@ -1,7 +1,7 @@
 @page "/journeys"
-@rendermode InteractiveServer
 @using Kaaiman_reizen.Data.Services
 @using Kaaiman_reizen.Data.Entities
+@rendermode InteractiveServer
 @inject IJourneyService JourneyService
 @inject IJSRuntime JS
 
@@ -11,15 +11,31 @@
 
 <div class="card">
     <div class="card-body">
-        <Table TItem="Journey" Items="_journeys" OnDelete="@OnDelete" Path="journeys" CreateText="Nieuwe reis" EditHrefSelector="@GetEditHref">
+        <div class="mb-3">
+            <input class="form-control"
+                   placeholder="Zoek op land..."
+                   @bind="_searchTerm"
+                   @bind:event="oninput" />
+        </div>
+
+        <Table TItem="Journey" Items="FilteredJourneys" OnDelete="@OnDelete" Path="journeys" CreateText="Nieuwe reis" EditHrefSelector="@GetEditHref">
             <HeaderContent>
-                <th>Reis</th>
-                <th>Start datum</th>
-                <th>Eind datum</th>
+                <th @onclick='() => SortBy("Name")'>
+                    Reis @(GetSortIcon("Name"))
+                </th>
+                <th @onclick='() => SortBy("StartDate")'>
+                    Start Datum @(GetSortIcon("StartDate"))
+                </th>
+                <th @onclick='() => SortBy("EndDate")'>
+                    Eind Datum @(GetSortIcon("EndDate"))
+                </th>
+                <th @onclick='() => SortBy("Busses")'>
+                    Busjes @(GetSortIcon("Busses"))
+                </th>
+                <th @onclick='() => SortBy("Travelers")'>
+                    Reizigers @(GetSortIcon("Travelers"))
+                </th>
                 <th>Reisleiders</th>
-                <th>Boekinsstatus</th>
-                <th>Busjes</th>
-                <th>Reizigers</th>
             </HeaderContent>
             <RowTemplate>
                 <td>@context.Name</td>
@@ -61,6 +77,9 @@
 
 @code {
     private List<Journey> _journeys = new();
+    private string _searchTerm = string.Empty;
+    private string _sortColumn = "Country";
+    private bool _sortAscending = true;
 
     private static string GetEditHref(Journey journey)
     {
@@ -72,6 +91,45 @@
         var leaders = journey.TravelLeaders ?? new List<TravelLeader>();
         return string.Join("; ", leaders.OrderBy(l => l.Name)
             .Select(l => $"{l.Name}"));
+    }
+
+    private IEnumerable<Journey> FilteredJourneys => 
+        ApplySorting(
+            _journeys.Where(j =>
+                string.IsNullOrWhiteSpace(_searchTerm) ||
+                j.Name.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase)
+        )
+    );
+
+    private IEnumerable<Journey> ApplySorting(IEnumerable<Journey> query)
+    {
+        return _sortColumn switch
+        {
+            "Country" => _sortAscending ? query.OrderBy(x => x.Name) : query.OrderByDescending(x => x.Name),
+            "StartDate" => _sortAscending ? query.OrderBy(x => x.Start) : query.OrderByDescending(x => x.Start),
+            "EndDate" => _sortAscending ? query.OrderBy(x => x.End) : query.OrderByDescending(x => x.End),
+            "Busses" => _sortAscending ? query.OrderBy(x => x.Busses) : query.OrderByDescending(x => x.Busses),
+            "Travelers" => _sortAscending ? query.OrderBy(x => x.Travelers) : query.OrderByDescending(x => x.Travelers),
+
+            _ => query
+        };
+    }
+
+    private void SortBy(string column)
+    {
+        if (_sortColumn == column) _sortAscending = !_sortAscending;
+        else
+        {
+            _sortColumn = column;
+            _sortAscending = true;
+        }
+    }
+
+    private string GetSortIcon(string column)
+    {
+        if (_sortColumn != column) return "";
+
+        return _sortAscending ? "↑" : "↓";
     }
 
     private async Task OnDelete(Journey? journey)
@@ -93,7 +151,7 @@
     {
         try
         {
-            var items = await JourneyService.GetJourneysAsync();
+            var items = await JourneyService.GetJourneysWithPublishedPlanningAsync();
             _journeys = items.ToList();
         }
         catch

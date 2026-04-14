@@ -1,29 +1,134 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">Kaaiman-reizen</a>
+@using Microsoft.AspNetCore.Components.Authorization
+
+<div class="d-flex flex-column vh-100 nav-shell">
+    <div class="border-bottom p-3 nav-brand">
+        <div class="d-flex justify-content-center">
+            <a href="/">
+                <img src="images/kaaiman-logo-footer-1920x405.png.webp" class="navbar-brand img-fluid" style="max-height: 58px;" alt="Logo Kaaiman-reizen" />
+            </a>
+        </div>
+    </div>
+
+    <div class="nav-scrollable flex-grow-1 d-flex flex-column overflow-auto" onclick="document.querySelector('.navbar-toggler').click()">
+        <nav class="nav flex-column h-100 flex-nowrap">
+            
+            <div class="nav-item">
+                <NavLink class="nav-link d-flex align-items-center rounded-0" href="" Match="NavLinkMatch.All">
+                    <i class="bi bi-house-door-fill nav-icon me-3"></i> Home
+                </NavLink>
+            </div>
+
+            <AuthorizeView>
+                <NotAuthorized>
+                    <div class="nav-item border-top mt-auto nav-footer-border">
+
+                        <NavLink class="nav-link d-flex align-items-center rounded-0 py-3" href="Account/Login">
+
+                            <i class="bi bi-box-arrow-in-right nav-icon me-3"></i> Inloggen
+
+                        </NavLink>
+
+                    </div>
+                </NotAuthorized>
+            </AuthorizeView>
+     
+            <AuthorizeView Roles="Planner">
+                <div class="nav-item">
+                    <NavLink class="nav-link d-flex align-items-center rounded-0" href="travelleaders">
+                        <i class="bi bi-people-fill nav-icon me-3"></i> Reisleiders
+                    </NavLink>
+                </div>
+
+                <div class="nav-item">
+                    <NavLink class="nav-link d-flex align-items-center rounded-0" href="journeys">
+                        <i class="bi bi-compass-fill nav-icon me-3"></i> Reizen
+                    </NavLink>
+                </div>
+
+                <div class="nav-item">
+                    <NavLink class="nav-link d-flex align-items-center rounded-0" href="planner/draft">
+                        <i class="bi bi-calendar-check nav-icon me-3"></i> Planner
+                    </NavLink>
+                </div>
+            </AuthorizeView>
+            <AuthorizeView>
+                <Authorized>
+                    <div class="border-top w-100 m-0 mt-auto p-0 nav-footer-border">
+            
+                        <div class="border-bottom d-flex align-items-center justify-content-center px-3 py-2 nav-user-row">
+                            <i class="bi bi-person-circle me-2"></i>
+                            <small class="text-truncate">@context.User.Identity?.Name</small>
+                        </div>
+
+                        <form action="Account/Logout" method="post" class="m-0 p-0">
+                            <AntiforgeryToken />
+                            <input type="hidden" name="ReturnUrl" value="/" />
+                            <button type="submit" class="nav-link btn btn-link w-100 d-flex align-items-center rounded-0 border-0 px-3 py-3 text-start shadow-none" style="margin: 0 !important;">
+                                <i class="bi bi-box-arrow-left nav-icon me-3"></i> Uitloggen
+                            </button>
+                        </form>
+                    </div>
+                </Authorized>
+            </AuthorizeView>
+        </nav>
     </div>
 </div>
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler"/>
+<style>
+    .nav-shell {
+        background-color: #00796B;
+        color: #ffffff;
+        --mud-palette-tertiary: transparent;
+        --mud-palette-tertiary-rgb: 0, 0, 0;
+        --mud-palette-tertiary-text: #ffffff;
+        --mud-palette-tertiary-darken: transparent;
+        --mud-palette-tertiary-lighten: transparent;
+    }
 
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="nav flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
+    .nav-brand {
+        border-color: rgba(255, 255, 255, 0.2) !important;
+    }
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="travelleaders">
-                <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> Reisleiders
-            </NavLink>
-        </div>
+    .nav-shell .nav-link {
+        color: #ffffff !important;
+        position: relative;
+        margin: 4px 10px !important;
+        border-radius: 10px !important;
+    }
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="journeys">
-                <span class="bi bi-airplane-fill-nav-menu" aria-hidden="true"></span> Reizen
-            </NavLink>
-        </div>
-    </nav>
-</div>
+    .nav-shell .nav-link .nav-icon {
+        color: inherit !important;
+    }
+
+    .nav-shell .nav-link:hover {
+        background-color: rgba(255, 255, 255, 0.14);
+        color: #ffffff !important;
+    }
+
+    .nav-shell .nav-link.active,
+    .nav-shell .nav-link.active:hover,
+    .nav-shell .nav-link.active:focus {
+        background-color: #42958B !important;
+        font-weight: 700;
+    }
+
+    .nav-shell .nav-link.active::after {
+        content: "";
+        position: absolute;
+        top: 8px;
+        bottom: 8px;
+        right: 8px;
+        width: 4px;
+        border-radius: 2px;
+        background: #ffffff;
+    }
+
+    .nav-footer-border {
+        border-color: rgba(255, 255, 255, 0.2) !important;
+    }
+
+    .nav-user-row {
+        color: #ffffff;
+        border-color: rgba(255, 255, 255, 0.2) !important;
+    }
+</style>
