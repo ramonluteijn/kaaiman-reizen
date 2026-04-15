@@ -29,13 +29,16 @@
                 <th @onclick='() => SortBy("EndDate")'>
                     Eind Datum @(GetSortIcon("EndDate"))
                 </th>
+                <th>Reisleiders</th>
+                <th @onclick='() => SortBy("BookingStatus")'>
+                    Boekingsstatus @(GetSortIcon("BookingStatus"))
+                </th>
                 <th @onclick='() => SortBy("Busses")'>
                     Busjes @(GetSortIcon("Busses"))
                 </th>
                 <th @onclick='() => SortBy("Travelers")'>
                     Reizigers @(GetSortIcon("Travelers"))
                 </th>
-                <th>Reisleiders</th>
             </HeaderContent>
             <RowTemplate>
                 <td>@context.Name</td>
@@ -105,9 +108,10 @@
     {
         return _sortColumn switch
         {
-            "Country" => _sortAscending ? query.OrderBy(x => x.Name) : query.OrderByDescending(x => x.Name),
+            "Name" => _sortAscending ? query.OrderBy(x => x.Name) : query.OrderByDescending(x => x.Name),
             "StartDate" => _sortAscending ? query.OrderBy(x => x.Start) : query.OrderByDescending(x => x.Start),
             "EndDate" => _sortAscending ? query.OrderBy(x => x.End) : query.OrderByDescending(x => x.End),
+            "BookingStatus" => _sortAscending ? query.OrderBy(x => x.BookingStatus) : query.OrderByDescending(x => x.BookingStatus),
             "Busses" => _sortAscending ? query.OrderBy(x => x.Busses) : query.OrderByDescending(x => x.Busses),
             "Travelers" => _sortAscending ? query.OrderBy(x => x.Travelers) : query.OrderByDescending(x => x.Travelers),
 
