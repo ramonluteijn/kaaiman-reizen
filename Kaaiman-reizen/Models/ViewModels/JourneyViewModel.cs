@@ -5,7 +5,7 @@ namespace Kaaiman_reizen.Models.ViewModels;
 public sealed class JourneyViewModel
 {
     public int Id { get; init; }
-    public string Country { get; init; } = string.Empty;
+    public string Name { get; init; } = string.Empty;
     public DateOnly Start { get; init; }
     public DateOnly End { get; init; }
     public int? Busses { get; init; }
@@ -18,7 +18,7 @@ public sealed class JourneyViewModel
         return new Journey
         {
             Id              = this.Id,
-            Country         = this.Country,
+            Name         = this.Name,
             Start           = this.Start,
             End             = this.End,
             Busses          = this.Busses,

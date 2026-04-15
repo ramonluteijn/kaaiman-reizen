@@ -23,13 +23,14 @@ namespace Kaaiman_reizen.Tests.Services
         public async Task AddJourney_Should_Add_Journey()
         {
             var db = GetInMemoryDb();
-            var service = new JourneyService(db);
+            var planningService = new PlanningService(db);
+            var service = new JourneyService(db, planningService);
 
             var journey = new Journey
             {
                 Name = "Test Country",
-                Start = new DateTime(0001, 1, 1),
-                End = new DateTime(0001, 1, 2),
+                Start = new DateOnly(0001, 1, 1),
+                End = new DateOnly(0001, 1, 2),
                 Busses = 1,
                 Travelers = 1,
                 BookingStatus = 1,
@@ -45,13 +46,14 @@ namespace Kaaiman_reizen.Tests.Services
         public async Task UpdateJourney_Should_Update_Journey()
         {
             var db = GetInMemoryDb();
-            var service = new JourneyService(db);
+            var planningService = new PlanningService(db);
+            var service = new JourneyService(db, planningService);
 
             var journey = new Journey
             {
                 Name = "New Country",
-                Start = new DateTime(0001, 1, 1),
-                End = new DateTime(0001, 1, 2),
+                Start = new DateOnly(0001, 1, 1),
+                End = new DateOnly(0001, 1, 2),
                 Busses = 1,
                 Travelers = 1,
                 BookingStatus = 1,
@@ -70,13 +72,14 @@ namespace Kaaiman_reizen.Tests.Services
         public async Task DeleteJourney_Should_Remove_Journey()
         {
             var db = GetInMemoryDb();
-            var service = new JourneyService(db);
+            var planningService = new PlanningService(db);
+            var service = new JourneyService(db, planningService);
 
             var journey = new Journey
             {
                 Name = "Delete Country",
-                Start = new DateTime(0001, 1, 1),
-                End = new DateTime(0001, 1, 2),
+                Start = new DateOnly(0001, 1, 1),
+                End = new DateOnly(0001, 1, 2),
                 Busses = 1,
                 Travelers = 1,
                 BookingStatus = 1,
@@ -94,13 +97,14 @@ namespace Kaaiman_reizen.Tests.Services
         public async Task GetJourneyById_Should_Return_Correct_Journey()
         {
             var db = GetInMemoryDb();
-            var service = new JourneyService(db);
+            var planningService = new PlanningService(db);
+            var service = new JourneyService(db, planningService);
 
             var journey = new Journey
             {
                 Name = "Find Country",
-                Start = new DateTime(0001, 1, 1),
-                End = new DateTime(0001, 1, 2),
+                Start = new DateOnly(0001, 1, 1),
+                End = new DateOnly(0001, 1, 2),
                 Busses = 1,
                 Travelers = 1,
                 BookingStatus = 1,
@@ -115,13 +119,13 @@ namespace Kaaiman_reizen.Tests.Services
         }
 
         [Fact]
-        public void Validate_Should_Return_Error_When_MinTrips_GreaterThan_MaxTrips()
+        public void Validate_Should_Return_Error_When_StartDate_GreaterThan_EndDate()
         {
             var journey = new Journey
             {
                 Name = "Invalid Country",
-                Start = new DateTime(0001, 1, 2),
-                End = new DateTime(0001, 1, 1),
+                Start = new DateOnly(0001, 1, 2),
+                End = new DateOnly(0001, 1, 1),
                 Busses = 1,
                 Travelers = 1,
                 BookingStatus = 1,

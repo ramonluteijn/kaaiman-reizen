@@ -91,15 +91,12 @@ namespace Kaaiman_reizen.Data.Migrations
                     b.Property<int>("Busses")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("End")
-                        .HasColumnType("datetime(6)");
+                    b.Property<DateOnly>("End")
+                        .HasColumnType("date");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("longtext");
-
-                    b.Property<DateOnly>("End")
-                        .HasColumnType("date");
 
                     b.Property<int>("RequiredLeaders")
                         .HasColumnType("int");
@@ -117,47 +114,58 @@ namespace Kaaiman_reizen.Data.Migrations
                     b.HasData(
                         new
                         {
+                            Id = 1,
+                            BookingStatus = 0,
+                            Busses = 1,
+                            End = new DateOnly(2026, 7, 14),
+                            Name = "Italië",
+                            RequiredLeaders = 1,
+                            Start = new DateOnly(2026, 7, 1),
+                            Travelers = 10
+                        },
+                        new
+                        {
                             Id = 2,
+                            BookingStatus = 0,
                             Busses = 2,
-                            Name = "Spanje",
                             End = new DateOnly(2026, 3, 20),
+                            Name = "Spanje",
                             RequiredLeaders = 1,
                             Start = new DateOnly(2026, 3, 10),
-                            Travelers = 15,
-                            BookingStatus = 2
+                            Travelers = 15
                         },
                         new
                         {
                             Id = 3,
+                            BookingStatus = 1,
                             Busses = 1,
-                            Name = "Oostenrijk",
                             End = new DateOnly(2026, 4, 3),
+                            Name = "Oostenrijk",
                             RequiredLeaders = 1,
                             Start = new DateOnly(2026, 3, 25),
-                            Travelers = 8,
-                            BookingStatus = 1
+                            Travelers = 8
                         },
                         new
                         {
                             Id = 4,
+                            BookingStatus = 2,
                             Busses = 3,
-                            Name = "Griekenland",
                             End = new DateOnly(2026, 4, 15),
+                            Name = "Griekenland",
                             RequiredLeaders = 2,
                             Start = new DateOnly(2026, 4, 5),
-                            Travelers = 25,
-                            BookingStatus = 0
+                            Travelers = 25
                         },
                         new
                         {
                             Id = 5,
+                            BookingStatus = 2,
                             Busses = 2,
-                            Name = "Kroatië",
                             End = new DateOnly(2026, 5, 10),
+                            Name = "Kroatië",
                             RequiredLeaders = 1,
                             Start = new DateOnly(2026, 4, 28),
-                            Travelers = 12,
-                            BookingStatus = 2
+                            Travelers = 12
                         });
                 });
 

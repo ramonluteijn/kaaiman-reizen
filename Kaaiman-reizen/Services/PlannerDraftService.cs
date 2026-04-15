@@ -38,7 +38,7 @@ public class PlannerDraftService : IPlannerDraftService
                 .Select(j => new PlannerJourneyInput
                 {
                     Id              = j.Id,
-                    Country         = j.Country,
+                    Name            = j.Name,
                     Start           = j.Start,
                     End             = j.End,
                     RequiredLeaders = j.RequiredLeaders   // ← carry through
@@ -128,7 +128,7 @@ public class PlannerDraftService : IPlannerDraftService
             for (int j = 0; j < J; j++)
             {
                 int cost = leaders[l].PreferredDestinations.TryGetValue(
-                    journeys[j].Country, out int rank) ? rank : 10;
+                    journeys[j].Name, out int rank) ? rank : 10;
                 obj.AddTerm(x[l, j], cost);
             }
         }
@@ -163,7 +163,7 @@ public class PlannerDraftService : IPlannerDraftService
         if (journeysWithoutEnoughLeaders.Any())
         {
             var names = string.Join(", ", journeysWithoutEnoughLeaders.Select(j =>
-                $"{j.Country} ({j.Start:dd MMM}–{j.End:dd MMM yyyy}, vereist: {j.RequiredLeaders})"));
+                $"{j.Name} ({j.Start:dd MMM}–{j.End:dd MMM yyyy}, vereist: {j.RequiredLeaders})"));
             result.IsSuccess    = false;
             result.ErrorMessage =
                 $"Niet genoeg reisleiders beschikbaar voor: {names}. " +
@@ -190,7 +190,7 @@ public class PlannerDraftService : IPlannerDraftService
                         var leader  = leaders[l];
                         var journey = journeys[j];
                         int? rankMatched = leader.PreferredDestinations
-                            .TryGetValue(journey.Country, out int r) ? r : null;
+                            .TryGetValue(journey.Name, out int r) ? r : null;
 
                         assignments.Add(new JourneyAssignmentResult
                         {

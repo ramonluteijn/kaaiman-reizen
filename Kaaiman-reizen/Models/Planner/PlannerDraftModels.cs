@@ -23,7 +23,7 @@ public class PlannerLeaderInput
 public class PlannerJourneyInput
 {
     public int Id { get; set; }
-    public string Country { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
     public DateOnly Start { get; set; }
     public DateOnly End { get; set; }
     /// <summary>How many leaders the solver must assign to this journey.</summary>
