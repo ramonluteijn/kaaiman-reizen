@@ -1,10 +1,8 @@
-using Kaaiman_reizen.Components;
 using Kaaiman_reizen.Data;
 using Kaaiman_reizen.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Kaaiman_reizen.Data.Identity;
-using Kaaiman_reizen.Services;
 using MudBlazor.Services;
 var builder = WebApplication.CreateBuilder(args);
 
@@ -101,7 +99,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();
-app.MapRazorComponents<App>()
+app.MapRazorComponents<Kaaiman_reizen.Components.App>()
     .AddInteractiveServerRenderMode();
 
 app.MapRazorPages();

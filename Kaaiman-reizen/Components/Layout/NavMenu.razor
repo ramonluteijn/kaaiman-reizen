@@ -55,10 +55,10 @@
                 <Authorized>
                     <div class="border-top w-100 m-0 mt-auto p-0 nav-footer-border">
             
-                        <div class="border-bottom d-flex align-items-center justify-content-center px-3 py-2 nav-user-row">
+                        <a href="profile" class="border-bottom d-flex align-items-center justify-content-center px-3 py-2 nav-user-row text-decoration-none text-white">
                             <i class="bi bi-person-circle me-2"></i>
                             <small class="text-truncate">@context.User.Identity?.Name</small>
-                        </div>
+                        </a>
 
                         <form action="Identity/Account/Logout" method="post" class="m-0 p-0">
                             <AntiforgeryToken />
