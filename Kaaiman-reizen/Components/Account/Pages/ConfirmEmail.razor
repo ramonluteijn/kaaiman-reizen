@@ -1,0 +1,85 @@
+﻿@page "/Account/ConfirmEmail"
+@layout AuthLayout
+
+@using System.Text
+@using Kaaiman_reizen.Components.Account
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.WebUtilities
+@using Kaaiman_reizen.Data.Identity
+
+@inject UserManager<ApplicationUser> UserManager
+@inject IdentityRedirectManager RedirectManager
+
+<PageTitle>E-mailadres bevestigen</PageTitle>
+
+<div class="d-flex justify-content-center align-items-center container mb-5" style="min-height: 85vh;">
+    <div class="col-12 col-md-8 col-lg-5">
+        <div class="card rounded-4 border-0 shadow-lg">
+            <div class="card-body p-5 text-center">
+                
+                @* Logo met extra witruimte *@
+                <div class="mb-5 pb-3">
+                    <img src="images/Kaaiman-reizen-logo.webp" class="navbar-brand img-fluid" style="max-height: 50px;" alt="Logo Kaaiman-reizen" />
+                </div>
+
+                <div class="mb-5">
+                    <h2 class="h4 fw-bold mb-4">E-mailbevestiging</h2>
+                    
+                    @* De statusmelding in het Nederlands *@
+                    <StatusMessage Message="@statusMessage" />
+                </div>
+
+                @* Directe actieknop voor de gebruiker *@
+                <div class="mt-5">
+                    <a href="Account/Login" class="w-100 btn btn-dark btn-lg rounded-3 py-3 shadow-sm">
+                        Nu inloggen
+                    </a>
+                </div>
+
+                @* Footer met extra spacing *@
+                <div class="border-top mt-5 pt-5">
+                    <p class="text-muted mb-0">
+                        Heb je vragen? <a href="Contact" class="text-decoration-none fw-bold text-dark">Neem contact op</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string? statusMessage;
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    [SupplyParameterFromQuery]
+    private string? UserId { get; set; }
+
+    [SupplyParameterFromQuery]
+    private string? Code { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (UserId is null || Code is null)
+        {
+            RedirectManager.RedirectTo("");
+            return;
+        }
+
+        var user = await UserManager.FindByIdAsync(UserId);
+        if (user is null)
+        {
+            HttpContext.Response.StatusCode = StatusCodes.Status404NotFound;
+            statusMessage = $"Fout: Kan gebruiker met ID {UserId} niet laden.";
+        }
+        else
+        {
+            var code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(Code));
+            var result = await UserManager.ConfirmEmailAsync(user, code);
+            statusMessage = result.Succeeded
+                ? "Bedankt voor het bevestigen van je e-mailadres. Je kunt nu inloggen."
+                : "Fout bij het bevestigen van je e-mailadres.";
+        }
+    }
+}
