@@ -1,7 +1,10 @@
 @page "/profile"
 @using Microsoft.AspNetCore.Components.Authorization
 @using System.Security.Claims
-@inject AuthenticationStateProvider AuthenticationStateProvider
+@using Microsoft.AspNetCore.Identity
+@using Kaaiman_reizen.Data.Identity
+@using System.ComponentModel.DataAnnotations
+@rendermode InteractiveServer
 
 <PageTitle>Profiel</PageTitle>
 
@@ -37,6 +40,46 @@
                         }
                     </div>
                 </div>
+
+                <hr my-4 />
+                <h2 class="h5 mb-3">Wachtwoord wijzigen</h2>
+
+                @if (!string.IsNullOrEmpty(statusMessage))
+                {
+                    <div class="alert alert-@statusColor">@statusMessage</div>
+                }
+
+                <EditForm Model="passwordModel" OnValidSubmit="ChangePassword" FormName="changePassword" Context="editContext">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary class="text-danger" />
+
+                    <div class="row mb-3">
+                        <label class="col-sm-3 col-form-label fw-bold">Huidig wachtwoord</label>
+                        <div class="col-sm-9">
+                            <InputText type="password" class="form-control" @bind-Value="passwordModel.CurrentPassword" />
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <label class="col-sm-3 col-form-label fw-bold">Nieuw wachtwoord</label>
+                        <div class="col-sm-9">
+                            <InputText type="password" class="form-control" @bind-Value="passwordModel.NewPassword" />
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <label class="col-sm-3 col-form-label fw-bold">Bevestig nieuw wachtwoord</label>
+                        <div class="col-sm-9">
+                            <InputText type="password" class="form-control" @bind-Value="passwordModel.ConfirmPassword" />
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-9 offset-sm-3">
+                            <button type="submit" class="btn btn-primary" style="background-color: #00796B; border-color: #00796B;">Wijzig wachtwoord</button>
+                        </div>
+                    </div>
+                </EditForm>
             </Authorized>
             <NotAuthorized>
                 <div class="alert alert-info">
@@ -46,15 +89,3 @@
         </AuthorizeView>
     </div>
 </div>
-
-@code {
-    private string GetUserEmail(ClaimsPrincipal user)
-    {
-        return user.FindFirst(ClaimTypes.Email)?.Value ?? user.Identity?.Name ?? "Onbekend";
-    }
-
-    private IEnumerable<string> GetUserRoles(ClaimsPrincipal user)
-    {
-        return user.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value);
-    }
-}
