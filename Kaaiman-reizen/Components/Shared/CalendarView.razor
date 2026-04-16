@@ -26,7 +26,7 @@
                                     @foreach (var j in group)
                                     {
                                         <span class="cal-journey-chip" @onclick="() => GoToMonth(j.Start)">
-                                            @j.Country
+                                            @j.Name
                                         </span>
                                     }
                                 </div>
@@ -104,7 +104,7 @@
                      @ondrop="() => HandleDropOnJourney(journey)"
                      @ondrop:stopPropagation="true">
 
-                    <span class="journey-span-country">@journey.Country</span>
+                    <span class="journey-span-country">@journey.Name</span>
 
                     @if (journey.TravelLeaders != null && journey.TravelLeaders.Any())
                     {
