@@ -10,7 +10,7 @@ public static class JourneyExtensions
         return new JourneyViewModel
         {
             Id = journey.Id,
-            Country = journey.Country,
+            Name = journey.Name,
             Start = journey.Start,
             End = journey.End,
             Busses = journey.Busses,

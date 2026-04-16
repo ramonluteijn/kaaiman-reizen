@@ -33,7 +33,7 @@ public static class CheckRules
         return new PlannerRuleResult(
             NoOverlap: !windows.Any(j => JourneysOverlap.Check(j.Start, j.End, journey.Start, journey.End)),
             HasMinimumGap: windows.All(j => HasMinimumGapDays.Check(j.Start, j.End, journey.Start, journey.End, MinimumGapDays)),
-            HasExperience: windows.All(j => HasExperience.Check(RequiredExperience, journey.Country, leader.AmountOfTrips)),
+            HasExperience: windows.All(j => HasExperience.Check(RequiredExperience, journey.Name, leader.AmountOfTrips)),
             MinMaxResult: MinMaxJourneys.Evaluate(windows.Count, leader.MinTrips, leader.MinTrips)
         );
     }

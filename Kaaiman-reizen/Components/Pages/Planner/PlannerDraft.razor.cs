@@ -57,7 +57,7 @@ public partial class PlannerDraft : ComponentBase
     {
         if (_request is null) return;
 
-        var allCountries = _request.Journeys.Select(j => j.Country).Distinct();
+        var allCountries = _request.Journeys.Select(j => j.Name).Distinct();
 
         var popularity = allCountries
             .Select(c => (
@@ -276,7 +276,7 @@ public partial class PlannerDraft : ComponentBase
                 {
                     var leader = _request.Leaders.FirstOrDefault(item => item.Id == assignment.TravelLeaderId);
                     int? rank = leader is not null &&
-                                leader.PreferredDestinations.TryGetValue(journey.Country, out var matchedRank)
+                                leader.PreferredDestinations.TryGetValue(journey.Name, out var matchedRank)
                         ? matchedRank
                         : null;
 
@@ -337,7 +337,7 @@ public partial class PlannerDraft : ComponentBase
             return new JourneyViewModel
             {
                 Id              = j.Id,
-                Country         = j.Country,
+                Name            = j.Name,
                 Start           = j.Start,
                 End             = j.End,
                 RequiredLeaders = j.RequiredLeaders,
@@ -373,7 +373,7 @@ public partial class PlannerDraft : ComponentBase
         _selectedJourney = new JourneyViewModel
         {
             Id              = _selectedJourney.Id,
-            Country         = _selectedJourney.Country,
+            Name            = _selectedJourney.Name,
             Start           = _selectedJourney.Start,
             End             = _selectedJourney.End,
             RequiredLeaders = journeyInput.RequiredLeaders,
@@ -410,7 +410,7 @@ public partial class PlannerDraft : ComponentBase
         if (currentCount >= journeyInput.RequiredLeaders) return;
 
         var leader = _request.Leaders.First(l => l.Id == candidate.LeaderId);
-        int? rank  = leader.PreferredDestinations.TryGetValue(_selectedJourney.Country, out int r) ? r : null;
+        int? rank  = leader.PreferredDestinations.TryGetValue(_selectedJourney.Name, out int r) ? r : null;
 
         var entry = new JourneyAssignmentResult
         {
@@ -473,7 +473,7 @@ public partial class PlannerDraft : ComponentBase
                     .Where(j => j is not null && j.Start < journeyInput.End && journeyInput.Start < j.End)
                     .FirstOrDefault();
 
-                int? rank = leader.PreferredDestinations.TryGetValue(journey.Country, out int r) ? r : null;
+                int? rank = leader.PreferredDestinations.TryGetValue(journey.Name, out int r) ? r : null;
 
                 return new LeaderCandidate(
                     LeaderId           : leader.Id,
@@ -482,7 +482,7 @@ public partial class PlannerDraft : ComponentBase
                     IsAlreadyAssigned  : assignedToThis.Contains(leader.Id),
                     HasConflict        : conflictJourney is not null,
                     ConflictJourneyName: conflictJourney is not null
-                        ? $"{conflictJourney.Country} ({conflictJourney.Start:dd MMM}–{conflictJourney.End:dd MMM})"
+                        ? $"{conflictJourney.Name} ({conflictJourney.Start:dd MMM}–{conflictJourney.End:dd MMM})"
                         : string.Empty,
                     ExceedsMaxTrips    : currentCount >= leader.MaxTrips,
                     CurrentAssignments : currentCount,
