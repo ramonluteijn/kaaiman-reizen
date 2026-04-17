@@ -23,60 +23,66 @@ namespace Kaaiman_reizen.Tests.Services
         public async Task AddJourney_Should_Add_Journey()
         {
             var db = GetInMemoryDb();
-            var service = new JourneyService(db);
+            var planningService = new PlanningService(db);
+            var service = new JourneyService(db, planningService);
 
             var journey = new Journey
             {
-                Country = "Test Country",
+                Name = "Test Country",
                 Start = new DateOnly(0001, 1, 1),
                 End = new DateOnly(0001, 1, 2),
                 Busses = 1,
                 Travelers = 1,
+                BookingStatus = 1,
             };
             await service.AddJourneyAsync(journey, new List<int>());
 
             var allJourneys = await service.GetJourneysAsync();
             Assert.Single(allJourneys);
-            Assert.Equal("Test Country", allJourneys.First().Country);
+            Assert.Equal("Test Country", allJourneys.First().Name);
         }
 
         [Fact]
         public async Task UpdateJourney_Should_Update_Journey()
         {
             var db = GetInMemoryDb();
-            var service = new JourneyService(db);
+            var planningService = new PlanningService(db);
+            var service = new JourneyService(db, planningService);
 
             var journey = new Journey
             {
-                Country = "New Country",
+                Name = "New Country",
                 Start = new DateOnly(0001, 1, 1),
                 End = new DateOnly(0001, 1, 2),
                 Busses = 1,
                 Travelers = 1,
+                BookingStatus = 1,
             };
             await service.AddJourneyAsync(journey, new List<int>());
 
             var savedJourney = (await service.GetJourneysAsync()).First();
-            savedJourney.Country = "New Country";
+            savedJourney.Name = "New Country";
             await service.UpdateJourneyAsync(savedJourney, new List<int>());
 
             var updatedJounrey = (await service.GetJourneysAsync()).First();
-            Assert.Equal("New Country", updatedJounrey.Country);
+            Assert.Equal("New Country", updatedJounrey.Name);
         }
 
         [Fact]
         public async Task DeleteJourney_Should_Remove_Journey()
         {
             var db = GetInMemoryDb();
-            var service = new JourneyService(db);
+            var planningService = new PlanningService(db);
+            var service = new JourneyService(db, planningService);
 
             var journey = new Journey
             {
-                Country = "Delete Country",
+                Name = "Delete Country",
                 Start = new DateOnly(0001, 1, 1),
                 End = new DateOnly(0001, 1, 2),
                 Busses = 1,
                 Travelers = 1,
+                BookingStatus = 1,
             }; 
             await service.AddJourneyAsync(journey, new List<int>());
 
@@ -91,15 +97,17 @@ namespace Kaaiman_reizen.Tests.Services
         public async Task GetJourneyById_Should_Return_Correct_Journey()
         {
             var db = GetInMemoryDb();
-            var service = new JourneyService(db);
+            var planningService = new PlanningService(db);
+            var service = new JourneyService(db, planningService);
 
             var journey = new Journey
             {
-                Country = "Find Country",
+                Name = "Find Country",
                 Start = new DateOnly(0001, 1, 1),
                 End = new DateOnly(0001, 1, 2),
                 Busses = 1,
                 Travelers = 1,
+                BookingStatus = 1,
             }; 
             await service.AddJourneyAsync(journey, new List<int>());
 
@@ -107,19 +115,20 @@ namespace Kaaiman_reizen.Tests.Services
             var foundJourney = await service.GetJourneyByIdAsync(savedJourney.Id);
 
             Assert.NotNull(foundJourney);
-            Assert.Equal("Find Country", foundJourney.Country);
+            Assert.Equal("Find Country", foundJourney.Name);
         }
 
         [Fact]
-        public void Validate_Should_Return_Error_When_MinTrips_GreaterThan_MaxTrips()
+        public void Validate_Should_Return_Error_When_StartDate_GreaterThan_EndDate()
         {
             var journey = new Journey
             {
-                Country = "Invalid Country",
+                Name = "Invalid Country",
                 Start = new DateOnly(0001, 1, 2),
                 End = new DateOnly(0001, 1, 1),
                 Busses = 1,
                 Travelers = 1,
+                BookingStatus = 1,
             };
 
             var results = journey.Validate(new System.ComponentModel.DataAnnotations.ValidationContext(journey)).ToList();

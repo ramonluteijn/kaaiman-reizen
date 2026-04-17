@@ -1,4 +1,5 @@
 @page "/travelleaders/create"
+@attribute [Authorize(Roles = "Planner")]
 @rendermode InteractiveServer
 @using Kaaiman_reizen.Data.Entities
 @using Kaaiman_reizen.Data.Services
@@ -10,7 +11,7 @@
 
 <div class="card">
     <div class="card-body">
-        <EditForm Model="_model" OnValidSubmit="HandleValidSubmit">
+        <EditForm Model="_model" OnValidSubmit="HandleValidSubmit" FormName="CreateTravelLeaderForm">
             <DataAnnotationsValidator />
 
             <div class="mb-3">

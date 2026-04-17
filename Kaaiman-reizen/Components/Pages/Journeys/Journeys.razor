@@ -20,8 +20,8 @@
 
         <Table TItem="Journey" Items="FilteredJourneys" OnDelete="@OnDelete" Path="journeys" CreateText="Nieuwe reis" EditHrefSelector="@GetEditHref">
             <HeaderContent>
-                <th @onclick='() => SortBy("Country")'>
-                    Land @(GetSortIcon("Country"))
+                <th @onclick='() => SortBy("Name")'>
+                    Reis @(GetSortIcon("Name"))
                 </th>
                 <th @onclick='() => SortBy("StartDate")'>
                     Start Datum @(GetSortIcon("StartDate"))
@@ -29,26 +29,45 @@
                 <th @onclick='() => SortBy("EndDate")'>
                     Eind Datum @(GetSortIcon("EndDate"))
                 </th>
+                <th>Reisleiders</th>
+                <th @onclick='() => SortBy("BookingStatus")'>
+                    Boekingsstatus @(GetSortIcon("BookingStatus"))
+                </th>
                 <th @onclick='() => SortBy("Busses")'>
                     Busjes @(GetSortIcon("Busses"))
                 </th>
                 <th @onclick='() => SortBy("Travelers")'>
                     Reizigers @(GetSortIcon("Travelers"))
                 </th>
-                <th>Reisleiders</th>
             </HeaderContent>
             <RowTemplate>
-                <td>@context.Country</td>
+                <td>@context.Name</td>
                 <td>@context.Start</td>
                 <td>@context.End</td>
-                <td>@context.Busses</td>
-                <td>@context.Travelers</td>
                 <td>
-                    @if (context.TravelLeaders != null && context.TravelLeaders.Any())
-                    {
+                    @if (context.TravelLeaders != null && context.TravelLeaders.Any()) {
                         @FormatTravelLeaders(context)
                     }
                 </td>
+                <td>
+                    @if (context.BookingStatus == 1) {
+                        <span class="badge bg-success">Bezig</span>
+                    }
+                    else if (context.BookingStatus == 2)
+                    {
+                        <span class="badge bg-warning">Geweest</span>
+                    }
+                    else if (context.BookingStatus == 3)
+                    {
+                        <span class="badge bg-danger">Geannuleerd</span>
+                    }
+                </td>
+                <td>
+                    <span class="badge @(context.Busses > 0 ? "bg-warning" : "bg-secondary")">
+                        @(context.Busses > 0 ? context.Busses + " busje(s)" : "N.v.t.")
+                    </span>
+                </td>
+                <td>@context.Travelers</td>
             </RowTemplate>
         </Table>
 
@@ -81,7 +100,7 @@
         ApplySorting(
             _journeys.Where(j =>
                 string.IsNullOrWhiteSpace(_searchTerm) ||
-                j.Country.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase)
+                j.Name.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase)
         )
     );
 
@@ -89,9 +108,10 @@
     {
         return _sortColumn switch
         {
-            "Country" => _sortAscending ? query.OrderBy(x => x.Country) : query.OrderByDescending(x => x.Country),
+            "Name" => _sortAscending ? query.OrderBy(x => x.Name) : query.OrderByDescending(x => x.Name),
             "StartDate" => _sortAscending ? query.OrderBy(x => x.Start) : query.OrderByDescending(x => x.Start),
             "EndDate" => _sortAscending ? query.OrderBy(x => x.End) : query.OrderByDescending(x => x.End),
+            "BookingStatus" => _sortAscending ? query.OrderBy(x => x.BookingStatus) : query.OrderByDescending(x => x.BookingStatus),
             "Busses" => _sortAscending ? query.OrderBy(x => x.Busses) : query.OrderByDescending(x => x.Busses),
             "Travelers" => _sortAscending ? query.OrderBy(x => x.Travelers) : query.OrderByDescending(x => x.Travelers),
 
@@ -122,7 +142,7 @@
             return;
 
         //TODO: Make a cool custom confirmation dialog
-        var confirm = await JS.InvokeAsync<bool>("confirm", $"Weet je zeker dat je '{journey.Country}' wilt verwijderen?");
+        var confirm = await JS.InvokeAsync<bool>("confirm", $"Weet je zeker dat je '{journey.Name}' wilt verwijderen?");
         if (!confirm)
             return;
 

@@ -40,6 +40,11 @@ public class TravelLeaderService : ITravelLeaderService
         if (entity == null)
             return;
 
+        var assignments = await _db.PlanningAssignments
+            .Where(pa => pa.TravelLeaderId == id)
+            .ToListAsync(cancellationToken);
+        _db.PlanningAssignments.RemoveRange(assignments);
+        
         _db.TravelLeader.Remove(entity);
         await _db.SaveChangesAsync(cancellationToken);
     }
