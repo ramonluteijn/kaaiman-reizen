@@ -67,7 +67,7 @@
                 <div class="mb-3">
                     <label class="form-label">Reisleiders</label>
                     <p>Gebruik CTRL en SHIFT om meerdere reisleiders te selecteren</p>
-                    <select multiple class="form-control mb-3" @onchange="OnLeadersChanged">
+                    <select multiple class="form-control mb-3 app-multiselect" @onchange="OnLeadersChanged">
                         @foreach (var leader in _leaders)
                         {
                             <option value="@leader.Id">@leader.Name</option>
@@ -75,9 +75,9 @@
                     </select>
                 </div>
 
-                <div class="d-flex">
+                <div class="app-form-actions">
                     <button type="submit" class="btn btn-primary">Opslaan</button>
-                    <button type="button" class="btn btn-secondary ms-2" @onclick="Cancel">Annuleren</button>
+                    <button type="button" class="btn btn-secondary" @onclick="Cancel">Annuleren</button>
                 </div>
             </EditForm>
         }

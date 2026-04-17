@@ -1,0 +1,49 @@
+.external-buttons-container {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+.external-btn-half {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.7rem 0.5rem;
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    color: #333333;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.external-btn-half:hover {
+    background-color: #f9fafb;
+    border-color: #cccccc;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+}
+
+.external-btn-half:active {
+    transform: translateY(0);
+}
+
+.provider-icon {
+    margin-right: 10px;
+    display: flex;
+    align-items: center;
+}
+
+.provider-name {
+    white-space: nowrap;
+}
+
+@media (max-width: 575.98px) {
+    .external-buttons-container {
+        flex-direction: column;
+    }
+}

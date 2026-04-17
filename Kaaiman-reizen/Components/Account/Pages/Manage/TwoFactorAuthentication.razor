@@ -42,7 +42,7 @@
 
         if (isMachineRemembered)
         {
-            <form style="display: inline-block" @formname="forget-browser" @onsubmit="OnSubmitForgetBrowserAsync" method="post">
+            <form class="inline-form" @formname="forget-browser" @onsubmit="OnSubmitForgetBrowserAsync" method="post">
                 <AntiforgeryToken />
                 <button type="submit" class="btn btn-primary">Forget this browser</button>
             </form>
