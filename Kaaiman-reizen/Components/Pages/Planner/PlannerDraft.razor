@@ -126,7 +126,7 @@
                                         {
                                             <div class="d-flex align-center gap-2 flex-wrap">
                                                 <MudText Typo="Typo.body2">
-                                                    @item.Journey.Country
+                                                    @item.Journey.Name
                                                     <span class="text-secondary ms-1">
                                                         (@item.Journey.Start.ToString("dd MMM") – @item.Journey.End.ToString("dd MMM yyyy"))
                                                     </span>
@@ -256,7 +256,7 @@
         <!-- Header -->
         <div class="jd-header">
             <div class="jd-header-text">
-                <span class="jd-header-title">@_selectedJourney.Country</span>
+                <span class="jd-header-title">@_selectedJourney.Name</span>
                 <span class="jd-header-dates">
                     @_selectedJourney.Start.ToString("dd MMM yyyy") – @_selectedJourney.End.ToString("dd MMM yyyy")
                 </span>

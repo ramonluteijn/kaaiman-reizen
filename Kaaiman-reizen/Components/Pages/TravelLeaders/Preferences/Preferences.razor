@@ -1,13 +1,14 @@
-@page "/travelleaders/edit/{Id:int}"
-@attribute [Authorize(Roles = "Planner")]
+@page "/travelleaders/preferences"
+@page "/travelleaders/preferences/{Id:int}"
 @rendermode InteractiveServer
 @using Kaaiman_reizen.Data.Entities
 @using Kaaiman_reizen.Data.Services
+@using MudBlazor
 
+<PageTitle>Mijn Voorkeuren</PageTitle>
 
-<PageTitle>Bewerk reisleider</PageTitle>
-
-<h1 class="h4">Bewerk reisleider</h1>
+<h1 class="h4">Mijn Reisvoorkeuren en Beschikbaarheid</h1>
+<p class="text-muted">Geef hier je voorkeuren en beschikbaarheid door voor de komende reizen.</p>
 
 <div class="card">
     <div class="card-body">
@@ -21,23 +22,11 @@
         }
         else
         {
-            <EditForm Model="_model" OnValidSubmit="HandleValidSubmit" FormName="EditTravelLeaderForm">
+            <EditForm Model="_model" OnValidSubmit="HandleValidSubmit" FormName="PreferencesForm">
                 <DataAnnotationsValidator />
 
                 <div class="mb-3">
-                    <label class="form-label">Naam</label>
-                    <InputText class="form-control" @bind-Value="_model.Name" />
-                    <ValidationMessage For="() => _model.Name" />
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Telefoon</label>
-                    <InputText class="form-control" @bind-Value="_model.PhoneNumber" />
-                    <ValidationMessage For="() => _model.PhoneNumber" />
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Aantal reizen</label>
+                    <label class="form-label">Aantal reizen gereisd</label>
                     <InputNumber class="form-control" @bind-Value="_model.AmountOfTrips" />
                     <ValidationMessage For="() => _model.AmountOfTrips" />
                 </div>
@@ -65,7 +54,7 @@
                 </div>
 
                 <h5>Voorkeurs bestemmingen</h5>
-                <p class="text-muted small">Vul maximaal 3 landen in die de reisleider het liefst begeleidt (keuze 1 = sterkste voorkeur).</p>
+                <p class="text-muted small">Vul maximaal 3 landen in die je het liefst begeleidt (keuze 1 = sterkste voorkeur).</p>
                 <div class="mb-3">
                     <label class="form-label">Keuze 1</label>
                     <InputText class="form-control" @bind-Value="_preferred[0]" placeholder="bijv. Italië" />
@@ -98,7 +87,7 @@
                                        Color="Color.Error"
                                        StartIcon="@Icons.Material.Filled.Delete"
                                        OnClick="@(EventCallback.Factory.Create(this, () => RemovePeriod(idx)))">
-                                Verwijder
+                                Verwijderen
                             </MudButton>
                         </div>
                     </div>
@@ -120,18 +109,8 @@
                                StartIcon="@Icons.Material.Filled.Save">
                         Opslaan
                     </MudButton>
-                    <span class="ms-2">
-                        <MudButton Variant="Variant.Text"
-                                   Color="Color.Secondary"
-                                   StartIcon="@Icons.Material.Filled.Close"
-                                   OnClick="Cancel">
-                            Annuleren
-                        </MudButton>
-                    </span>
                 </div>
             </EditForm>
         }
     </div>
 </div>
-
-
