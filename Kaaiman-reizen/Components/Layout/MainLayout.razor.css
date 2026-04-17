@@ -11,6 +11,7 @@
 
 .content-region {
     padding: 16px;
+    min-width: 0;
 }
 
 .content-panel {
@@ -20,6 +21,8 @@
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
     padding: 20px;
     min-height: calc(100vh - 32px);
+    min-width: 0;
+    max-width: 100%;
 }
 
 main {
