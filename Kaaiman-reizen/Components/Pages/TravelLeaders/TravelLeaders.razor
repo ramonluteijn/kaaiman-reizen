@@ -46,7 +46,7 @@
                 <td>@context.MaxTrips</td>
                 <td>@context.Availability</td>
                 <td>
-                    <span class="badge @(context.IsActive ? "bg-success" : "bg-danger")" style="cursor: pointer;" @onclick="@(() => ToggleActive(context))">
+                    <span class="badge status-toggle-badge @(context.IsActive ? "bg-success" : "bg-danger")" @onclick="@(() => ToggleActive(context))">
                         @(context.IsActive ? "Ja" : "Nee")
                     </span>
                 </td>

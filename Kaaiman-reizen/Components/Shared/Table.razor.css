@@ -1,0 +1,35 @@
+.app-table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.app-table {
+    min-width: 860px;
+}
+
+.app-table th,
+.app-table td {
+    white-space: nowrap;
+    word-break: normal;
+    overflow-wrap: normal;
+}
+
+.table-footer-controls {
+    gap: 0.75rem;
+}
+
+.table-footer-meta {
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.table-page-size {
+    width: auto;
+}
+
+@media (max-width: 575.98px) {
+    .table-footer-controls {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+}
