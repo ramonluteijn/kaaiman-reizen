@@ -51,14 +51,21 @@
                     </NavLink>
                 </div>
             </AuthorizeView>
+            <AuthorizeView Roles="Reisleider">
+                <div class="nav-item">
+                    <NavLink class="nav-link d-flex align-items-center rounded-0" href="travelleaders/preferences">
+                        <i class="bi bi-journal-check nav-icon me-3"></i> Mijn Voorkeuren
+                    </NavLink>
+                </div>
+            </AuthorizeView>
             <AuthorizeView>
                 <Authorized>
                     <div class="border-top w-100 m-0 mt-auto p-0 nav-footer-border">
             
-                        <div class="border-bottom d-flex align-items-center justify-content-center px-3 py-2 nav-user-row">
+                        <a href="profile" class="border-bottom d-flex align-items-center justify-content-center px-3 py-2 nav-user-row text-decoration-none text-white">
                             <i class="bi bi-person-circle me-2"></i>
                             <small class="text-truncate">@context.User.Identity?.Name</small>
-                        </div>
+                        </a>
 
                         <form action="Account/Logout" method="post" class="m-0 p-0">
                             <AntiforgeryToken />

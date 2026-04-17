@@ -1,0 +1,91 @@
+@page "/profile"
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Identity
+@using Kaaiman_reizen.Data.Identity
+@using System.ComponentModel.DataAnnotations
+@rendermode InteractiveServer
+
+<PageTitle>Profiel</PageTitle>
+
+<h1 class="h4 mb-3">Mijn Profiel</h1>
+
+<div class="card">
+    <div class="card-body">
+        <AuthorizeView>
+            <Authorized>
+                <div class="row mb-3">
+                    <div class="col-sm-3 fw-bold">Gebruikersnaam</div>
+                    <div class="col-sm-9">@context.User.Identity?.Name</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-3 fw-bold">Email</div>
+                    <div class="col-sm-9">@GetUserEmail(context.User)</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-3 fw-bold">Rollen</div>
+                    <div class="col-sm-9">
+                        @if (GetUserRoles(context.User).Any())
+                        {
+                            <ul class="list-inline mb-0">
+                                @foreach (var role in GetUserRoles(context.User))
+                                {
+                                    <li class="list-inline-item"><span class="badge" style="background-color: #00796B;">@role</span></li>
+                                }
+                            </ul>
+                        }
+                        else
+                        {
+                            <span class="text-muted">Geen rollen toegewezen</span>
+                        }
+                    </div>
+                </div>
+
+                <hr my-4 />
+                <h2 class="h5 mb-3">Wachtwoord wijzigen</h2>
+
+                @if (!string.IsNullOrEmpty(statusMessage))
+                {
+                    <div class="alert alert-@statusColor">@statusMessage</div>
+                }
+
+                <EditForm Model="passwordModel" OnValidSubmit="ChangePassword" FormName="changePassword" Context="editContext">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary class="text-danger" />
+
+                    <div class="row mb-3">
+                        <label class="col-sm-3 col-form-label fw-bold">Huidig wachtwoord</label>
+                        <div class="col-sm-9">
+                            <InputText type="password" class="form-control" @bind-Value="passwordModel.CurrentPassword" />
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <label class="col-sm-3 col-form-label fw-bold">Nieuw wachtwoord</label>
+                        <div class="col-sm-9">
+                            <InputText type="password" class="form-control" @bind-Value="passwordModel.NewPassword" />
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <label class="col-sm-3 col-form-label fw-bold">Bevestig nieuw wachtwoord</label>
+                        <div class="col-sm-9">
+                            <InputText type="password" class="form-control" @bind-Value="passwordModel.ConfirmPassword" />
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-9 offset-sm-3">
+                            <button type="submit" class="btn btn-primary" style="background-color: #00796B; border-color: #00796B;">Wijzig wachtwoord</button>
+                        </div>
+                    </div>
+                </EditForm>
+            </Authorized>
+            <NotAuthorized>
+                <div class="alert alert-info">
+                    Log in om uw profiel te bekijken.
+                </div>
+            </NotAuthorized>
+        </AuthorizeView>
+    </div>
+</div>
