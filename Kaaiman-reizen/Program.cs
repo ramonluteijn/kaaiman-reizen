@@ -1,5 +1,4 @@
 using Azure.Identity;
-using Kaaiman_reizen.Components;
 using Kaaiman_reizen.Components.Account;
 using Kaaiman_reizen.Data;
 using Kaaiman_reizen.Data.Identity;
@@ -142,7 +141,7 @@ app.MapStaticAssets();
 
 app.MapAdditionalIdentityEndpoints();
 
-app.MapRazorComponents<App>()
+app.MapRazorComponents<Kaaiman_reizen.Components.App>()
     .AddInteractiveServerRenderMode();
 
 app.MapRazorPages();
