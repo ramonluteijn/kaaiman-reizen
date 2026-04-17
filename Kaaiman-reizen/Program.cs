@@ -4,6 +4,7 @@ using Kaaiman_reizen.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Kaaiman_reizen.Data.Identity;
+using Kaaiman_reizen.Services;
 using MudBlazor.Services;
 var builder = WebApplication.CreateBuilder(args);
 
