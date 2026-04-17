@@ -22,7 +22,7 @@
                 <NotAuthorized>
                     <div class="nav-item border-top mt-auto nav-footer-border">
 
-                        <NavLink class="nav-link d-flex align-items-center rounded-0 py-3" href="Identity/Account/Login">
+                        <NavLink class="nav-link d-flex align-items-center rounded-0 py-3" href="Account/Login">
 
                             <i class="bi bi-box-arrow-in-right nav-icon me-3"></i> Inloggen
 
@@ -60,7 +60,7 @@
                             <small class="text-truncate">@context.User.Identity?.Name</small>
                         </div>
 
-                        <form action="Identity/Account/Logout" method="post" class="m-0 p-0">
+                        <form action="Account/Logout" method="post" class="m-0 p-0">
                             <AntiforgeryToken />
                             <input type="hidden" name="ReturnUrl" value="" />
                             <button type="submit" class="nav-link btn btn-link w-100 d-flex align-items-center rounded-0 border-0 px-3 py-3 text-start shadow-none nav-logout-button">
