@@ -1,0 +1,116 @@
+@page "/travelleaders/preferences"
+@page "/travelleaders/preferences/{Id:int}"
+@rendermode InteractiveServer
+@using Kaaiman_reizen.Data.Entities
+@using Kaaiman_reizen.Data.Services
+@using MudBlazor
+
+<PageTitle>Mijn Voorkeuren</PageTitle>
+
+<h1 class="h4">Mijn Reisvoorkeuren en Beschikbaarheid</h1>
+<p class="text-muted">Geef hier je voorkeuren en beschikbaarheid door voor de komende reizen.</p>
+
+<div class="card">
+    <div class="card-body">
+        @if (_loading)
+        {
+            <div>Bezig met laden…</div>
+        }
+        else if (_notFound)
+        {
+            <div class="text-muted">Reisleider niet gevonden.</div>
+        }
+        else
+        {
+            <EditForm Model="_model" OnValidSubmit="HandleValidSubmit" FormName="PreferencesForm">
+                <DataAnnotationsValidator />
+
+                <div class="mb-3">
+                    <label class="form-label">Aantal reizen gereisd</label>
+                    <InputNumber class="form-control" @bind-Value="_model.AmountOfTrips" />
+                    <ValidationMessage For="() => _model.AmountOfTrips" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Minimaal aantal reizen per jaar</label>
+                    <InputNumber class="form-control" @bind-Value="_model.MinTrips" />
+                    <ValidationMessage For="() => _model.MinTrips" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Maximaal aantal reizen per jaar</label>
+                    <InputNumber class="form-control" @bind-Value="_model.MaxTrips" />
+                    <ValidationMessage For="() => _model.MaxTrips" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Notitie</label>
+                    <InputTextArea class="form-control" @bind-Value="_model.Note" />
+                </div>
+
+                <div class="mb-3 form-check">
+                    <InputCheckbox class="form-check-input" @bind-Value="_model.IsActive" />
+                    <label class="form-check-label">Actief</label>
+                </div>
+
+                <h5>Voorkeurs bestemmingen</h5>
+                <p class="text-muted small">Vul maximaal 3 landen in die je het liefst begeleidt (keuze 1 = sterkste voorkeur).</p>
+                <div class="mb-3">
+                    <label class="form-label">Keuze 1</label>
+                    <InputText class="form-control" @bind-Value="_preferred[0]" placeholder="bijv. Italië" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Keuze 2</label>
+                    <InputText class="form-control" @bind-Value="_preferred[1]" placeholder="bijv. Spanje" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Keuze 3</label>
+                    <InputText class="form-control" @bind-Value="_preferred[2]" placeholder="bijv. Griekenland" />
+                </div>
+
+                <h5>Beschikbaarheid (periode)</h5>
+                @for (int i = 0; i < _preferredPeriods.Count; i++)
+                {
+                    var period = _preferredPeriods[i];
+                    var idx = i;
+                    <div class="row mb-2 align-items-end">
+                        <div class="col-md-4">
+                            <label class="form-label">Start</label>
+                            <InputDate @bind-Value="period.Start" class="form-control" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Eind</label>
+                            <InputDate @bind-Value="period.End" class="form-control" />
+                        </div>
+                        <div class="col-md-2">
+                            <MudButton Variant="Variant.Outlined"
+                                       Color="Color.Error"
+                                       StartIcon="@Icons.Material.Filled.Delete"
+                                       OnClick="@(EventCallback.Factory.Create(this, () => RemovePeriod(idx)))">
+                                Verwijderen
+                            </MudButton>
+                        </div>
+                    </div>
+                }
+
+                <div class="mb-3">
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Secondary"
+                               StartIcon="@Icons.Material.Filled.Add"
+                               OnClick="AddPeriod">
+                        Periode toevoegen
+                    </MudButton>
+                </div>
+
+                <div class="d-flex">
+                    <MudButton ButtonType="ButtonType.Submit"
+                               Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Save">
+                        Opslaan
+                    </MudButton>
+                </div>
+            </EditForm>
+        }
+    </div>
+</div>

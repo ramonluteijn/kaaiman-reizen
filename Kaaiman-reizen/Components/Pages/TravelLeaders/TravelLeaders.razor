@@ -1,4 +1,6 @@
 @page "/travelleaders"
+@attribute [Authorize(Roles = "Planner")]
+@rendermode InteractiveServer
 @using Kaaiman_reizen.Models.ViewModels
 @using Kaaiman_reizen.Data.Services
 @using Kaaiman_reizen.Data.Entities
@@ -10,15 +12,32 @@
 
 <div class="card">
     <div class="card-body">
-        <Table TItem="TravelLeaderViewModel" Items="_leaders" OnDelete="@OnDelete" Path="travelleaders" CreateText="Nieuwe reisleider" EditHrefSelector="@GetEditHref">
+        <div class="mb-3">
+            <input class="form-control"
+                   placeholder="Zoek op naam..."
+                   @bind="_searchTerm"
+                   @bind:event="oninput" />
+        </div>
+
+            <Table TItem="TravelLeaderViewModel" Items="FilteredLeaders" OnDelete="@OnDelete" Path="travelleaders" CreateText="Nieuwe reisleider" EditHrefSelector="@GetEditHref">
             <HeaderContent>
-                <th>Naam</th>
+                <th @onclick='() => SortBy("Name")'>
+                    Naam @(GetSortIcon("Name"))
+                </th>
                 <th>Telefoon</th>
-                <th>Reizen ervaring</th>
-                <th>Min aantal reizen</th>
-                <th>Max aantal reizen</th>
+                <th @onclick='() => SortBy("Experience")'>
+                    Reizen Ervaring @(GetSortIcon("Experience"))
+                </th>
+                <th @onclick='() => SortBy("Minimum")'>
+                    Minimaal Aantal Reizen @(GetSortIcon("Minimum"))
+                </th>
+                <th @onclick='() => SortBy("Maximum")'>
+                    Maximaal Aantal Reizen @(GetSortIcon("Maximum"))
+                </th>
                 <th>Beschikbaar</th>
-                <th>Actief</th>
+                <th @onclick='() => SortBy("Active")'>
+                    Actief @(GetSortIcon("Active"))
+                </th>
             </HeaderContent>
             <RowTemplate>
                 <td>@context.Name</td>
@@ -26,9 +45,7 @@
                 <td>@context.AmountOfTrips</td>
                 <td>@context.MinTrips</td>
                 <td>@context.MaxTrips</td>
-                <td>
-                    @context.Availability
-                </td>
+                <td>@context.Availability</td>
                 <td>
                     <span class="badge @(context.IsActive ? "bg-success" : "bg-danger")" style="cursor: pointer;" @onclick="@(() => ToggleActive(context))">
                         @(context.IsActive ? "Ja" : "Nee")
@@ -43,4 +60,3 @@
         }
     </div>
 </div>
-

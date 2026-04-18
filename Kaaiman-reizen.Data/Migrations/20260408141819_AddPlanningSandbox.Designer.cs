@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Kaaiman_reizen.Data.Migrations
 {
     [DbContext(typeof(MainContext))]
-    [Migration("20260320135935_SeedMoreJourneys")]
-    partial class SeedMoreJourneys
+    [Migration("20260408141819_AddPlanningSandbox")]
+    partial class AddPlanningSandbox
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -67,22 +67,15 @@ namespace Kaaiman_reizen.Data.Migrations
                         new
                         {
                             Id = 1,
-                            End = new DateOnly(2025, 5, 3),
-                            Start = new DateOnly(2025, 4, 29),
+                            End = new DateOnly(2026, 7, 31),
+                            Start = new DateOnly(2026, 4, 1),
                             TravelLeaderId = 1
                         },
                         new
                         {
                             Id = 2,
-                            End = new DateOnly(2025, 6, 14),
-                            Start = new DateOnly(2025, 5, 30),
-                            TravelLeaderId = 1
-                        },
-                        new
-                        {
-                            Id = 3,
-                            End = new DateOnly(2025, 12, 31),
-                            Start = new DateOnly(2025, 1, 1),
+                            End = new DateOnly(2026, 5, 31),
+                            Start = new DateOnly(2026, 3, 1),
                             TravelLeaderId = 2
                         });
                 });
@@ -102,11 +95,14 @@ namespace Kaaiman_reizen.Data.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<DateTime>("End")
-                        .HasColumnType("datetime(6)");
+                    b.Property<DateOnly>("End")
+                        .HasColumnType("date");
 
-                    b.Property<DateTime>("Start")
-                        .HasColumnType("datetime(6)");
+                    b.Property<int>("RequiredLeaders")
+                        .HasColumnType("int");
+
+                    b.Property<DateOnly>("Start")
+                        .HasColumnType("date");
 
                     b.Property<int>("Travelers")
                         .HasColumnType("int");
@@ -121,8 +117,9 @@ namespace Kaaiman_reizen.Data.Migrations
                             Id = 1,
                             Busses = 1,
                             Country = "Italië",
-                            End = new DateTime(2026, 7, 14, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Start = new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            End = new DateOnly(2026, 7, 14),
+                            RequiredLeaders = 1,
+                            Start = new DateOnly(2026, 7, 1),
                             Travelers = 10
                         },
                         new
@@ -130,8 +127,9 @@ namespace Kaaiman_reizen.Data.Migrations
                             Id = 2,
                             Busses = 2,
                             Country = "Spanje",
-                            End = new DateTime(2026, 3, 20, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Start = new DateTime(2026, 3, 10, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            End = new DateOnly(2026, 3, 20),
+                            RequiredLeaders = 1,
+                            Start = new DateOnly(2026, 3, 10),
                             Travelers = 15
                         },
                         new
@@ -139,8 +137,9 @@ namespace Kaaiman_reizen.Data.Migrations
                             Id = 3,
                             Busses = 1,
                             Country = "Oostenrijk",
-                            End = new DateTime(2026, 4, 3, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Start = new DateTime(2026, 3, 25, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            End = new DateOnly(2026, 4, 3),
+                            RequiredLeaders = 1,
+                            Start = new DateOnly(2026, 3, 25),
                             Travelers = 8
                         },
                         new
@@ -148,8 +147,9 @@ namespace Kaaiman_reizen.Data.Migrations
                             Id = 4,
                             Busses = 3,
                             Country = "Griekenland",
-                            End = new DateTime(2026, 4, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Start = new DateTime(2026, 4, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            End = new DateOnly(2026, 4, 15),
+                            RequiredLeaders = 2,
+                            Start = new DateOnly(2026, 4, 5),
                             Travelers = 25
                         },
                         new
@@ -157,10 +157,62 @@ namespace Kaaiman_reizen.Data.Migrations
                             Id = 5,
                             Busses = 2,
                             Country = "Kroatië",
-                            End = new DateTime(2026, 5, 10, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Start = new DateTime(2026, 4, 28, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            End = new DateOnly(2026, 5, 10),
+                            RequiredLeaders = 1,
+                            Start = new DateOnly(2026, 4, 28),
                             Travelers = 12
                         });
+                });
+
+            modelBuilder.Entity("Kaaiman_reizen.Data.Entities.PlanningAssignment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("JourneyId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PlanningVersionId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TravelLeaderId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("JourneyId");
+
+                    b.HasIndex("PlanningVersionId");
+
+                    b.HasIndex("TravelLeaderId");
+
+                    b.ToTable("PlanningAssignments");
+                });
+
+            modelBuilder.Entity("Kaaiman_reizen.Data.Entities.PlanningVersion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PlanningVersions");
                 });
 
             modelBuilder.Entity("Kaaiman_reizen.Data.Entities.PreferredDestination", b =>
@@ -219,14 +271,14 @@ namespace Kaaiman_reizen.Data.Migrations
                         new
                         {
                             Id = 5,
-                            Destination = "Portugal",
+                            Destination = "Oostenrijk",
                             Rank = 2,
                             TravelLeaderId = 2
                         },
                         new
                         {
                             Id = 6,
-                            Destination = "Marokko",
+                            Destination = "Griekenland",
                             Rank = 3,
                             TravelLeaderId = 2
                         });
@@ -515,6 +567,33 @@ namespace Kaaiman_reizen.Data.Migrations
                     b.Navigation("TravelLeader");
                 });
 
+            modelBuilder.Entity("Kaaiman_reizen.Data.Entities.PlanningAssignment", b =>
+                {
+                    b.HasOne("Kaaiman_reizen.Data.Entities.Journey", "Journey")
+                        .WithMany()
+                        .HasForeignKey("JourneyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Kaaiman_reizen.Data.Entities.PlanningVersion", "PlanningVersion")
+                        .WithMany("Assignments")
+                        .HasForeignKey("PlanningVersionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Kaaiman_reizen.Data.Entities.TravelLeader", "TravelLeader")
+                        .WithMany()
+                        .HasForeignKey("TravelLeaderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Journey");
+
+                    b.Navigation("PlanningVersion");
+
+                    b.Navigation("TravelLeader");
+                });
+
             modelBuilder.Entity("Kaaiman_reizen.Data.Entities.PreferredDestination", b =>
                 {
                     b.HasOne("Kaaiman_reizen.Data.Entities.TravelLeader", "TravelLeader")
@@ -575,6 +654,11 @@ namespace Kaaiman_reizen.Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Kaaiman_reizen.Data.Entities.PlanningVersion", b =>
+                {
+                    b.Navigation("Assignments");
                 });
 
             modelBuilder.Entity("Kaaiman_reizen.Data.Entities.TravelLeader", b =>

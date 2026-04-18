@@ -3,8 +3,8 @@
 
 <PageTitle>Draft Planning</PageTitle>
 
-<MudStack Spacing="4" Class="pa-4">
-    <MudText Typo="Typo.h5">Planner Draft Dashboard</MudText>
+<MudStack Spacing="4" Class="pa-4 pd-page">
+    <MudText Typo="Typo.h5">Planner</MudText>
 
     @if (_loading)
     {
@@ -12,21 +12,80 @@
     }
     else if (_request != null)
     {
-        <!-- Generate button -->
-        <div>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary"
-                       OnClick="GenerateDraftAsync" Disabled="@_isGenerating">
-                @if (_isGenerating)
-                {
-                    <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-                    <MudText Class="ms-2">Bezig met genereren...</MudText>
-                }
-                else
-                {
-                    <MudText>Genereer Draft Planning</MudText>
-                }
-            </MudButton>
-        </div>
+        @if (_showEntryModal)
+        {
+            <div class="pd-entry-overlay">
+                <MudPaper Class="pd-entry-modal" Elevation="8">
+                    <div class="pd-entry-header">
+                        <MudText Typo="Typo.h6">Planning Action</MudText>
+                    </div>
+                    <div class="pd-entry-choices">
+                        <MudPaper Class="pa-4 pd-choice-card">
+                            <MudText Typo="Typo.subtitle1" Class="pd-block-title">Generate New Draft</MudText>
+                            <MudText Typo="Typo.body2" Class="mt-1 mb-4">
+                                Let the system generate a fresh planning from the current journeys and leader data.
+                            </MudText>
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       Size="Size.Medium"
+                                       Class="pd-action-btn"
+                                       Disabled="@_entryActionInProgress"
+                                       OnClick="GenerateNewPlanningFromModalAsync">
+                                Generate Draft
+                            </MudButton>
+                        </MudPaper>
+
+                        <MudPaper Class="pa-4 pd-choice-card">
+                            <MudText Typo="Typo.subtitle1" Class="pd-block-title">Continue Existing Draft</MudText>
+                            <MudText Typo="Typo.body2" Class="mt-1 mb-3">
+                                Select one of the saved draft plannings below. Latest edited is pre-selected.
+                            </MudText>
+
+                            @if (_availableDrafts.Count > 0)
+                            {
+                                <div class="pd-draft-list mb-4">
+                                    @foreach (var draft in _availableDrafts)
+                                    {
+                                        var isSelected = _selectedDraftId == draft.Id;
+                                        <button type="button"
+                                                class="pd-draft-item @(isSelected ? "pd-draft-item--selected" : "")"
+                                                @onclick="() => _selectedDraftId = draft.Id">
+                                            <span class="pd-draft-name">@draft.Name</span>
+                                            <span class="pd-draft-date">@draft.CreatedAt.ToLocalTime().ToString("dd-MM-yyyy HH:mm")</span>
+                                        </button>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mb-4">
+                                    Er zijn nog geen opgeslagen conceptplanningen.
+                                </MudAlert>
+                            }
+
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Default"
+                                       Class="pd-continue-btn"
+                                       Size="Size.Medium"
+                                       Disabled="@(_entryActionInProgress || _selectedDraftId is null)"
+                                       OnClick="ResumeSelectedDraftAsync">
+                                Continue
+                            </MudButton>
+                        </MudPaper>
+                    </div>
+                </MudPaper>
+            </div>
+        }
+
+        @if (!_showEntryModal)
+        {
+        @if (!string.IsNullOrWhiteSpace(_saveMessage)
+             && !_saveMessage.StartsWith("Concept geladen", System.StringComparison.OrdinalIgnoreCase))
+        {
+            <MudAlert Severity="@_saveMessageSeverity" Variant="Variant.Outlined" Dense="true">
+                @_saveMessage
+            </MudAlert>
+        }
 
         @if (_isGenerating)
         {
@@ -39,63 +98,15 @@
         {
             if (_result.IsSuccess)
             {
-                var totalMatches = _result.JourneyAssignments.Count;
-                var leaderRows = BuildLeaderRows();
-                var inPlanning = leaderRows.Where(r => r.AssignedJourneys.Count > 0).ToList();
+                var leaderRows   = BuildLeaderRows();
+                var inPlanning   = leaderRows.Where(r => r.AssignedJourneys.Count > 0).ToList();
                 var notInPlanning = leaderRows.Where(r => r.AssignedJourneys.Count == 0).ToList();
 
-                <MudAlert Severity="Severity.Success" Variant="Variant.Filled" Class="mb-4">
-                    Planning gegenereerd — @totalMatches toewijzingen gevonden.
-                </MudAlert>
-
-                <!-- Assignment cards -->
-                <MudStack Spacing="3">
-                    @foreach (var kvp in _result.JourneyAssignments)
-                    {
-                        var assignment = kvp.Value;
-                        var journey = _request.Journeys.First(j => j.Id == kvp.Key);
-
-                        <MudPaper Class="pa-4" Elevation="1">
-                            <MudGrid>
-                                <MudItem xs="12" sm="5">
-                                    <MudText Typo="Typo.h6">@journey.Country</MudText>
-                                    <MudText Typo="Typo.body2" Color="Color.Secondary">
-                                        <MudIcon Icon="@Icons.Material.Filled.CalendarMonth"
-                                                 Size="Size.Small" Class="mr-1 mb-n1" />
-                                        @journey.Start.ToString("dd MMM yyyy") - @journey.End.ToString("dd MMM yyyy")
-                                    </MudText>
-                                </MudItem>
-                                <MudItem xs="12" sm="4">
-                                    <MudText Typo="Typo.subtitle1">
-                                        <b>Reisleider:</b> @assignment.LeaderName
-                                    </MudText>
-                                </MudItem>
-                                <MudItem xs="12" sm="3" Class="d-flex align-center justify-end">
-                                    @if (assignment.RankMatched.HasValue)
-                                    {
-                                        <MudChip T="string" Size="Size.Small"
-                                                 Color="@(assignment.RankMatched == 1 ? Color.Success
-                                                         : assignment.RankMatched == 2 ? Color.Info
-                                                         : Color.Warning)">
-                                            Keuze #@assignment.RankMatched
-                                        </MudChip>
-                                    }
-                                    else
-                                    {
-                                        <MudChip T="string" Size="Size.Small">Geen voorkeur</MudChip>
-                                    }
-                                </MudItem>
-                            </MudGrid>
-                        </MudPaper>
-                    }
-                </MudStack>
-
                 <!-- Calendar preview -->
-                <MudText Typo="Typo.h6" Class="mt-6 mb-2">Kalenderoverzicht</MudText>
+                <CalendarView Journeys="BuildCalendarJourneys()"
+                              OnJourneyClick="HandleJourneyClick" />
 
-                <CalendarView Journeys="BuildCalendarJourneys()" />
-
-                <!-- Leader overview: in and out of planning -->
+                <!-- Leader overview -->
                 <MudText Typo="Typo.h6" Class="mt-6 mb-2">Reisleiders overzicht</MudText>
                 <MudGrid>
                     <!-- In de planning -->
@@ -115,7 +126,7 @@
                                         {
                                             <div class="d-flex align-center gap-2 flex-wrap">
                                                 <MudText Typo="Typo.body2">
-                                                    @item.Journey.Country
+                                                    @item.Journey.Name
                                                     <span class="text-secondary ms-1">
                                                         (@item.Journey.Start.ToString("dd MMM") – @item.Journey.End.ToString("dd MMM yyyy"))
                                                     </span>
@@ -182,6 +193,40 @@
                         }
                     </MudItem>
                 </MudGrid>
+
+                <div class="pd-bottom-actions">
+                    <div class="d-flex flex-wrap gap-2">
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Primary"
+                                   Disabled="@_isSaving"
+                                   OnClick="SaveDraftAsync">
+                            @if (_isSaving)
+                            {
+                                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                <MudText Class="ms-2">Bezig met opslaan...</MudText>
+                            }
+                            else
+                            {
+                                <MudText>Opslaan als concept</MudText>
+                            }
+                        </MudButton>
+
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   Disabled="@_isSaving"
+                                   OnClick="PublishPlanningAsync">
+                            @if (_isSaving)
+                            {
+                                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                <MudText Class="ms-2">Bezig met opslaan...</MudText>
+                            }
+                            else
+                            {
+                                <MudText>Publiceer planning</MudText>
+                            }
+                        </MudButton>
+                    </div>
+                </div>
             }
             else
             {
@@ -190,6 +235,159 @@
                 </MudAlert>
             }
         }
+        }
     }
 </MudStack>
+
+<!-- ── Journey detail drawer ───────────────────────────────────── -->
+
+@* Backdrop — clicking it closes the drawer *@
+<div class="jd-overlay @(_drawerOpen ? "jd-overlay--visible" : "")"
+     @onclick="CloseDrawer"></div>
+
+<aside class="jd-drawer @(_drawerOpen ? "jd-drawer--open" : "")">
+    @if (_selectedJourney is not null)
+    {
+        var candidates    = GetCandidatesFor(_selectedJourney);
+        var assignedCount = _selectedJourney.TravelLeaders.Count;
+        var required      = _selectedJourney.RequiredLeaders;
+        var isFull        = assignedCount >= required;
+
+        <!-- Header -->
+        <div class="jd-header">
+            <div class="jd-header-text">
+                <span class="jd-header-title">@_selectedJourney.Name</span>
+                <span class="jd-header-dates">
+                    @_selectedJourney.Start.ToString("dd MMM yyyy") – @_selectedJourney.End.ToString("dd MMM yyyy")
+                </span>
+            </div>
+            <button class="jd-close-btn" @onclick="CloseDrawer" aria-label="Sluiten">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+
+        <div class="jd-divider"></div>
+
+        <!-- Scrollable body -->
+        <div class="jd-body">
+
+            <!-- ── Section 1: Assigned leaders ── -->
+            <div class="jd-section-header">
+                <p class="jd-section-label">Toegewezen reisleiders</p>
+                <span class="jd-required-badge @(isFull ? "jd-required-badge--ok" : "jd-required-badge--gap")">
+                    @assignedCount / @required
+                    <span class="material-icons" style="font-size:0.85rem; margin-left:2px;">
+                        @(isFull ? "check_circle" : "warning_amber")
+                    </span>
+                </span>
+            </div>
+
+            @if (_selectedJourney.TravelLeaders.Any())
+            {
+                <div class="jd-leader-list">
+                    @foreach (var leader in _selectedJourney.TravelLeaders)
+                    {
+                        <div class="jd-leader-card">
+                            <div class="jd-avatar">@leader.Name[0]</div>
+                            <span class="jd-leader-name">@leader.Name</span>
+                            <button class="jd-remove-btn" @onclick="() => RemoveLeader(leader)"
+                                    title="Verwijder reisleider">
+                                <span class="material-icons">person_remove</span>
+                                Verwijderen
+                            </button>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="jd-no-leader">
+                    <span class="material-icons jd-no-leader-icon">warning_amber</span>
+                    <span>Geen reisleider toegewezen.</span>
+                </div>
+            }
+
+            <div class="jd-divider" style="margin: 18px 0;"></div>
+
+            <!-- ── Section 2: Available candidates ── -->
+            <div class="jd-section-header">
+                <p class="jd-section-label">Beschikbare reisleiders</p>
+                <span class="jd-count-badge">@candidates.Count</span>
+            </div>
+
+            @if (candidates.Count == 0)
+            {
+                <div class="jd-no-leader">
+                    <span class="material-icons">group_off</span>
+                    <span>Geen reisleiders beschikbaar voor deze reisdatums.</span>
+                </div>
+            }
+            else
+            {
+                <div class="jd-alt-list">
+                    @foreach (var c in candidates)
+                    {
+                        <div class="jd-alt-row @(c.IsAlreadyAssigned ? "jd-alt-row--assigned" : "")">
+                            <!-- Avatar + name + preference badge -->
+                            <div class="jd-alt-row-main">
+                                <div class="jd-avatar jd-avatar--sm">@c.LeaderName[0]</div>
+                                <div class="jd-alt-info">
+                                    <span class="jd-alt-name">@c.LeaderName</span>
+                                    <div class="jd-alt-badges">
+                                        @if (c.PreferenceRank.HasValue)
+                                        {
+                                            <span class="jd-pref-badge jd-pref-badge--@c.PreferenceRank">
+                                                Keuze @c.PreferenceRank
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="jd-pref-badge jd-pref-badge--none">Geen voorkeur</span>
+                                        }
+                                    </div>
+                                    <!-- Warning chips -->
+                                    @if (c.HasConflict)
+                                    {
+                                        <div class="jd-warn-chip jd-warn-chip--conflict">
+                                            <span class="material-icons" style="font-size:0.85rem;">swap_horiz</span>
+                                            Overlapt: @c.ConflictJourneyName
+                                        </div>
+                                    }
+                                    @if (c.ExceedsMaxTrips)
+                                    {
+                                        <div class="jd-warn-chip jd-warn-chip--maxtrips">
+                                            <span class="material-icons" style="font-size:0.85rem;">block</span>
+                                            Max trips bereikt (@c.CurrentAssignments/@c.MaxTrips)
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                            <!-- Action button -->
+                            @if (c.IsAlreadyAssigned)
+                            {
+                                <span class="jd-already-check" title="Al toegewezen">
+                                    <span class="material-icons">check</span>
+                                </span>
+                            }
+                            else if (isFull)
+                            {
+                                <span class="jd-assign-btn jd-assign-btn--disabled"
+                                      title="Limiet bereikt (@required/@required reisleiders)">
+                                    <span class="material-icons">lock</span>
+                                </span>
+                            }
+                            else
+                            {
+                                <button class="jd-assign-btn" @onclick="() => AssignLeader(c)"
+                                        title="Wijs toe">
+                                    <span class="material-icons">person_add</span>
+                                </button>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
+</aside>
 

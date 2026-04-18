@@ -85,18 +85,24 @@ namespace Kaaiman_reizen.Data.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("BookingStatus")
+                        .HasColumnType("int");
+
                     b.Property<int>("Busses")
                         .HasColumnType("int");
 
-                    b.Property<string>("Country")
+                    b.Property<DateOnly>("End")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<DateTime>("End")
-                        .HasColumnType("datetime(6)");
+                    b.Property<int>("RequiredLeaders")
+                        .HasColumnType("int");
 
-                    b.Property<DateTime>("Start")
-                        .HasColumnType("datetime(6)");
+                    b.Property<DateOnly>("Start")
+                        .HasColumnType("date");
 
                     b.Property<int>("Travelers")
                         .HasColumnType("int");
@@ -109,48 +115,109 @@ namespace Kaaiman_reizen.Data.Migrations
                         new
                         {
                             Id = 1,
+                            BookingStatus = 0,
                             Busses = 1,
-                            Country = "Italië",
-                            End = new DateTime(2026, 7, 14, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Start = new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            End = new DateOnly(2026, 7, 14),
+                            Name = "Italië",
+                            RequiredLeaders = 1,
+                            Start = new DateOnly(2026, 7, 1),
                             Travelers = 10
                         },
                         new
                         {
                             Id = 2,
+                            BookingStatus = 0,
                             Busses = 2,
-                            Country = "Spanje",
-                            End = new DateTime(2026, 3, 20, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Start = new DateTime(2026, 3, 10, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            End = new DateOnly(2026, 3, 20),
+                            Name = "Spanje",
+                            RequiredLeaders = 1,
+                            Start = new DateOnly(2026, 3, 10),
                             Travelers = 15
                         },
                         new
                         {
                             Id = 3,
+                            BookingStatus = 1,
                             Busses = 1,
-                            Country = "Oostenrijk",
-                            End = new DateTime(2026, 4, 3, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Start = new DateTime(2026, 3, 25, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            End = new DateOnly(2026, 4, 3),
+                            Name = "Oostenrijk",
+                            RequiredLeaders = 1,
+                            Start = new DateOnly(2026, 3, 25),
                             Travelers = 8
                         },
                         new
                         {
                             Id = 4,
+                            BookingStatus = 2,
                             Busses = 3,
-                            Country = "Griekenland",
-                            End = new DateTime(2026, 4, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Start = new DateTime(2026, 4, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            End = new DateOnly(2026, 4, 15),
+                            Name = "Griekenland",
+                            RequiredLeaders = 2,
+                            Start = new DateOnly(2026, 4, 5),
                             Travelers = 25
                         },
                         new
                         {
                             Id = 5,
+                            BookingStatus = 2,
                             Busses = 2,
-                            Country = "Kroatië",
-                            End = new DateTime(2026, 5, 10, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Start = new DateTime(2026, 4, 28, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            End = new DateOnly(2026, 5, 10),
+                            Name = "Kroatië",
+                            RequiredLeaders = 1,
+                            Start = new DateOnly(2026, 4, 28),
                             Travelers = 12
                         });
+                });
+
+            modelBuilder.Entity("Kaaiman_reizen.Data.Entities.PlanningAssignment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("JourneyId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PlanningVersionId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TravelLeaderId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("JourneyId");
+
+                    b.HasIndex("PlanningVersionId");
+
+                    b.HasIndex("TravelLeaderId");
+
+                    b.ToTable("PlanningAssignments");
+                });
+
+            modelBuilder.Entity("Kaaiman_reizen.Data.Entities.PlanningVersion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PlanningVersions");
                 });
 
             modelBuilder.Entity("Kaaiman_reizen.Data.Entities.PreferredDestination", b =>
@@ -505,6 +572,33 @@ namespace Kaaiman_reizen.Data.Migrations
                     b.Navigation("TravelLeader");
                 });
 
+            modelBuilder.Entity("Kaaiman_reizen.Data.Entities.PlanningAssignment", b =>
+                {
+                    b.HasOne("Kaaiman_reizen.Data.Entities.Journey", "Journey")
+                        .WithMany()
+                        .HasForeignKey("JourneyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Kaaiman_reizen.Data.Entities.PlanningVersion", "PlanningVersion")
+                        .WithMany("Assignments")
+                        .HasForeignKey("PlanningVersionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Kaaiman_reizen.Data.Entities.TravelLeader", "TravelLeader")
+                        .WithMany()
+                        .HasForeignKey("TravelLeaderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Journey");
+
+                    b.Navigation("PlanningVersion");
+
+                    b.Navigation("TravelLeader");
+                });
+
             modelBuilder.Entity("Kaaiman_reizen.Data.Entities.PreferredDestination", b =>
                 {
                     b.HasOne("Kaaiman_reizen.Data.Entities.TravelLeader", "TravelLeader")
@@ -565,6 +659,11 @@ namespace Kaaiman_reizen.Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Kaaiman_reizen.Data.Entities.PlanningVersion", b =>
+                {
+                    b.Navigation("Assignments");
                 });
 
             modelBuilder.Entity("Kaaiman_reizen.Data.Entities.TravelLeader", b =>

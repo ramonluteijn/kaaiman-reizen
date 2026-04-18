@@ -1,7 +1,89 @@
 @page "/"
+@using Kaaiman_reizen.Data.Entities
+@using Microsoft.AspNetCore.Components.Authorization
 
 <PageTitle>Home</PageTitle>
 
-<div class="text-center">
-    <h4 class="text-muted">Homepagina</h4>
-</div>
+<h1 class="h4 mb-3">Home</h1>
+
+@if (_loading)
+{
+    <div class="text-muted">Gegevens laden...</div>
+}
+else
+{
+    <AuthorizeView>
+        <NotAuthorized>
+            <div class="alert alert-info">
+                Log in om jouw planningsoverzicht te bekijken.
+            </div>
+        </NotAuthorized>
+        <Authorized>
+            @if (_isPlanner)
+            {
+                <section class="mb-4">
+                    <h2 class="h5">Conceptplanningen</h2>
+
+                    @if (_drafts.Count == 0)
+                    {
+                        <div class="text-muted">Er zijn nog geen conceptplanningen.</div>
+                    }
+                    else
+                    {
+                        <div class="list-group">
+                            @foreach (var draft in _drafts)
+                            {
+                                <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                                   href="@($"/planner/draft?versionId={draft.Id}")">
+                                    <span>
+                                        <strong>@draft.Name</strong><br />
+                                        <small class="text-muted">Aangemaakt: @draft.CreatedAt.ToLocalTime().ToString("dd-MM-yyyy HH:mm")</small>
+                                    </span>
+                                    <span class="badge text-bg-secondary rounded-pill">@draft.Assignments.Count toewijzingen</span>
+                                </a>
+                            }
+                        </div>
+                    }
+                </section>
+            }
+
+            @if (_isReisleider)
+            {
+                <section>
+                    <h2 class="h5">Gepubliceerde planning</h2>
+
+                    @if (_publishedJourneys.Count == 0)
+                    {
+                        <div class="text-muted">Er is nog geen gepubliceerde planning zichtbaar.</div>
+                    }
+                    else
+                    {
+                        <div class="card">
+                            <div class="card-body p-0">
+                                <table class="table mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Land</th>
+                                            <th>Periode</th>
+                                            <th>Reisleiders</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var journey in _publishedJourneys)
+                                        {
+                                            <tr>
+                                                <td>@journey.Name</td>
+                                                <td>@journey.Start - @journey.End</td>
+                                                <td>@FormatTravelLeaders(journey)</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    }
+                </section>
+            }
+        </Authorized>
+    </AuthorizeView>
+}

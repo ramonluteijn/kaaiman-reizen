@@ -16,6 +16,8 @@ public class MainContext : IdentityDbContext<ApplicationUser>
     public DbSet<PreferredDestination> PreferredDestinations { get; set; }
     public DbSet<AvailabilityPeriod> AvailabilityPeriods { get; set; }
     public DbSet<Journey> Journey { get; set; }
+    public DbSet<PlanningVersion> PlanningVersions { get; set; }
+    public DbSet<PlanningAssignment> PlanningAssignments { get; set; }
 
 
     protected override void OnModelCreating(ModelBuilder builder)
@@ -67,11 +69,11 @@ public class MainContext : IdentityDbContext<ApplicationUser>
             new AvailabilityPeriod { Id = 2, TravelLeaderId = 2, Start = new DateOnly(2026, 3, 1), End = new DateOnly(2026, 5, 31) }
         );
         builder.Entity<Journey>().HasData(
-            new Journey { Id = 1, Country = "Italië", Start = new DateOnly(2026, 7, 1), End = new DateOnly(2026, 7, 14), Busses = 1, Travelers = 10 },
-            new Journey { Id = 2, Country = "Spanje", Start = new DateOnly(2026, 3, 10), End = new DateOnly(2026, 3, 20), Busses = 2, Travelers = 15 },
-            new Journey { Id = 3, Country = "Oostenrijk", Start = new DateOnly(2026, 3, 25), End = new DateOnly(2026, 4, 3), Busses = 1, Travelers = 8 },
-            new Journey { Id = 4, Country = "Griekenland", Start = new DateOnly(2026, 4, 5), End = new DateOnly(2026, 4, 15), Busses = 3, Travelers = 25 },
-            new Journey { Id = 5, Country = "Kroatië", Start = new DateOnly(2026, 4, 28), End = new DateOnly(2026, 5, 10), Busses = 2, Travelers = 12 }
+            new Journey { Id = 1, Name = "Italië",      Start = new DateOnly(2026, 7, 1),  End = new DateOnly(2026, 7, 14), Busses = 1, Travelers = 10, RequiredLeaders = 1, BookingStatus = 0 },
+            new Journey { Id = 2, Name = "Spanje",      Start = new DateOnly(2026, 3, 10), End = new DateOnly(2026, 3, 20), Busses = 2, Travelers = 15, RequiredLeaders = 1, BookingStatus = 0 },
+            new Journey { Id = 3, Name = "Oostenrijk",  Start = new DateOnly(2026, 3, 25), End = new DateOnly(2026, 4, 3),  Busses = 1, Travelers = 8,  RequiredLeaders = 1, BookingStatus = 1 },
+            new Journey { Id = 4, Name = "Griekenland", Start = new DateOnly(2026, 4, 5),  End = new DateOnly(2026, 4, 15), Busses = 3, Travelers = 25, RequiredLeaders = 2, BookingStatus = 2 },
+            new Journey { Id = 5, Name = "Kroatië",     Start = new DateOnly(2026, 4, 28), End = new DateOnly(2026, 5, 10), Busses = 2, Travelers = 12, RequiredLeaders = 1, BookingStatus = 2 }
         );
     }
 
@@ -92,5 +94,23 @@ public class MainContext : IdentityDbContext<ApplicationUser>
         builder.Entity<Journey>()
            .HasMany(a => a.TravelLeaders)
            .WithMany(r => r.Journeys);
+
+        builder.Entity<PlanningAssignment>()
+            .HasOne(assignment => assignment.PlanningVersion)
+            .WithMany(version => version.Assignments)
+            .HasForeignKey(assignment => assignment.PlanningVersionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<PlanningAssignment>()
+            .HasOne(assignment => assignment.Journey)
+            .WithMany()
+            .HasForeignKey(assignment => assignment.JourneyId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<PlanningAssignment>()
+            .HasOne(assignment => assignment.TravelLeader)
+            .WithMany()
+            .HasForeignKey(assignment => assignment.TravelLeaderId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
