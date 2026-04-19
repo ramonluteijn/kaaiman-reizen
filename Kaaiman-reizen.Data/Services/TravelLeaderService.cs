@@ -44,7 +44,7 @@ public class TravelLeaderService : ITravelLeaderService
             .Where(pa => pa.TravelLeaderId == id)
             .ToListAsync(cancellationToken);
         _db.PlanningAssignments.RemoveRange(assignments);
-        
+
         _db.TravelLeader.Remove(entity);
         await _db.SaveChangesAsync(cancellationToken);
     }

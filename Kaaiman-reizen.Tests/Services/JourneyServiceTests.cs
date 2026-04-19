@@ -83,7 +83,7 @@ namespace Kaaiman_reizen.Tests.Services
                 Busses = 1,
                 Travelers = 1,
                 BookingStatus = 1,
-            }; 
+            };
             await service.AddJourneyAsync(journey, new List<int>());
 
             var savedJourney = (await service.GetJourneysAsync()).First();
@@ -108,7 +108,7 @@ namespace Kaaiman_reizen.Tests.Services
                 Busses = 1,
                 Travelers = 1,
                 BookingStatus = 1,
-            }; 
+            };
             await service.AddJourneyAsync(journey, new List<int>());
 
             var savedJourney = (await service.GetJourneysAsync()).First();
