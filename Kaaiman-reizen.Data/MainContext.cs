@@ -2,7 +2,6 @@ using Kaaiman_reizen.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Kaaiman_reizen.Data.Identity;
-using System.Collections;
 
 namespace Kaaiman_reizen.Data;
 
@@ -75,6 +74,13 @@ public class MainContext : IdentityDbContext<ApplicationUser>
             new Journey { Id = 3, Name = "Oostenrijk",  Start = new DateOnly(2026, 3, 25), End = new DateOnly(2026, 4, 3),  Busses = 1, Travelers = 8,  RequiredLeaders = 1, BookingStatus = 1 },
             new Journey { Id = 4, Name = "Griekenland", Start = new DateOnly(2026, 4, 5),  End = new DateOnly(2026, 4, 15), Busses = 3, Travelers = 25, RequiredLeaders = 2, BookingStatus = 2 },
             new Journey { Id = 5, Name = "Kroatië",     Start = new DateOnly(2026, 4, 28), End = new DateOnly(2026, 5, 10), Busses = 2, Travelers = 12, RequiredLeaders = 1, BookingStatus = 2 }
+        );
+
+        builder.Entity<Rule>().HasData(
+            new Rule { Id = 1, Description = "Reisleider mag geen overlappende reizen hebben.", IsActive = true, Key = "NoOverlap" },
+            new Rule { Id = 2, Description = "Minimaal aantal dagen tussen twee reizen.", IsActive = true, Key = "MinimumGapDays", Value = "3" },
+            new Rule { Id = 3, Description = "Minimaal aantal reizen ervaring voor niet-standaard bestemmingen.", IsActive = true, Key = "RequiredExperience", Value = "3" },
+            new Rule { Id = 4, Description = "Controle op minimum/maximum aantal reizen per reisleider.", IsActive = true, Key = "MinMaxJourneys" }
         );
     }
 
