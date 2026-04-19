@@ -5,10 +5,12 @@
     <div class="border-bottom p-3 nav-brand d-flex align-items-center">
         <div class="d-flex flex-grow-1">
             <a href="/">
-                <img src="images/kaaiman-logo-footer-1920x405.png.webp" class="navbar-brand img-fluid nav-brand-logo" alt="Logo Kaaiman-reizen" />
+                <img src="images/kaaiman-logo-footer-1920x405.png.webp" class="navbar-brand img-fluid nav-brand-logo"
+                     alt="Logo Kaaiman-reizen" />
             </a>
         </div>
-        <button type="button" class="d-sm-none btn btn-link text-white p-1 nav-toggle-btn" @onclick="ToggleNav" aria-label="Toggle navigatie">
+        <button type="button" class="d-sm-none btn btn-link text-white p-1 nav-toggle-btn" @onclick="ToggleNav"
+                aria-label="Toggle navigatie">
             <i class="bi @(navExpanded ? "bi-x-lg" : "bi-list") nav-toggle-icon"></i>
         </button>
     </div>
@@ -53,14 +55,16 @@
             <AuthorizeView>
                 <Authorized>
                     <div class="w-100 m-0 mt-auto p-0 nav-footer-section">
-                        <a href="profile" class="border-bottom d-flex align-items-center justify-content-center px-3 py-2 nav-user-row text-decoration-none text-white">
+                        <a href="profile"
+                               class="border-bottom d-flex align-items-center justify-content-center px-3 py-2 nav-user-row text-decoration-none text-white">
                             <i class="bi bi-person-circle me-2"></i>
                             <small class="text-truncate">@context.User.Identity?.Name</small>
                         </a>
                         <form action="Account/Logout" method="post" class="m-0 p-0 d-flex justify-content-center">
                             <AntiforgeryToken />
                             <input type="hidden" name="ReturnUrl" value="" />
-                            <button type="submit" class="nav-link btn btn-link d-flex align-items-center rounded-0 border-0 px-3 py-3 text-start shadow-none nav-logout-button">
+                            <button type="submit"
+                                    class="nav-link btn btn-link d-flex align-items-center rounded-0 border-0 px-3 py-3 text-start shadow-none nav-auth-button">
                                 <i class="bi bi-box-arrow-left nav-icon me-3"></i> Uitloggen
                             </button>
                         </form>
@@ -68,7 +72,9 @@
                 </Authorized>
                 <NotAuthorized>
                     <div class="w-100 m-0 mt-auto p-0 nav-footer-section">
-                        <NavLink class="nav-link d-flex align-items-center rounded-0 px-3 py-3" href="Account/Login">
+                        <NavLink
+                            class="nav-link btn btn-link d-flex align-items-center rounded-0 border-0 px-3 py-3 text-start shadow-none nav-auth-button text-white fw-bold"
+                            href="Account/Login">
                             <i class="bi bi-box-arrow-in-right nav-icon me-3"></i> Inloggen
                         </NavLink>
                     </div>

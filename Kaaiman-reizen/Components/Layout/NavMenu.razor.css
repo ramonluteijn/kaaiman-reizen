@@ -65,7 +65,7 @@
     border-color: rgba(255, 255, 255, 0.2) !important;
 }
 
-.nav-logout-button {
+.nav-auth-button {
     margin: 4px 10px !important;
     width: calc(100% - 20px);
 }
