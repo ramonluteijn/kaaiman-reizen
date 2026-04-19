@@ -1,0 +1,63 @@
+@using Kaaiman_reizen.Data.Entities
+
+<div class="pd-entry-overlay">
+    <MudPaper Class="pd-entry-modal" Elevation="8">
+        <div class="pd-entry-header">
+            <MudText Typo="Typo.h6">Planning Action</MudText>
+        </div>
+        <div class="pd-entry-choices">
+            <MudPaper Class="pa-4 pd-choice-card">
+                <MudText Typo="Typo.subtitle1" Class="pd-block-title">Generate New Draft</MudText>
+                <MudText Typo="Typo.body2" Class="mt-1 mb-4">
+                    Let the system generate a fresh planning from the current journeys and leader data.
+                </MudText>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           Size="Size.Medium"
+                           Class="pd-action-btn"
+                           Disabled="@ActionInProgress"
+                           OnClick="OnGenerateNew">
+                    Generate Draft
+                </MudButton>
+            </MudPaper>
+
+            <MudPaper Class="pa-4 pd-choice-card">
+                <MudText Typo="Typo.subtitle1" Class="pd-block-title">Continue Existing Draft</MudText>
+                <MudText Typo="Typo.body2" Class="mt-1 mb-3">
+                    Select one of the saved draft plannings below. Latest edited is pre-selected.
+                </MudText>
+
+                @if (AvailableDrafts.Count > 0)
+                {
+                    <div class="pd-draft-list mb-4">
+                        @foreach (var draft in AvailableDrafts)
+                        {
+                            var isSelected = SelectedDraftId == draft.Id;
+                            <button type="button"
+                                    class="pd-draft-item @(isSelected ? "pd-draft-item--selected" : "")"
+                                    @onclick="() => SelectDraft(draft.Id)">
+                                <span class="pd-draft-name">@draft.Name</span>
+                                <span class="pd-draft-date">@draft.CreatedAt.ToLocalTime().ToString("dd-MM-yyyy HH:mm")</span>
+                            </button>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mb-4">
+                        Er zijn nog geen opgeslagen conceptplanningen.
+                    </MudAlert>
+                }
+
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Default"
+                           Class="pd-continue-btn"
+                           Size="Size.Medium"
+                           Disabled="@(ActionInProgress || SelectedDraftId is null)"
+                           OnClick="OnResumeDraft">
+                    Continue
+                </MudButton>
+            </MudPaper>
+        </div>
+    </MudPaper>
+</div>

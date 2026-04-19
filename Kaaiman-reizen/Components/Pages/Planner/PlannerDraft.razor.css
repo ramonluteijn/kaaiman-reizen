@@ -1,99 +1,6 @@
-.pd-entry-overlay {
-    position: absolute;
-    inset: 0;
-    z-index: 1400;
-    background: rgba(255, 255, 255, 0.7);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-}
-
 .pd-page {
     position: relative;
     min-height: 78vh;
-}
-
-.pd-entry-modal {
-    width: min(610px, 94vw);
-    min-height: 500px;
-    border-radius: 8px;
-    overflow: hidden;
-}
-
-.pd-entry-header {
-    padding: 14px 18px;
-    background: #f7f7f7;
-}
-
-.pd-entry-header .mud-typography {
-    font-weight: 700;
-}
-
-.pd-entry-choices {
-    display: grid;
-    gap: 14px;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    padding: 18px;
-}
-
-.pd-choice-card {
-    border-radius: 6px;
-    min-height: 340px;
-    display: flex;
-    flex-direction: column;
-    background: #f9f9f9;
-}
-
-.pd-block-title {
-    font-weight: 700;
-}
-
-.pd-draft-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    max-height: 260px;
-    overflow: auto;
-    padding-right: 4px;
-}
-
-.pd-draft-item {
-    border-radius: 6px;
-    background: #ffffff;
-    padding: 8px 10px;
-    text-align: left;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    width: 100%;
-}
-
-.pd-draft-item--selected {
-    background: #e8ecec;
-}
-
-.pd-draft-name {
-    font-weight: 600;
-    font-size: 0.88rem;
-}
-
-.pd-draft-date {
-    font-size: 0.76rem;
-    color: #6b7280;
-}
-
-.pd-continue-btn {
-    background-color: #e5e7eb !important;
-    color: #333333 !important;
-    box-shadow: none !important;
-    align-self: flex-start;
-    min-width: 150px;
-}
-
-.pd-action-btn {
-    align-self: flex-start;
-    min-width: 170px;
 }
 
 .pd-bottom-actions {
@@ -105,11 +12,6 @@
     background: linear-gradient(to top, #ffffff 70%, rgba(255, 255, 255, 0));
 }
 
-@media (max-width: 900px) {
-    .pd-entry-choices {
-        grid-template-columns: 1fr;
-    }
-}
 
 .jd-overlay {
     position: fixed;
