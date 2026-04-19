@@ -14,7 +14,7 @@ public static class MinMaxJourneys
         var projectedTripCount = currentTripCount + 1;
         var min = minTrips ?? 0;
         var max = maxTrips ?? int.MaxValue;
-     
+
         return new MinMaxJourneysResult(
             IsWithinLimitsAfterAssignment: projectedTripCount >= min && projectedTripCount <= max,
             BelowMinAfterAssignment: minTrips.HasValue && projectedTripCount <= minTrips.Value,

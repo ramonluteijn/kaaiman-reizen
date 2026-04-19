@@ -69,7 +69,8 @@ authBuilder.AddGoogle(options =>
                     options.CallbackPath = "/login-google";
                     options.Events.OnTicketReceived = ExternalLoginHandler.HandleExternalLogin;
                 })
-                .AddMicrosoftAccount(options => {
+                .AddMicrosoftAccount(options =>
+                {
                     options.ClientId = microsoft["ClientId"]!;
                     options.ClientSecret = microsoft["ClientSecret"]!;
                     options.CallbackPath = "/login-microsoft";

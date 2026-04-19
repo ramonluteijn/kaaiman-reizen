@@ -20,8 +20,8 @@ public partial class PlannerDraft : ComponentBase
     [Inject] private ISnackbar Snackbar { get; set; } = default!;
 
     private PlannerDraftRequest? _request;
-    private PlannerDraftResult?  _result;
-    private bool _loading     = true;
+    private PlannerDraftResult? _result;
+    private bool _loading = true;
     private bool _isGenerating = false;
     private bool _isSaving = false;
     private bool _showEntryModal = true;
@@ -31,12 +31,12 @@ public partial class PlannerDraft : ComponentBase
     private List<PlanningVersion> _availableDrafts = [];
     private int? _selectedDraftId;
     private CancellationTokenSource? _saveMessageCts;
-    private List<(string Country, int Count)> _topPopular       = [];
-    private List<(string Country, int Count)> _leastPopular     = [];
-    private List<PlannerLeaderInput>          _multiInterestLeaders = [];
+    private List<(string Country, int Count)> _topPopular = [];
+    private List<(string Country, int Count)> _leastPopular = [];
+    private List<PlannerLeaderInput> _multiInterestLeaders = [];
 
     // ── Drawer state ───────────────────────────────────────────
-    private bool             _drawerOpen      = false;
+    private bool _drawerOpen = false;
     private JourneyViewModel? _selectedJourney;
 
     // ── Initialisation ─────────────────────────────────────────
@@ -66,8 +66,8 @@ public partial class PlannerDraft : ComponentBase
             ))
             .ToList();
 
-        _topPopular           = popularity.OrderByDescending(p => p.Count).Take(3).ToList();
-        _leastPopular         = popularity.OrderBy(p => p.Count).Take(3).ToList();
+        _topPopular = popularity.OrderByDescending(p => p.Count).Take(3).ToList();
+        _leastPopular = popularity.OrderBy(p => p.Count).Take(3).ToList();
         _multiInterestLeaders = _request.Leaders
             .Where(l => l.PreferredDestinations.Count > 1)
             .OrderByDescending(l => l.PreferredDestinations.Count)
@@ -80,11 +80,11 @@ public partial class PlannerDraft : ComponentBase
     {
         if (_request is null) return;
         _isGenerating = true;
-        _result       = null;
+        _result = null;
         ClearSaveMessage();
         StateHasChanged();
         await Task.Delay(50);
-        _result       = await Task.Run(() => DraftService.GenerateDraft(_request));
+        _result = await Task.Run(() => DraftService.GenerateDraft(_request));
         _isGenerating = false;
     }
 
@@ -313,7 +313,7 @@ public partial class PlannerDraft : ComponentBase
             _result.JourneyAssignments
                 .Where(kvp => kvp.Value.Any(a => a.LeaderId == leader.Id))
                 .Select(kvp => (
-                    Journey:     _request.Journeys.First(j => j.Id == kvp.Key),
+                    Journey: _request.Journeys.First(j => j.Id == kvp.Key),
                     RankMatched: kvp.Value.First(a => a.LeaderId == leader.Id).RankMatched
                 ))
                 .ToList(),
@@ -336,12 +336,12 @@ public partial class PlannerDraft : ComponentBase
 
             return new JourneyViewModel
             {
-                Id              = j.Id,
-                Name            = j.Name,
-                Start           = j.Start,
-                End             = j.End,
+                Id = j.Id,
+                Name = j.Name,
+                Start = j.Start,
+                End = j.End,
                 RequiredLeaders = j.RequiredLeaders,
-                TravelLeaders   = leaders
+                TravelLeaders = leaders
             };
         }).ToList();
     }
@@ -351,12 +351,12 @@ public partial class PlannerDraft : ComponentBase
     private void HandleJourneyClick(JourneyViewModel journey)
     {
         _selectedJourney = journey;
-        _drawerOpen      = true;
+        _drawerOpen = true;
     }
 
     private void CloseDrawer()
     {
-        _drawerOpen      = false;
+        _drawerOpen = false;
         _selectedJourney = null;
     }
 
@@ -372,12 +372,12 @@ public partial class PlannerDraft : ComponentBase
 
         _selectedJourney = new JourneyViewModel
         {
-            Id              = _selectedJourney.Id,
-            Name            = _selectedJourney.Name,
-            Start           = _selectedJourney.Start,
-            End             = _selectedJourney.End,
+            Id = _selectedJourney.Id,
+            Name = _selectedJourney.Name,
+            Start = _selectedJourney.Start,
+            End = _selectedJourney.End,
             RequiredLeaders = journeyInput.RequiredLeaders,
-            TravelLeaders   = leaders
+            TravelLeaders = leaders
         };
     }
 
@@ -410,12 +410,12 @@ public partial class PlannerDraft : ComponentBase
         if (currentCount >= journeyInput.RequiredLeaders) return;
 
         var leader = _request.Leaders.First(l => l.Id == candidate.LeaderId);
-        int? rank  = leader.PreferredDestinations.TryGetValue(_selectedJourney.Name, out int r) ? r : null;
+        int? rank = leader.PreferredDestinations.TryGetValue(_selectedJourney.Name, out int r) ? r : null;
 
         var entry = new JourneyAssignmentResult
         {
-            LeaderId    = candidate.LeaderId,
-            LeaderName  = candidate.LeaderName,
+            LeaderId = candidate.LeaderId,
+            LeaderName = candidate.LeaderName,
             RankMatched = rank
         };
 
@@ -430,15 +430,15 @@ public partial class PlannerDraft : ComponentBase
     // ── Candidate helpers ──────────────────────────────────────
 
     private record LeaderCandidate(
-        int    LeaderId,
+        int LeaderId,
         string LeaderName,
-        int?   PreferenceRank,
-        bool   IsAlreadyAssigned,
-        bool   HasConflict,
+        int? PreferenceRank,
+        bool IsAlreadyAssigned,
+        bool HasConflict,
         string ConflictJourneyName,
-        bool   ExceedsMaxTrips,
-        int    CurrentAssignments,
-        int    MaxTrips
+        bool ExceedsMaxTrips,
+        int CurrentAssignments,
+        int MaxTrips
     );
 
     /// <summary>
@@ -476,23 +476,23 @@ public partial class PlannerDraft : ComponentBase
                 int? rank = leader.PreferredDestinations.TryGetValue(journey.Name, out int r) ? r : null;
 
                 return new LeaderCandidate(
-                    LeaderId           : leader.Id,
-                    LeaderName         : leader.Name,
-                    PreferenceRank     : rank,
-                    IsAlreadyAssigned  : assignedToThis.Contains(leader.Id),
-                    HasConflict        : conflictJourney is not null,
+                    LeaderId: leader.Id,
+                    LeaderName: leader.Name,
+                    PreferenceRank: rank,
+                    IsAlreadyAssigned: assignedToThis.Contains(leader.Id),
+                    HasConflict: conflictJourney is not null,
                     ConflictJourneyName: conflictJourney is not null
                         ? $"{conflictJourney.Name} ({conflictJourney.Start:dd MMM}–{conflictJourney.End:dd MMM})"
                         : string.Empty,
-                    ExceedsMaxTrips    : currentCount >= leader.MaxTrips,
-                    CurrentAssignments : currentCount,
-                    MaxTrips           : leader.MaxTrips
+                    ExceedsMaxTrips: currentCount >= leader.MaxTrips,
+                    CurrentAssignments: currentCount,
+                    MaxTrips: leader.MaxTrips
                 );
             })
             // Sort: already-assigned first, then clean candidates, then flagged
             .OrderBy(c => c.IsAlreadyAssigned ? 0 : 1)
-            .ThenBy(c  => (c.HasConflict || c.ExceedsMaxTrips) ? 1 : 0)
-            .ThenBy(c  => c.PreferenceRank ?? 99)
+            .ThenBy(c => (c.HasConflict || c.ExceedsMaxTrips) ? 1 : 0)
+            .ThenBy(c => c.PreferenceRank ?? 99)
             .ToList();
     }
 }

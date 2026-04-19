@@ -6,7 +6,7 @@ public static class CheckRules
     public sealed record JourneyWindow(DateOnly Start, DateOnly End);
     private const int MinimumGapDays = 3; // min days between journeys
     private const int RequiredExperience = 3; // min number of trips for experience requirement
-    
+
     public sealed record PlannerRuleResult(
         bool NoOverlap,
         bool HasMinimumGap,
@@ -14,11 +14,11 @@ public static class CheckRules
         MinMaxJourneysResult MinMaxResult
     )
     {
-        public bool IsEligible => 
-            NoOverlap && 
-            HasMinimumGap && 
+        public bool IsEligible =>
+            NoOverlap &&
+            HasMinimumGap &&
             HasExperience &&
-            !MinMaxResult.ExceedsMaxAfterAssignment && 
+            !MinMaxResult.ExceedsMaxAfterAssignment &&
             MinMaxResult.IsWithinLimitsAfterAssignment;
     }
 
@@ -29,7 +29,7 @@ public static class CheckRules
     )
     {
         var windows = existingJourneys.ToList();
-        
+
         return new PlannerRuleResult(
             NoOverlap: !windows.Any(j => JourneysOverlap.Check(j.Start, j.End, journey.Start, journey.End)),
             HasMinimumGap: windows.All(j => HasMinimumGapDays.Check(j.Start, j.End, journey.Start, journey.End, MinimumGapDays)),

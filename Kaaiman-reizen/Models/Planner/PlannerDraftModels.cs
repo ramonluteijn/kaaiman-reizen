@@ -39,9 +39,9 @@ public class PlannerDraftResult
     public Dictionary<int, List<JourneyAssignmentResult>> JourneyAssignments { get; set; } = [];
 
     // KPI computed props — flatten list-of-lists
-    public int Rank1Matches        => JourneyAssignments.Values.SelectMany(l => l).Count(a => a.RankMatched == 1);
-    public int Rank2Matches        => JourneyAssignments.Values.SelectMany(l => l).Count(a => a.RankMatched == 2);
-    public int Rank3Matches        => JourneyAssignments.Values.SelectMany(l => l).Count(a => a.RankMatched == 3);
+    public int Rank1Matches => JourneyAssignments.Values.SelectMany(l => l).Count(a => a.RankMatched == 1);
+    public int Rank2Matches => JourneyAssignments.Values.SelectMany(l => l).Count(a => a.RankMatched == 2);
+    public int Rank3Matches => JourneyAssignments.Values.SelectMany(l => l).Count(a => a.RankMatched == 3);
     public int NoPreferenceMatches => JourneyAssignments.Values.SelectMany(l => l).Count(a => a.RankMatched == null);
 }
 
