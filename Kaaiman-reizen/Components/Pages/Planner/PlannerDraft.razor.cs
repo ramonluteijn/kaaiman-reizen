@@ -442,7 +442,7 @@ public partial class PlannerDraft : ComponentBase
         string ConflictJourneyName,
         bool ExceedsMaxTrips,
         int CurrentAssignments,
-        int MaxTrips
+        int MaxTrips,
         string? ValidationReason
     );
 
@@ -533,7 +533,7 @@ public partial class PlannerDraft : ComponentBase
                         : string.Empty,
                     ExceedsMaxTrips: currentCount >= leader.MaxTrips,
                     CurrentAssignments: currentCount,
-                    MaxTrips: leader.MaxTrips
+                    MaxTrips: leader.MaxTrips,
                     ValidationReason: validationReason
                 );
             })
