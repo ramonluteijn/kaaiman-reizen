@@ -484,13 +484,15 @@ public partial class PlannerDraft : ComponentBase
 
                 // Use CheckRules.CanAssignForPlanner to get the reason
                 string? validationReason;
-                var journeyEntity = new Journey {
+                var journeyEntity = new Journey
+                {
                     Id = journeyInput.Id,
                     Name = journeyInput.Name,
                     Start = journeyInput.Start,
                     End = journeyInput.End
                 };
-                var leaderEntity = new TravelLeader {
+                var leaderEntity = new TravelLeader
+                {
                     Id = leader.Id,
                     Name = leader.Name,
                     AmountOfTrips = leader.AmountOfTrips,
@@ -499,7 +501,8 @@ public partial class PlannerDraft : ComponentBase
                 };
                 var existingJourneys = _result.JourneyAssignments
                     .Where(kvp => kvp.Value.Any(a => a.LeaderId == leader.Id) && kvp.Key != journey.Id)
-                    .Select(kvp => {
+                    .Select(kvp =>
+                    {
                         var j = _request.Journeys.FirstOrDefault(x => x.Id == kvp.Key);
                         return j is not null ? new Kaaiman_reizen.Data.Rules.CheckRules.JourneyWindow(j.Start, j.End) : null;
                     })

@@ -65,7 +65,7 @@ public static class CountryMappings
     {
         { "Wit-Rusland", Countries.Wit_Rusland }
     };
-    
+
     public static string NormalizeCountryName(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
