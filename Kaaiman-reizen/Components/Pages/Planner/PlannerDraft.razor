@@ -344,14 +344,21 @@
                                         }
                                     </div>
                                     <!-- Warning chips -->
-                                    @if (c.HasConflict)
+                                    @if (!string.IsNullOrEmpty(c.ValidationReason))
+                                    {
+                                        <div class="jd-warn-chip jd-warn-chip--validation">
+                                            <span class="material-icons" style="font-size:0.85rem;">error_outline</span>
+                                            @c.ValidationReason
+                                        </div>
+                                    }
+                                    else if (c.HasConflict)
                                     {
                                         <div class="jd-warn-chip jd-warn-chip--conflict">
                                             <span class="material-icons jd-warn-icon">swap_horiz</span>
                                             Overlapt: @c.ConflictJourneyName
                                         </div>
                                     }
-                                    @if (c.ExceedsMaxTrips)
+                                    else if (c.ExceedsMaxTrips)
                                     {
                                         <div class="jd-warn-chip jd-warn-chip--maxtrips">
                                             <span class="material-icons jd-warn-icon">block</span>

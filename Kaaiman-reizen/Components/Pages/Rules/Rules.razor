@@ -1,0 +1,62 @@
+@page "/rules"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "Planner")]
+@rendermode InteractiveServer
+
+<PageTitle>Regels</PageTitle>
+
+<h1 class="h4">Regels</h1>
+
+<div class="card">
+    <div class="card-body">
+        <div class="mb-3">
+            <input class="form-control"
+                   placeholder="Zoek op key..."
+                   @bind="_searchTerm"
+                   @bind:event="oninput" />
+        </div>
+
+            <Table TItem="RuleViewModel" Items="FilteredRules" Path="rules">
+            <HeaderContent>
+                <th @onclick='() => SortBy("Key")'>
+                    Naam @(GetSortIcon("Key"))
+                </th>
+                <th>
+                    Beschrijving
+                </th>
+                <th>Waarde</th>
+                <th @onclick='() => SortBy("Active")'>
+                    Actief @(GetSortIcon("Active"))
+                </th>
+            </HeaderContent>
+            <RowTemplate>
+                <td>@context.Key</td>
+                <td>
+                    @context.Description
+                </td>
+                <td>
+                    @if (HasEditableValue(context))
+                    {
+                        <input class="form-control form-control-sm"
+                               value="@GetRuleValue(context)"
+                               @onchange="@(async (ChangeEventArgs e) => await UpdateRuleValue(context, e.Value?.ToString()))" />
+                    }
+                    else
+                    {
+                        <span class="text-muted">-</span>
+                    }
+                </td>
+                <td>
+                    <span class="badge @(context.IsActive ? "bg-success" : "bg-danger")" style="cursor: pointer;" @onclick="@(() => ToggleActive(context))">
+                        @(context.IsActive ? "Ja" : "Nee")
+                    </span>
+                </td>
+            </RowTemplate>
+        </Table>
+
+        @if (_rules.Count == 0)
+        {
+            <div class="text-muted">Geen regels gevonden.</div>
+        }
+    </div>
+</div>
