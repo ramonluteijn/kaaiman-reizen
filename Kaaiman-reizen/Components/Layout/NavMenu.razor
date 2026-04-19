@@ -1,37 +1,29 @@
+@rendermode InteractiveServer
 @using Microsoft.AspNetCore.Components.Authorization
 
-<div class="d-flex flex-column vh-100 nav-shell">
-    <div class="border-bottom p-3 nav-brand">
-        <div class="d-flex justify-content-center">
+<div class="d-flex flex-column nav-shell">
+    <div class="border-bottom p-3 nav-brand d-flex align-items-center">
+        <div class="d-flex flex-grow-1">
             <a href="/">
-                <img src="images/kaaiman-logo-footer-1920x405.png.webp" class="navbar-brand img-fluid" style="max-height: 58px;" alt="Logo Kaaiman-reizen" />
+                <img src="images/kaaiman-logo-footer-1920x405.png.webp" class="navbar-brand img-fluid nav-brand-logo"
+                     alt="Logo Kaaiman-reizen" />
             </a>
         </div>
+        <button type="button" class="d-sm-none btn btn-link text-white p-1 nav-toggle-btn" @onclick="ToggleNav"
+                aria-label="Toggle navigatie">
+            <i class="bi @(navExpanded ? "bi-x-lg" : "bi-list") nav-toggle-icon"></i>
+        </button>
     </div>
 
-    <div class="nav-scrollable flex-grow-1 d-flex flex-column overflow-auto" onclick="document.querySelector('.navbar-toggler').click()">
+    <div class="nav-scrollable flex-grow-1 d-flex flex-column overflow-auto @(navExpanded ? "" : "nav-collapsed")">
         <nav class="nav flex-column h-100 flex-nowrap">
-            
+
             <div class="nav-item">
                 <NavLink class="nav-link d-flex align-items-center rounded-0" href="" Match="NavLinkMatch.All">
                     <i class="bi bi-house-door-fill nav-icon me-3"></i> Home
                 </NavLink>
             </div>
 
-            <AuthorizeView>
-                <NotAuthorized>
-                    <div class="nav-item border-top mt-auto nav-footer-border">
-
-                        <NavLink class="nav-link d-flex align-items-center rounded-0 py-3" href="Account/Login">
-
-                            <i class="bi bi-box-arrow-in-right nav-icon me-3"></i> Inloggen
-
-                        </NavLink>
-
-                    </div>
-                </NotAuthorized>
-            </AuthorizeView>
-     
             <AuthorizeView Roles="Planner">
                 <div class="nav-item">
                     <NavLink class="nav-link d-flex align-items-center rounded-0" href="travelleaders">
@@ -57,6 +49,7 @@
                     </NavLink>
                 </div>
             </AuthorizeView>
+
             <AuthorizeView Roles="Reisleider">
                 <div class="nav-item">
                     <NavLink class="nav-link d-flex align-items-center rounded-0" href="travelleaders/preferences">
@@ -64,84 +57,45 @@
                     </NavLink>
                 </div>
             </AuthorizeView>
+
             <AuthorizeView>
                 <Authorized>
-                    <div class="border-top w-100 m-0 mt-auto p-0 nav-footer-border">
-            
-                        <a href="profile" class="border-bottom d-flex align-items-center justify-content-center px-3 py-2 nav-user-row text-decoration-none text-white">
+                    <div class="w-100 m-0 mt-auto p-0 nav-footer-section">
+                        <a href="profile"
+                               class="border-bottom d-flex align-items-center justify-content-center px-3 py-2 nav-user-row text-decoration-none text-white">
                             <i class="bi bi-person-circle me-2"></i>
                             <small class="text-truncate">@context.User.Identity?.Name</small>
                         </a>
-
-                        <form action="Account/Logout" method="post" class="m-0 p-0">
+                        <form action="Account/Logout" method="post" class="m-0 p-0 d-flex justify-content-center">
                             <AntiforgeryToken />
-                            <input type="hidden" name="ReturnUrl" value="/" />
-                            <button type="submit" class="nav-link btn btn-link w-100 d-flex align-items-center rounded-0 border-0 px-3 py-3 text-start shadow-none" style="margin: 0 !important;">
+                            <input type="hidden" name="ReturnUrl" value="" />
+                            <button type="submit"
+                                    class="nav-link btn btn-link d-flex align-items-center rounded-0 border-0 px-3 py-3 text-start shadow-none nav-auth-button">
                                 <i class="bi bi-box-arrow-left nav-icon me-3"></i> Uitloggen
                             </button>
                         </form>
                     </div>
                 </Authorized>
+                <NotAuthorized>
+                    <div class="w-100 m-0 mt-auto p-0 nav-footer-section">
+                        <NavLink
+                            class="nav-link btn btn-link d-flex align-items-center rounded-0 border-0 px-3 py-3 text-start shadow-none nav-auth-button text-white fw-bold"
+                            href="Account/Login">
+                            <i class="bi bi-box-arrow-in-right nav-icon me-3"></i> Inloggen
+                        </NavLink>
+                    </div>
+                </NotAuthorized>
             </AuthorizeView>
+
         </nav>
     </div>
 </div>
 
-<style>
-    .nav-shell {
-        background-color: #00796B;
-        color: #ffffff;
-        --mud-palette-tertiary: transparent;
-        --mud-palette-tertiary-rgb: 0, 0, 0;
-        --mud-palette-tertiary-text: #ffffff;
-        --mud-palette-tertiary-darken: transparent;
-        --mud-palette-tertiary-lighten: transparent;
-    }
+@code {
+    private bool navExpanded = false;
 
-    .nav-brand {
-        border-color: rgba(255, 255, 255, 0.2) !important;
+    private void ToggleNav()
+    {
+        navExpanded = !navExpanded;
     }
-
-    .nav-shell .nav-link {
-        color: #ffffff !important;
-        position: relative;
-        margin: 4px 10px !important;
-        border-radius: 10px !important;
-    }
-
-    .nav-shell .nav-link .nav-icon {
-        color: inherit !important;
-    }
-
-    .nav-shell .nav-link:hover {
-        background-color: rgba(255, 255, 255, 0.14);
-        color: #ffffff !important;
-    }
-
-    .nav-shell .nav-link.active,
-    .nav-shell .nav-link.active:hover,
-    .nav-shell .nav-link.active:focus {
-        background-color: #42958B !important;
-        font-weight: 700;
-    }
-
-    .nav-shell .nav-link.active::after {
-        content: "";
-        position: absolute;
-        top: 8px;
-        bottom: 8px;
-        right: 8px;
-        width: 4px;
-        border-radius: 2px;
-        background: #ffffff;
-    }
-
-    .nav-footer-border {
-        border-color: rgba(255, 255, 255, 0.2) !important;
-    }
-
-    .nav-user-row {
-        color: #ffffff;
-        border-color: rgba(255, 255, 255, 0.2) !important;
-    }
-</style>
+}

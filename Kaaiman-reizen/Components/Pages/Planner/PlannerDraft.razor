@@ -118,8 +118,7 @@
                         <MudStack Spacing="2">
                             @foreach (var row in inPlanning)
                             {
-                                <MudPaper Class="pa-3" Elevation="1"
-                                          Style="border-left: 4px solid var(--mud-palette-success);">
+                                <MudPaper Class="pa-3 pd-leader-paper pd-leader-paper--success" Elevation="1">
                                     <MudText Typo="Typo.subtitle2"><b>@row.LeaderName</b></MudText>
                                     <MudStack Spacing="1" Class="mt-1">
                                         @foreach (var item in row.AssignedJourneys)
@@ -169,8 +168,7 @@
                             <MudStack Spacing="2">
                                 @foreach (var row in notInPlanning)
                                 {
-                                    <MudPaper Class="pa-3" Elevation="1"
-                                              Style="border-left: 4px solid var(--mud-palette-warning);">
+                                    <MudPaper Class="pa-3 pd-leader-paper pd-leader-paper--warning" Elevation="1">
                                         <MudText Typo="Typo.subtitle2"><b>@row.LeaderName</b></MudText>
                                         @if (row.Preferences.Count > 0)
                                         {
@@ -276,7 +274,7 @@
                 <p class="jd-section-label">Toegewezen reisleiders</p>
                 <span class="jd-required-badge @(isFull ? "jd-required-badge--ok" : "jd-required-badge--gap")">
                     @assignedCount / @required
-                    <span class="material-icons" style="font-size:0.85rem; margin-left:2px;">
+                    <span class="material-icons jd-required-icon">
                         @(isFull ? "check_circle" : "warning_amber")
                     </span>
                 </span>
@@ -307,7 +305,7 @@
                 </div>
             }
 
-            <div class="jd-divider" style="margin: 18px 0;"></div>
+            <div class="jd-divider jd-divider--section"></div>
 
             <!-- ── Section 2: Available candidates ── -->
             <div class="jd-section-header">
@@ -356,14 +354,14 @@
                                     else if (c.HasConflict)
                                     {
                                         <div class="jd-warn-chip jd-warn-chip--conflict">
-                                            <span class="material-icons" style="font-size:0.85rem;">swap_horiz</span>
+                                            <span class="material-icons jd-warn-icon">swap_horiz</span>
                                             Overlapt: @c.ConflictJourneyName
                                         </div>
                                     }
                                     else if (c.ExceedsMaxTrips)
                                     {
                                         <div class="jd-warn-chip jd-warn-chip--maxtrips">
-                                            <span class="material-icons" style="font-size:0.85rem;">block</span>
+                                            <span class="material-icons jd-warn-icon">block</span>
                                             Max trips bereikt (@c.CurrentAssignments/@c.MaxTrips)
                                         </div>
                                     }

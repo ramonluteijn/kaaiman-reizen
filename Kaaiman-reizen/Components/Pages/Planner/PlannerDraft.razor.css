@@ -105,7 +105,7 @@
     background: linear-gradient(to top, #ffffff 70%, rgba(255, 255, 255, 0));
 }
 
-@media (max-width: 900px) {
+@media (max-width: 575.98px) {
     .pd-entry-choices {
         grid-template-columns: 1fr;
     }
@@ -316,7 +316,9 @@
     font-size: 0.75rem;
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.15s, color 0.15s;
+    transition:
+        background 0.15s,
+        color 0.15s;
     white-space: nowrap;
 }
 
@@ -453,16 +455,18 @@
     border: none;
     border-radius: 8px;
     background: #d9f0ed;
-    color: #00796B;
+    color: #00796b;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background 0.15s, color 0.15s;
+    transition:
+        background 0.15s,
+        color 0.15s;
 }
 
 .jd-assign-btn:hover {
-    background: #00796B;
+    background: #00796b;
     color: #fff;
 }
 
@@ -483,7 +487,7 @@
     height: 32px;
     border-radius: 8px;
     background: #d9f0ed;
-    color: #00796B;
+    color: #00796b;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -491,4 +495,30 @@
 
 .jd-already-check .material-icons {
     font-size: 1.1rem;
+}
+
+.pd-leader-paper {
+    border-left-width: 4px;
+    border-left-style: solid;
+}
+
+.pd-leader-paper--success {
+    border-left-color: var(--mud-palette-success);
+}
+
+.pd-leader-paper--warning {
+    border-left-color: var(--mud-palette-warning);
+}
+
+.jd-required-icon {
+    font-size: 0.85rem;
+    margin-left: 2px;
+}
+
+.jd-divider--section {
+    margin: 18px 0;
+}
+
+.jd-warn-icon {
+    font-size: 0.85rem;
 }

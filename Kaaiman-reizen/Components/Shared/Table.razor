@@ -11,78 +11,80 @@
         </MudButton>
     </div>
 }
-<table class="table">
-    <thead>
-    <tr>
-        @if (HeaderContent != null)
-        {
-            @HeaderContent
-        }
-        else
-        {
-            <th>Item</th>
-        }
+<div class="table-responsive app-table-scroll">
+    <table class="table app-table mb-0">
+        <thead>
+        <tr>
+            @if (HeaderContent != null)
+            {
+                @HeaderContent
+            }
+            else
+            {
+                <th>Item</th>
+            }
 
-        @if (HasActions)
+            @if (HasActions)
+            {
+                <th>Acties</th>
+            }
+        </tr>
+        </thead>
+        <tbody>
+        @if (PaginatedItems != null)
         {
-            <th>Acties</th>
-        }
-    </tr>
-    </thead>
-    <tbody>
-    @if (PaginatedItems != null)
-    {
-        foreach (var item in PaginatedItems)
-        {
-            <tr>
-                @if (RowTemplate != null)
-                {
-                    @RowTemplate(item)
-                }
-                else
-                {
-                    <td>@item</td>
-                }
-
-                @if (HasActions)
+            foreach (var item in PaginatedItems)
+            {
+                <tr>
+                    @if (RowTemplate != null)
                     {
-                        <td>
-                            @if (EditHrefSelector != null)
-                            {
-                                <span class="me-2">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                                   Variant="Variant.Filled"
-                                                   Color="Color.Primary"
-                                                   Size="Size.Small"
-                                                   Href="@EditHrefSelector(item)"
-                                                   Title="Bewerk" />
-                                </span>
-                            }
-                            @if (OnDelete.HasDelegate)
-                            {
-                                <span>
-                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                                   Variant="Variant.Filled"
-                                                   Color="Color.Error"
-                                                   Size="Size.Small"
-                                                   OnClick="@(() => OnDelete.InvokeAsync(item))"
-                                                   Title="Verwijder" />
-                                </span>
-                            }
-                        </td>
+                        @RowTemplate(item)
                     }
-            </tr>
+                    else
+                    {
+                        <td>@item</td>
+                    }
+
+                    @if (HasActions)
+                        {
+                            <td>
+                                @if (EditHrefSelector != null)
+                                {
+                                    <span class="me-2">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                       Variant="Variant.Filled"
+                                                       Color="Color.Primary"
+                                                       Size="Size.Small"
+                                                       Href="@EditHrefSelector(item)"
+                                                       Title="Bewerk" />
+                                    </span>
+                                }
+                                @if (OnDelete.HasDelegate)
+                                {
+                                    <span>
+                                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                       Variant="Variant.Filled"
+                                                       Color="Color.Error"
+                                                       Size="Size.Small"
+                                                       OnClick="@(() => OnDelete.InvokeAsync(item))"
+                                                       Title="Verwijder" />
+                                    </span>
+                                }
+                            </td>
+                        }
+                </tr>
+            }
         }
-    }
-    </tbody>
-</table>
+        </tbody>
+    </table>
+</div>
 
 @if (Items != null && Items.Any())
 {
-    <div class="d-flex justify-content-between align-items-center mt-3">
-        <div class="d-flex align-items-center">
+    <div class="table-footer-controls d-flex justify-content-between align-items-center mt-3">
+        <div class="table-footer-meta d-flex align-items-center">
             <span class="me-2 text-muted small">Aantal per pagina:</span>
-            <select class="form-select form-select-sm custom-select" style="width: auto;" @bind="ItemsPerPage">
+            <select class="form-select form-select-sm custom-select table-page-size" @bind="ItemsPerPage">
                 @if (PageSizeOptions != null)
                 {
                     foreach (var size in PageSizeOptions)

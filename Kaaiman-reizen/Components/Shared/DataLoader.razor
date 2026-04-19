@@ -8,7 +8,7 @@
 else if (!string.IsNullOrWhiteSpace(Error))
 {
     <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">
-        <MudText Typo="Typo.body2" Style="white-space: pre-wrap; word-break: break-word;">@Error</MudText>
+        <MudText Typo="Typo.body2" Class="data-loader-error-text">@Error</MudText>
     </MudAlert>
 }
 else if (Items.Count == 0)
