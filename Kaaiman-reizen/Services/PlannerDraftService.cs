@@ -28,6 +28,8 @@ public class PlannerDraftService : IPlannerDraftService
                 {
                     Id = l.Id,
                     Name = l.Name,
+                    AmountOfTrips = l.AmountOfTrips ?? 0,
+                    MinTrips = l.MinTrips ?? 0,
                     MaxTrips = l.MaxTrips ?? 0,
                     AvailabilityPeriods = l.AvailabilityPeriods
                         .Select(a => (a.Start, a.End))

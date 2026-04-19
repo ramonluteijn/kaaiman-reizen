@@ -16,6 +16,7 @@ public class MainContext : IdentityDbContext<ApplicationUser>
     public DbSet<PreferredDestination> PreferredDestinations { get; set; }
     public DbSet<AvailabilityPeriod> AvailabilityPeriods { get; set; }
     public DbSet<Journey> Journey { get; set; }
+    public DbSet<Rule> Rule { get; set; }
     public DbSet<PlanningVersion> PlanningVersions { get; set; }
     public DbSet<PlanningAssignment> PlanningAssignments { get; set; }
 
@@ -112,5 +113,9 @@ public class MainContext : IdentityDbContext<ApplicationUser>
             .WithMany()
             .HasForeignKey(assignment => assignment.TravelLeaderId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<Rule>()
+            .HasIndex(rule => rule.Key)
+            .IsUnique();
     }
 }

@@ -19,6 +19,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ITravelLeaderService, TravelLeaderService>();
         services.AddScoped<IJourneyService, JourneyService>();
         services.AddScoped<IPlanningService, PlanningService>();
+        services.AddScoped<IRuleService, RuleService>();
         return services;
     }
 }
