@@ -15,6 +15,8 @@ public class PlannerLeaderInput
 {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
+    public int AmountOfTrips { get; set; }
+    public int MinTrips { get; set; }
     public int MaxTrips { get; set; }
     public List<(DateOnly Start, DateOnly End)> AvailabilityPeriods { get; set; } = [];
     public Dictionary<string, int> PreferredDestinations { get; set; } = [];
