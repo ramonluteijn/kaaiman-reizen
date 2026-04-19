@@ -5,7 +5,7 @@ namespace Kaaiman_reizen.Data.Entities;
 public class Rule
 {
     public int Id { get; set; }
-    public required string Key {get; set; }
+    public required string Key { get; set; }
     public string Description { get; set; } = null!;
     public string? Value { get; set; }
 

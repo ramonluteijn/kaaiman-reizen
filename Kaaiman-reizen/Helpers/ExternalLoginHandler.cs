@@ -59,8 +59,8 @@ namespace Kaaiman_reizen.Helpers
             if (aspnetuserloginsTableContent is null || providerKey is null || loginProvider is null)
                 return false;
 
-            return aspnetuserloginsTableContent.Any(login => 
-                                      login.ProviderKey == providerKey && 
+            return aspnetuserloginsTableContent.Any(login =>
+                                      login.ProviderKey == providerKey &&
                                       login.LoginProvider == loginProvider);
         }
     }

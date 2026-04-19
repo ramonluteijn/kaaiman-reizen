@@ -17,7 +17,7 @@ public class PlannerDraftService : IPlannerDraftService
 
     public async Task<PlannerDraftRequest> BuildRequestAsync(CancellationToken ct = default)
     {
-        var leaders  = await _leaderService.GetTravelLeadersAsync(ct);
+        var leaders = await _leaderService.GetTravelLeadersAsync(ct);
         var journeys = await _journeyService.GetJourneysAsync(ct);
 
         return new PlannerDraftRequest
@@ -39,10 +39,10 @@ public class PlannerDraftService : IPlannerDraftService
             Journeys = journeys
                 .Select(j => new PlannerJourneyInput
                 {
-                    Id              = j.Id,
-                    Name            = j.Name,
-                    Start           = j.Start,
-                    End             = j.End,
+                    Id = j.Id,
+                    Name = j.Name,
+                    Start = j.Start,
+                    End = j.End,
                     RequiredLeaders = j.RequiredLeaders   // ← carry through
                 })
                 .ToList(),
@@ -51,7 +51,7 @@ public class PlannerDraftService : IPlannerDraftService
 
     public PlannerDraftResult GenerateDraft(PlannerDraftRequest request)
     {
-        var result  = new PlannerDraftResult();
+        var result = new PlannerDraftResult();
         var leaders = request.Leaders;
         var journeys = request.Journeys;
 
@@ -60,13 +60,13 @@ public class PlannerDraftService : IPlannerDraftService
 
         if (L == 0)
         {
-            result.IsSuccess  = false;
+            result.IsSuccess = false;
             result.ErrorMessage = "Geen reisleiders of geen actieve reisleiders";
             return result;
         }
         if (J == 0)
         {
-            result.IsSuccess  = false;
+            result.IsSuccess = false;
             result.ErrorMessage = "Geen reizen gevonden";
             return result;
         }
@@ -91,7 +91,7 @@ public class PlannerDraftService : IPlannerDraftService
         {
             for (int j = 0; j < J; j++)
             {
-                var leader  = leaders[l];
+                var leader = leaders[l];
                 var journey = journeys[j];
                 bool available = leader.AvailabilityPeriods.Any(
                     p => p.Start <= journey.Start && p.End >= journey.End);
@@ -145,7 +145,7 @@ public class PlannerDraftService : IPlannerDraftService
             if (!eligible) continue;
 
             var assignedVar = model.NewBoolVar($"assigned_{l}");
-            var rowVars     = Enumerable.Range(0, J).Select(j => x[l, j]).ToList();
+            var rowVars = Enumerable.Range(0, J).Select(j => x[l, j]).ToList();
             model.Add(LinearExpr.Sum(rowVars) >= assignedVar);
             obj.AddTerm(assignedVar, -UnassignedPenalty);
         }
@@ -166,7 +166,7 @@ public class PlannerDraftService : IPlannerDraftService
         {
             var names = string.Join(", ", journeysWithoutEnoughLeaders.Select(j =>
                 $"{j.Name} ({j.Start:dd MMM}–{j.End:dd MMM yyyy}, vereist: {j.RequiredLeaders})"));
-            result.IsSuccess    = false;
+            result.IsSuccess = false;
             result.ErrorMessage =
                 $"Niet genoeg reisleiders beschikbaar voor: {names}. " +
                 "Controleer beschikbaarheidsperiodes of verhoog het aantal actieve reisleiders.";
@@ -189,15 +189,15 @@ public class PlannerDraftService : IPlannerDraftService
                 {
                     if (solver.Value(x[l, j]) == 1L)
                     {
-                        var leader  = leaders[l];
+                        var leader = leaders[l];
                         var journey = journeys[j];
                         int? rankMatched = leader.PreferredDestinations
                             .TryGetValue(journey.Name, out int r) ? r : null;
 
                         assignments.Add(new JourneyAssignmentResult
                         {
-                            LeaderId    = leader.Id,
-                            LeaderName  = leader.Name,
+                            LeaderId = leader.Id,
+                            LeaderName = leader.Name,
                             RankMatched = rankMatched
                         });
                     }
@@ -209,8 +209,8 @@ public class PlannerDraftService : IPlannerDraftService
         else
         {
             var availableSlots = leaders.Sum(l => l.MaxTrips);
-            var totalRequired  = journeys.Sum(j => j.RequiredLeaders);
-            result.IsSuccess    = false;
+            var totalRequired = journeys.Sum(j => j.RequiredLeaders);
+            result.IsSuccess = false;
             result.ErrorMessage =
                 $"De planning kon niet worden opgesteld. " +
                 $"Er zijn {totalRequired} benodigde reisleider-slots maar slechts {availableSlots} beschikbare plaatsen. " +

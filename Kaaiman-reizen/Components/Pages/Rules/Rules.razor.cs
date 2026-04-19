@@ -51,7 +51,7 @@ public partial class Rules
         }
     }
 
-    private IEnumerable<RuleViewModel> FilteredRules => 
+    private IEnumerable<RuleViewModel> FilteredRules =>
         ApplySorting(
             _rules.Where(r =>
                 string.IsNullOrWhiteSpace(_searchTerm) ||
