@@ -10,6 +10,7 @@
     min-height: 100vh;
     position: sticky;
     top: 0;
+    overflow-x: hidden;
 }
 
 .nav-brand {
@@ -22,6 +23,7 @@
 
 .nav-shell .nav-link {
     color: #ffffff !important;
+    font-weight: 700;
     position: relative;
     margin: 4px 10px !important;
     border-radius: 10px !important;
@@ -64,7 +66,8 @@
 }
 
 .nav-logout-button {
-    margin: 0 !important;
+    margin: 4px 10px !important;
+    width: calc(100% - 20px);
 }
 
 .bi {
@@ -91,7 +94,8 @@
 }
 
 .nav-item ::deep .nav-link {
-    color: #000000;
+    color: #ffffff;
+    font-weight: 700;
     background: none;
     border: none;
     border-radius: 4px;
@@ -100,6 +104,9 @@
     align-items: center;
     line-height: 3rem;
     width: 100%;
+    white-space: nowrap;
+    word-break: normal;
+    overflow-wrap: normal;
 }
 
 .nav-item ::deep a.active {
@@ -112,15 +119,27 @@
     color: white;
 }
 
-.nav-item ::deep .nav-link {
-    white-space: nowrap;
-    word-break: normal;
-    overflow-wrap: normal;
-}
-
 .nav-scrollable {
     display: flex;
     min-height: 0;
+}
+
+.nav-footer-section {
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.nav-toggle-btn {
+    text-decoration: none;
+    line-height: 1;
+}
+
+.nav-toggle-icon {
+    font-size: 1.5rem;
+    width: auto !important;
+    height: auto !important;
+    background: none !important;
+    margin-right: 0 !important;
+    top: 0 !important;
 }
 
 @media (max-width: 575.98px) {
@@ -144,5 +163,14 @@
 
     .nav-shell .nav-link {
         margin: 2px 8px !important;
+    }
+
+    .nav-collapsed {
+        display: none !important;
+    }
+
+    .nav-footer-section {
+        border-top: 1px solid rgba(255, 255, 255, 0.2);
+        border-bottom: none;
     }
 }
