@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 var keyVaultUri = builder.Configuration["KeyVault:VaultUri"];
@@ -19,7 +20,14 @@ if (string.IsNullOrWhiteSpace(keyVaultUri) is false)
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 if (string.IsNullOrWhiteSpace(connectionString))
-    throw new InvalidOperationException("Connection string 'DefaultConnection' is missing.");
+    throw new InvalidOperationException(
+        "Connection string 'DefaultConnection' is missing or empty.\n\n" +
+        "Configure it using User Secrets (recommended for local development):\n" +
+        "  cd Kaaiman-reizen\n" +
+        "  dotnet user-secrets init\n" +
+        "  dotnet user-secrets set \"ConnectionStrings:DefaultConnection\" \"Server=localhost;Database=kaaiman_reizen;Uid=root;Pwd=;\"\n\n" +
+        "Alternatively set it in Kaaiman-reizen/appsettings.Development.json (not recommended to commit because of security reasons)."
+    );
 
 builder.Services.AddMainContext(connectionString);
 builder.Services.AddDataServices();
@@ -90,7 +98,7 @@ using var scope = app.Services.CreateScope();
 var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
-List<string> roles = new() { "Planner", "Reisleider" };
+List<string> roles = ["Planner", "Reisleider"];
 
 foreach (var role in roles)
 {

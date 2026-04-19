@@ -17,6 +17,7 @@ public partial class PlannerDraft : ComponentBase
 
     [Inject] private IPlannerDraftService DraftService { get; set; } = default!;
     [Inject] private IPlanningService PlanningService { get; set; } = default!;
+    [Inject] private IRuleService RuleService { get; set; } = default!;
     [Inject] private ISnackbar Snackbar { get; set; } = default!;
 
     private PlannerDraftRequest? _request;
@@ -34,6 +35,7 @@ public partial class PlannerDraft : ComponentBase
     private List<(string Country, int Count)> _topPopular = [];
     private List<(string Country, int Count)> _leastPopular = [];
     private List<PlannerLeaderInput> _multiInterestLeaders = [];
+    private Kaaiman_reizen.Data.Rules.CheckRules.RuleSettings _ruleSettings = Kaaiman_reizen.Data.Rules.CheckRules.GetDefaultSettings();
 
     // ── Drawer state ───────────────────────────────────────────
     private bool _drawerOpen = false;
@@ -44,6 +46,8 @@ public partial class PlannerDraft : ComponentBase
     protected override async Task OnInitializedAsync()
     {
         _request = await DraftService.BuildRequestAsync();
+        var rules = await RuleService.GetRulesAsync();
+        _ruleSettings = Kaaiman_reizen.Data.Rules.CheckRules.FromRules(rules);
         ComputeInsights();
         var drafts = await PlanningService.GetDraftsAsync();
         _availableDrafts = drafts.ToList();
@@ -439,6 +443,7 @@ public partial class PlannerDraft : ComponentBase
         bool ExceedsMaxTrips,
         int CurrentAssignments,
         int MaxTrips
+        string? ValidationReason
     );
 
     /// <summary>
@@ -456,11 +461,13 @@ public partial class PlannerDraft : ComponentBase
             ? cur.Select(a => a.LeaderId).ToHashSet()
             : new HashSet<int>();
 
+        // Show all leaders; if they cannot be assigned, surface the first blocking reason.
         return _request.Leaders
-            .Where(leader => leader.AvailabilityPeriods.Any(
-                p => p.Start <= journeyInput.Start && p.End >= journeyInput.End))
             .Select(leader =>
             {
+                bool isAvailableForJourney = leader.AvailabilityPeriods.Any(
+                    p => p.Start <= journeyInput.Start && p.End >= journeyInput.End);
+
                 // Count how many journeys this leader is currently assigned to
                 int currentCount = _result.JourneyAssignments.Values
                     .SelectMany(l => l)
@@ -475,6 +482,43 @@ public partial class PlannerDraft : ComponentBase
 
                 int? rank = leader.PreferredDestinations.TryGetValue(journey.Name, out int r) ? r : null;
 
+                // Use CheckRules.CanAssignForPlanner to get the reason
+                string? validationReason;
+                var journeyEntity = new Journey {
+                    Id = journeyInput.Id,
+                    Name = journeyInput.Name,
+                    Start = journeyInput.Start,
+                    End = journeyInput.End
+                };
+                var leaderEntity = new TravelLeader {
+                    Id = leader.Id,
+                    Name = leader.Name,
+                    AmountOfTrips = leader.AmountOfTrips,
+                    MinTrips = leader.MinTrips,
+                    MaxTrips = leader.MaxTrips
+                };
+                var existingJourneys = _result.JourneyAssignments
+                    .Where(kvp => kvp.Value.Any(a => a.LeaderId == leader.Id) && kvp.Key != journey.Id)
+                    .Select(kvp => {
+                        var j = _request.Journeys.FirstOrDefault(x => x.Id == kvp.Key);
+                        return j is not null ? new Kaaiman_reizen.Data.Rules.CheckRules.JourneyWindow(j.Start, j.End) : null;
+                    })
+                    .Where(x => x != null)
+                    .Cast<Kaaiman_reizen.Data.Rules.CheckRules.JourneyWindow>();
+
+                Kaaiman_reizen.Data.Rules.CheckRules.CanAssignForPlanner(
+                    existingJourneys,
+                    journeyEntity,
+                    leaderEntity,
+                    out validationReason,
+                    _ruleSettings
+                );
+
+                if (!isAvailableForJourney)
+                {
+                    validationReason = "Deze reisleider is niet beschikbaar voor deze reisdatums.";
+                }
+
                 return new LeaderCandidate(
                     LeaderId: leader.Id,
                     LeaderName: leader.Name,
@@ -487,11 +531,12 @@ public partial class PlannerDraft : ComponentBase
                     ExceedsMaxTrips: currentCount >= leader.MaxTrips,
                     CurrentAssignments: currentCount,
                     MaxTrips: leader.MaxTrips
+                    ValidationReason: validationReason
                 );
             })
             // Sort: already-assigned first, then clean candidates, then flagged
             .OrderBy(c => c.IsAlreadyAssigned ? 0 : 1)
-            .ThenBy(c => (c.HasConflict || c.ExceedsMaxTrips) ? 1 : 0)
+            .ThenBy(c => (c.HasConflict || c.ExceedsMaxTrips || !string.IsNullOrEmpty(c.ValidationReason)) ? 1 : 0)
             .ThenBy(c => c.PreferenceRank ?? 99)
             .ToList();
     }
