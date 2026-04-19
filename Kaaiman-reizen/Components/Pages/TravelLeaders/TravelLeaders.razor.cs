@@ -53,7 +53,7 @@ public partial class TravelLeaders
         }
     }
 
-    private IEnumerable<TravelLeaderViewModel> FilteredLeaders => 
+    private IEnumerable<TravelLeaderViewModel> FilteredLeaders =>
         ApplySorting(
             _leaders.Where(l =>
                 string.IsNullOrWhiteSpace(_searchTerm) ||
@@ -95,7 +95,7 @@ public partial class TravelLeaders
     {
         if (leader == null)
             return;
-        
+
         var parameters = new DialogParameters<DeleteTravelLeaderDialog>
         {
             { x => x.LeaderName, leader.Name }

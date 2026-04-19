@@ -25,7 +25,7 @@ public class RuleService : IRuleService
             .OrderBy(t => t.Key)
             .ToListAsync(cancellationToken);
     }
-    
+
     public async Task<Entities.Rule?> GetRuleByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         return await _db.Rule
