@@ -129,7 +129,7 @@ public static class DevDataSeeder
     [
         new Journey
         {
-            Name = "Portugal (DEV)",
+            Name = "Portugal",
             Start = new DateOnly(2026, 1, 15),
             End = new DateOnly(2026, 1, 25),
             Busses = 1,
@@ -139,7 +139,7 @@ public static class DevDataSeeder
         },
         new Journey
         {
-            Name = "Marokko (DEV)",
+            Name = "Marokko",
             Start = new DateOnly(2026, 2, 10),
             End = new DateOnly(2026, 2, 22),
             Busses = 2,
@@ -149,7 +149,7 @@ public static class DevDataSeeder
         },
         new Journey
         {
-            Name = "Turkije (DEV)",
+            Name = "Turkije",
             Start = new DateOnly(2026, 4, 18),
             End = new DateOnly(2026, 4, 28),
             Busses = 1,
@@ -159,7 +159,7 @@ public static class DevDataSeeder
         },
         new Journey
         {
-            Name = "Zwitserland (DEV)",
+            Name = "Zwitserland",
             Start = new DateOnly(2026, 5, 2),
             End = new DateOnly(2026, 5, 12),
             Busses = 2,
@@ -169,7 +169,7 @@ public static class DevDataSeeder
         },
         new Journey
         {
-            Name = "Egypte (DEV)",
+            Name = "Egypte",
             Start = new DateOnly(2026, 6, 5),
             End = new DateOnly(2026, 6, 18),
             Busses = 3,
@@ -179,7 +179,7 @@ public static class DevDataSeeder
         },
         new Journey
         {
-            Name = "Duitsland (DEV)",
+            Name = "Duitsland",
             Start = new DateOnly(2026, 7, 20),
             End = new DateOnly(2026, 7, 30),
             Busses = 1,
@@ -189,7 +189,7 @@ public static class DevDataSeeder
         },
         new Journey
         {
-            Name = "Noorwegen (DEV)",
+            Name = "Noorwegen",
             Start = new DateOnly(2026, 9, 1),
             End = new DateOnly(2026, 9, 14),
             Busses = 2,
@@ -199,7 +199,7 @@ public static class DevDataSeeder
         },
         new Journey
         {
-            Name = "IJsland (DEV)",
+            Name = "IJsland",
             Start = new DateOnly(2026, 11, 3),
             End = new DateOnly(2026, 11, 13),
             Busses = 1,
