@@ -1,4 +1,5 @@
 using Google.OrTools.Sat;
+using Kaaiman_reizen.Data.Enum;
 using Kaaiman_reizen.Data.Services;
 using Kaaiman_reizen.Models.Planner;
 
@@ -37,13 +38,14 @@ public class PlannerDraftService : IPlannerDraftService
                     PreferredDestinations = l.PreferredDestinations.ToDictionary(p => p.Destination, p => p.Rank)
                 }).ToList(),
             Journeys = journeys
+                .Where(j => j.BookingStatus == BookingStatus.Bezig)
                 .Select(j => new PlannerJourneyInput
                 {
                     Id              = j.Id,
                     Name            = j.Name,
                     Start           = j.Start,
                     End             = j.End,
-                    RequiredLeaders = j.RequiredLeaders   // ← carry through
+                    RequiredLeaders = j.RequiredLeaders
                 })
                 .ToList(),
         };
