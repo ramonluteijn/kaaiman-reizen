@@ -43,7 +43,7 @@ public static class CheckRules
             MinMaxJourneysActive: GetIsActive(byKey, RuleKeys.MinMaxJourneys, settings.MinMaxJourneysActive)
         );
     }
-    
+
     public sealed record PlannerRuleResult(
         bool NoOverlap,
         bool HasMinimumGap,
@@ -51,11 +51,11 @@ public static class CheckRules
         MinMaxJourneysResult MinMaxResult
     )
     {
-        public bool IsEligible => 
-            NoOverlap && 
-            HasMinimumGap && 
+        public bool IsEligible =>
+            NoOverlap &&
+            HasMinimumGap &&
             HasExperience &&
-            !MinMaxResult.ExceedsMaxAfterAssignment && 
+            !MinMaxResult.ExceedsMaxAfterAssignment &&
             MinMaxResult.IsWithinLimitsAfterAssignment;
     }
 
@@ -75,7 +75,7 @@ public static class CheckRules
                 BelowMinAfterAssignment: false,
                 ExceedsMaxAfterAssignment: false,
                 DistanceFromMinMax: 0);
-        
+
         return new PlannerRuleResult(
             NoOverlap: !effectiveSettings.NoOverlapActive || !windows.Any(j => JourneysOverlap.Check(j.Start, j.End, journey.Start, journey.End)),
             HasMinimumGap: !effectiveSettings.MinimumGapDaysActive || windows.All(j => HasMinimumGapDays.Check(j.Start, j.End, journey.Start, journey.End, effectiveSettings.MinimumGapDays)),

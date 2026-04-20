@@ -15,12 +15,12 @@
 
 <PageTitle>Loginpagina</PageTitle>
 
-<div class="d-flex justify-content-center align-items-center container mb-5" style="min-height: 80vh;">
-    <div class="col-12 col-md-8 col-lg-5">
+<div class="auth-page-shell auth-page-shell--compact container">
+    <div class="auth-card-column">
         <div class="card rounded-4 border-0 shadow-lg">
             <div class="card-body p-5">
                 
-                <img src="images/Kaaiman-reizen-logo.webp" class="navbar-brand img-fluid mb-5" style="max-height: 50px;" alt="Logo Kaaiman-reizen" />
+                <img src="images/Kaaiman-reizen-logo.webp" class="navbar-brand img-fluid mb-5 auth-logo" alt="Logo Kaaiman-reizen" />
 
                 <StatusMessage Message="@errorMessage" />
 
@@ -39,10 +39,10 @@
                         <ValidationMessage For="() => Input.Password" class="text-danger" />
                     </div>
 
-                    <div class="d-flex justify-content-between align-items-center mb-5">
-                        <div class="d-flex align-items-center">
+                    <div class="d-flex flex-column flex-sm-row justify-content-sm-between align-items-sm-center gap-2 mb-5">
+                        <div class="d-flex align-items-center mb-2">
                             <InputCheckbox @bind-Value="Input.RememberMe" class="form-check-input m-0" id="rememberMe" />
-                            <label class="form-check-label mb-0 ms-2" for="rememberMe" style="line-height: 1; cursor: pointer;">
+                            <label class="form-check-label mb-0 ms-2 auth-remember-label" for="rememberMe">
                                 Onthoud mij
                             </label>
                         </div>

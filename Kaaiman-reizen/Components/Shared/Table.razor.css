@@ -1,0 +1,51 @@
+.app-table-scroll {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+}
+
+.app-table {
+    width: max-content;
+    min-width: 100%;
+}
+
+.app-table th,
+.app-table td {
+    white-space: nowrap;
+    word-break: normal;
+    overflow-wrap: normal;
+}
+
+.table-footer-controls {
+    gap: 0.75rem;
+}
+
+.table-footer-meta {
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.table-page-size {
+    width: auto;
+}
+
+@media (max-width: 575.98px) {
+    .app-table {
+        min-width: 540px;
+    }
+
+    .app-table th,
+    .app-table td {
+        font-size: 0.875rem;
+        padding: 0.5rem 0.75rem;
+    }
+
+    .table-footer-controls {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+}

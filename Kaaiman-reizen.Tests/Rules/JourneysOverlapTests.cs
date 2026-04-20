@@ -15,7 +15,7 @@ public class JourneysOverlapTests
         var result = JourneysOverlap.Check(existingStart, existingEnd, candidateStart, candidateEnd);
         Assert.True(result);
     }
-    
+
     [Fact]
     public void Check_ReturnsFalse_WhenJourneysDoNotOverlap()
     {

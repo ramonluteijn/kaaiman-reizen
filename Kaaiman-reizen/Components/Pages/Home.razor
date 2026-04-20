@@ -60,25 +60,27 @@ else
                     {
                         <div class="card">
                             <div class="card-body p-0">
-                                <table class="table mb-0">
-                                    <thead>
-                                        <tr>
-                                            <th>Land</th>
-                                            <th>Periode</th>
-                                            <th>Reisleiders</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach (var journey in _publishedJourneys)
-                                        {
+                                <div class="table-responsive app-table-scroll">
+                                    <table class="table app-table mb-0">
+                                        <thead>
                                             <tr>
-                                                <td>@journey.Name</td>
-                                                <td>@journey.Start - @journey.End</td>
-                                                <td>@FormatTravelLeaders(journey)</td>
+                                                <th>Land</th>
+                                                <th>Periode</th>
+                                                <th>Reisleiders</th>
                                             </tr>
-                                        }
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var journey in _publishedJourneys)
+                                            {
+                                                <tr>
+                                                    <td>@journey.Name</td>
+                                                    <td>@journey.Start - @journey.End</td>
+                                                    <td>@FormatTravelLeaders(journey)</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     }

@@ -17,14 +17,14 @@ public sealed class JourneyViewModel
     {
         return new Journey
         {
-            Id              = this.Id,
-            Name         = this.Name,
-            Start           = this.Start,
-            End             = this.End,
-            Busses          = this.Busses,
-            Travelers       = this.Travelers,
+            Id = this.Id,
+            Name = this.Name,
+            Start = this.Start,
+            End = this.End,
+            Busses = this.Busses,
+            Travelers = this.Travelers,
             RequiredLeaders = this.RequiredLeaders,
-            TravelLeaders   = this.TravelLeaders.Select(tl => tl.ToEntity()).ToList()
+            TravelLeaders = this.TravelLeaders.Select(tl => tl.ToEntity()).ToList()
         };
     }
 }
