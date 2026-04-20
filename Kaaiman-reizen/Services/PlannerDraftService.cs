@@ -16,7 +16,8 @@ public class PlannerDraftService : IPlannerDraftService
         _journeyService = journeyService;
     }
 
-    public async Task<PlannerDraftRequest> BuildRequestAsync(CancellationToken ct = default)
+// 1. Voeg 'int year' toe als eerste parameter
+    public async Task<PlannerDraftRequest> BuildRequestAsync(int year, CancellationToken ct = default)
     {
         var leaders  = await _leaderService.GetTravelLeadersAsync(ct);
         var journeys = await _journeyService.GetJourneysAsync(ct);
@@ -38,7 +39,8 @@ public class PlannerDraftService : IPlannerDraftService
                     PreferredDestinations = l.PreferredDestinations.ToDictionary(p => p.Destination, p => p.Rank)
                 }).ToList(),
             Journeys = journeys
-                .Where(j => j.BookingStatus == BookingStatus.Bezig)
+                // 2. Filter hier direct op het meegegeven jaar!
+                .Where(j => j.BookingStatus == BookingStatus.Bezig && j.Start.Year == year)
                 .Select(j => new PlannerJourneyInput
                 {
                     Id              = j.Id,

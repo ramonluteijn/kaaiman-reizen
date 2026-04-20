@@ -4,6 +4,6 @@ namespace Kaaiman_reizen.Services;
 
 public interface IPlannerDraftService
 {
-    Task<PlannerDraftRequest> BuildRequestAsync(CancellationToken ct = default);
+    Task<PlannerDraftRequest> BuildRequestAsync(int year, CancellationToken ct = default);
     PlannerDraftResult GenerateDraft(PlannerDraftRequest request);
 }

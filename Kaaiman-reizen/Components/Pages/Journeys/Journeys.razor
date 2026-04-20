@@ -80,6 +80,7 @@
     private string _searchTerm = string.Empty;
     private string _sortColumn = "Country";
     private bool _sortAscending = true;
+    private int _selectedYear = DateTime.UtcNow.Year;
 
     private static string GetEditHref(Journey journey)
     {
@@ -152,7 +153,7 @@
     {
         try
         {
-            var items = await JourneyService.GetJourneysWithPublishedPlanningAsync();
+            var items = await JourneyService.GetJourneysWithPublishedPlanningAsync(_selectedYear);
             _journeys = items.ToList();
         }
         catch

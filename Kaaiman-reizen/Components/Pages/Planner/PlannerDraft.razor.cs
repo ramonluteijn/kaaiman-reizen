@@ -19,7 +19,8 @@ public partial class PlannerDraft : ComponentBase
     [Inject] private IPlanningService PlanningService { get; set; } = default!;
     [Inject] private IRuleService RuleService { get; set; } = default!;
     [Inject] private ISnackbar Snackbar { get; set; } = default!;
-
+    
+    private int _selectedYear = DateTime.UtcNow.Year;
     private PlannerDraftRequest? _request;
     private PlannerDraftResult?  _result;
     private bool _loading     = true;
@@ -37,6 +38,7 @@ public partial class PlannerDraft : ComponentBase
     private List<PlannerLeaderInput>          _multiInterestLeaders = [];
     private Kaaiman_reizen.Data.Rules.CheckRules.RuleSettings _ruleSettings = Kaaiman_reizen.Data.Rules.CheckRules.GetDefaultSettings();
 
+
     // ── Drawer state ───────────────────────────────────────────
     private bool                  _drawerOpen         = false;
     private JourneyViewModel?     _selectedJourney;
@@ -47,17 +49,44 @@ public partial class PlannerDraft : ComponentBase
 
     // ── Initialisation ─────────────────────────────────────────
 
+    // ── Initialisation ─────────────────────────────────────────
+
     protected override async Task OnInitializedAsync()
     {
-        _request = await DraftService.BuildRequestAsync();
+        await LoadDataForYearAsync(_selectedYear);
+    }
+
+    private async Task OnYearChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int year))
+        {
+            _selectedYear = year;
+            _result = null; // Maak het huidige concept leeg
+            _selectedDraftId = null;
+            _showEntryModal = true; // Toon de popup weer voor het nieuwe jaar
+            await LoadDataForYearAsync(year);
+        }
+    }
+
+    private async Task LoadDataForYearAsync(int year)
+    {
+        _loading = true;
+        
+        // LET OP: Geef het jaar door aan de draft service!
+        _request = await DraftService.BuildRequestAsync(year); 
+        
         var rules = await RuleService.GetRulesAsync();
         _ruleSettings = Kaaiman_reizen.Data.Rules.CheckRules.FromRules(rules);
         ComputeInsights();
-        var drafts = await PlanningService.GetDraftsAsync();
+        
+        // LET OP: Geef het jaar door aan de planning service!
+        var drafts = await PlanningService.GetDraftsAsync(year);
+        
         _availableDrafts = drafts.ToList();
         _selectedDraftId = VersionId is not null && _availableDrafts.Any(draft => draft.Id == VersionId.Value)
             ? VersionId
             : _availableDrafts.FirstOrDefault()?.Id;
+            
         _loading = false;
     }
 
@@ -193,7 +222,7 @@ public partial class PlannerDraft : ComponentBase
                 ? $"Published planning {DateTime.Now:yyyy-MM-dd HH:mm}"
                 : $"Draft planning {DateTime.Now:yyyy-MM-dd HH:mm}";
 
-            await PlanningService.SavePlanningAsync(planningName, isPublished, assignments);
+            await PlanningService.SavePlanningAsync(_selectedYear, planningName, isPublished, assignments);
 
             var message = isPublished
                 ? "Planning is gepubliceerd. Andere gebruikers zien nu deze versie."
@@ -276,27 +305,48 @@ public partial class PlannerDraft : ComponentBase
             var journey = _request!.Journeys.FirstOrDefault(item => item.Id == journeyGroup.Key);
             if (journey is null)
             {
+                result.JourneyWarnings[journeyGroup.Key] = "Deze reis is geannuleerd of verplaatst naar een ander jaar.";
                 continue;
             }
 
-            result.JourneyAssignments[journeyGroup.Key] = journeyGroup
-                .Select(assignment =>
-                {
-                    var leader = _request.Leaders.FirstOrDefault(item => item.Id == assignment.TravelLeaderId);
-                    int? rank = leader is not null &&
-                                leader.PreferredDestinations.TryGetValue(journey.Name, out var matchedRank)
-                        ? matchedRank
-                        : null;
+            var assignmentsForJourney = new List<JourneyAssignmentResult>();
 
-                    return new JourneyAssignmentResult
-                    {
-                        LeaderId = assignment.TravelLeaderId,
-                        LeaderName = assignment.TravelLeader.Name,
-                        RankMatched = rank
-                    };
-                })
-                .OrderBy(item => item.LeaderName)
-                .ToList();
+            foreach (var assignment in journeyGroup)
+            {
+                var leader = _request.Leaders.FirstOrDefault(item => item.Id == assignment.TravelLeaderId);
+                
+                // CHECK 2: Is de leider inactief gezet of heeft hij 0 beschikbaarheid doorgegeven?
+                if (leader == null)
+                {
+                    // Let op: we hebben de tekst iets aangepast en 'continue' toegevoegd!
+                    result.JourneyWarnings[journey.Id] = $"Let op: {assignment.TravelLeader.Name} is automatisch verwijderd omdat deze inactief is of geen beschikbaarheid heeft.";
+                    continue; // Skip! Voeg deze persoon NIET toe aan de UI.
+                }
+
+                // CHECK 3: Kloppen de specifieke datums nog wel?
+                bool stillAvailable = leader.AvailabilityPeriods.Any(p => 
+                    p.Start <= journey.Start && p.End >= journey.End);
+                    
+                if (!stillAvailable)
+                {
+                    result.JourneyWarnings[journey.Id] = $"Let op: {leader.Name} is automatisch verwijderd omdat de beschikbaarheid is gewijzigd.";
+                    continue; // Skip! Voeg deze persoon NIET toe aan de UI.
+                }
+
+                // Als we hier zijn, is de data nog 100% geldig! We voegen hem toe aan de weergave.
+                int? rank = leader.PreferredDestinations.TryGetValue(journey.Name, out var matchedRank)
+                    ? matchedRank
+                    : null;
+
+                assignmentsForJourney.Add(new JourneyAssignmentResult
+                {
+                    LeaderId = assignment.TravelLeaderId,
+                    LeaderName = leader.Name,
+                    RankMatched = rank
+                });
+            }
+
+            result.JourneyAssignments[journeyGroup.Key] = assignmentsForJourney.OrderBy(item => item.LeaderName).ToList();
         }
 
         return result;
