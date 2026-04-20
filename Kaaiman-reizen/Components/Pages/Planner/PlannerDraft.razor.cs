@@ -433,26 +433,13 @@ public partial class PlannerDraft : ComponentBase
 
     // ── Candidate helpers ──────────────────────────────────────
 
-    private record LeaderCandidate(
-        int    LeaderId,
-        string LeaderName,
-        int?   PreferenceRank,
-        bool   IsAlreadyAssigned,
-        bool   HasConflict,
-        string ConflictJourneyName,
-        bool   ExceedsMaxTrips,
-        int    CurrentAssignments,
-        int    MaxTrips,
-        string? ValidationReason
-    );
-
     /// <summary>
     /// Returns every leader who has availability for the journey dates.
     /// Leaders with conflicts or MaxTrips exceeded are included but flagged.
     /// </summary>
-    private List<LeaderCandidate> GetCandidatesFor(JourneyViewModel journey)
+    private List<LeaderCandidate> GetCandidatesFor(JourneyViewModel? journey)
     {
-        if (_request is null || _result is null) return [];
+        if (journey is null || _request is null || _result is null) return [];
 
         var journeyInput = _request.Journeys.FirstOrDefault(j => j.Id == journey.Id);
         if (journeyInput is null) return [];
