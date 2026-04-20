@@ -15,12 +15,13 @@
     {
         @if (_showEntryModal)
         {
-            <EntryModal 
+            <EntryModal
                 ActionInProgress="_entryActionInProgress"
                 AvailableDrafts="_availableDrafts"
                 @bind-SelectedDraftId="_selectedDraftId"
                 OnGenerateNew="GenerateNewPlanningFromModalAsync"
-                OnResumeDraft="ResumeSelectedDraftAsync" />
+                OnResumeDraft="ResumeSelectedDraftAsync"
+                OnClose="() => _showEntryModal = false" />
         }
 
         @if (!_showEntryModal)

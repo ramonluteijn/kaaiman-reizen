@@ -19,6 +19,9 @@
 .pd-entry-header {
     padding: 14px 18px;
     background: #f7f7f7;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
 .pd-entry-header .mud-typography {

@@ -12,9 +12,9 @@ public partial class EntryModal : ComponentBase
     [Parameter] public int? SelectedDraftId { get; set; }
     [Parameter] public EventCallback<int?> SelectedDraftIdChanged { get; set; }
     
-    // Callback methods mapped to your buttons
     [Parameter] public EventCallback OnGenerateNew { get; set; }
     [Parameter] public EventCallback OnResumeDraft { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
 
     protected async Task SelectDraft(int id)
     {
