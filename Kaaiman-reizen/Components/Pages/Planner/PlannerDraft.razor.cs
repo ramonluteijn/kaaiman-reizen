@@ -33,96 +33,29 @@ public partial class PlannerDraft : ComponentBase
     private List<PlanningVersion> _availableDrafts = [];
     private int? _selectedDraftId;
     private CancellationTokenSource? _saveMessageCts;
-    private List<(string Country, int Count)> _topPopular       = [];
-    private List<(string Country, int Count)> _leastPopular     = [];
-    private List<PlannerLeaderInput>          _multiInterestLeaders = [];
     private Kaaiman_reizen.Data.Rules.CheckRules.RuleSettings _ruleSettings = Kaaiman_reizen.Data.Rules.CheckRules.GetDefaultSettings();
-
-
-    // ── Drawer state ───────────────────────────────────────────
     private bool                  _drawerOpen         = false;
     private JourneyViewModel?     _selectedJourney;
     private List<LeaderCandidate> _selectedCandidates = [];
-
-    // ── Sidebar state ──────────────────────────────────────────
     private bool _sidebarOpen = true;
-
-    // ── Initialisation ─────────────────────────────────────────
-
-    // ── Initialisation ─────────────────────────────────────────
-
     protected override async Task OnInitializedAsync()
     {
         await LoadDataForYearAsync(_selectedYear);
     }
 
-    private async Task OnYearChanged(ChangeEventArgs e)
-    {
-        if (int.TryParse(e.Value?.ToString(), out int year))
-        {
-            _selectedYear = year;
-            _result = null; // Maak het huidige concept leeg
-            _selectedDraftId = null;
-            _showEntryModal = true; // Toon de popup weer voor het nieuwe jaar
-            await LoadDataForYearAsync(year);
-        }
-    }
-
     private async Task LoadDataForYearAsync(int year)
     {
         _loading = true;
-        
-        // LET OP: Geef het jaar door aan de draft service!
-        _request = await DraftService.BuildRequestAsync(year); 
-        
+        _request = await DraftService.BuildRequestAsync(year);
         var rules = await RuleService.GetRulesAsync();
         _ruleSettings = Kaaiman_reizen.Data.Rules.CheckRules.FromRules(rules);
-        ComputeInsights();
-        
-        // LET OP: Geef het jaar door aan de planning service!
         var drafts = await PlanningService.GetDraftsAsync(year);
-        
         _availableDrafts = drafts.ToList();
         _selectedDraftId = VersionId is not null && _availableDrafts.Any(draft => draft.Id == VersionId.Value)
             ? VersionId
             : _availableDrafts.FirstOrDefault()?.Id;
-            
+
         _loading = false;
-    }
-
-    private void ComputeInsights()
-    {
-        if (_request is null) return;
-
-        var allCountries = _request.Journeys.Select(j => j.Name).Distinct();
-
-        var popularity = allCountries
-            .Select(c => (
-                Country: c,
-                Count: _request.Leaders.Count(l => l.PreferredDestinations.ContainsKey(c))
-            ))
-            .ToList();
-
-        _topPopular           = popularity.OrderByDescending(p => p.Count).Take(3).ToList();
-        _leastPopular         = popularity.OrderBy(p => p.Count).Take(3).ToList();
-        _multiInterestLeaders = _request.Leaders
-            .Where(l => l.PreferredDestinations.Count > 1)
-            .OrderByDescending(l => l.PreferredDestinations.Count)
-            .ToList();
-    }
-
-    // ── Generation ─────────────────────────────────────────────
-
-    private async Task GenerateDraftAsync()
-    {
-        if (_request is null) return;
-        _isGenerating = true;
-        _result       = null;
-        ClearSaveMessage();
-        StateHasChanged();
-        await Task.Delay(50);
-        _result       = await Task.Run(() => DraftService.GenerateDraft(_request));
-        _isGenerating = false;
     }
 
     private async Task LoadDraftByIdAsync(int planningVersionId)
@@ -288,7 +221,7 @@ public partial class PlannerDraft : ComponentBase
             }
             catch (TaskCanceledException)
             {
-                // Intentionally ignored because newer message replaced this one.
+
             }
         }, token);
     }
@@ -314,26 +247,21 @@ public partial class PlannerDraft : ComponentBase
             foreach (var assignment in journeyGroup)
             {
                 var leader = _request.Leaders.FirstOrDefault(item => item.Id == assignment.TravelLeaderId);
-                
-                // CHECK 2: Is de leider inactief gezet of heeft hij 0 beschikbaarheid doorgegeven?
                 if (leader == null)
                 {
-                    // Let op: we hebben de tekst iets aangepast en 'continue' toegevoegd!
                     result.JourneyWarnings[journey.Id] = $"Let op: {assignment.TravelLeader.Name} is automatisch verwijderd omdat deze inactief is of geen beschikbaarheid heeft.";
-                    continue; // Skip! Voeg deze persoon NIET toe aan de UI.
+                    continue;
                 }
-
-                // CHECK 3: Kloppen de specifieke datums nog wel?
+                
                 bool stillAvailable = leader.AvailabilityPeriods.Any(p => 
                     p.Start <= journey.Start && p.End >= journey.End);
                     
                 if (!stillAvailable)
                 {
                     result.JourneyWarnings[journey.Id] = $"Let op: {leader.Name} is automatisch verwijderd omdat de beschikbaarheid is gewijzigd.";
-                    continue; // Skip! Voeg deze persoon NIET toe aan de UI.
+                    continue;
                 }
-
-                // Als we hier zijn, is de data nog 100% geldig! We voegen hem toe aan de weergave.
+                
                 int? rank = leader.PreferredDestinations.TryGetValue(journey.Name, out var matchedRank)
                     ? matchedRank
                     : null;
@@ -351,8 +279,6 @@ public partial class PlannerDraft : ComponentBase
 
         return result;
     }
-
-    // ── Leader overview rows ────────────────────────────────────
 
     private record LeaderPlanningRow(
         int LeaderId,
