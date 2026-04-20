@@ -38,8 +38,9 @@ public partial class PlannerDraft : ComponentBase
     private Kaaiman_reizen.Data.Rules.CheckRules.RuleSettings _ruleSettings = Kaaiman_reizen.Data.Rules.CheckRules.GetDefaultSettings();
 
     // ── Drawer state ───────────────────────────────────────────
-    private bool             _drawerOpen      = false;
-    private JourneyViewModel? _selectedJourney;
+    private bool                  _drawerOpen         = false;
+    private JourneyViewModel?     _selectedJourney;
+    private List<LeaderCandidate> _selectedCandidates = [];
 
     // ── Initialisation ─────────────────────────────────────────
 
@@ -354,14 +355,16 @@ public partial class PlannerDraft : ComponentBase
 
     private void HandleJourneyClick(JourneyViewModel journey)
     {
-        _selectedJourney = journey;
-        _drawerOpen      = true;
+        _selectedJourney    = journey;
+        _selectedCandidates = GetCandidatesFor(journey);
+        _drawerOpen         = true;
     }
 
     private void CloseDrawer()
     {
-        _drawerOpen      = false;
-        _selectedJourney = null;
+        _drawerOpen         = false;
+        _selectedJourney    = null;
+        _selectedCandidates = [];
     }
 
     /// <summary>Rebuilds _selectedJourney from _result so the drawer immediately reflects changes.</summary>
@@ -396,6 +399,7 @@ public partial class PlannerDraft : ComponentBase
                 _result.JourneyAssignments.Remove(_selectedJourney.Id);
         }
         RefreshSelectedJourney();
+        _selectedCandidates = GetCandidatesFor(_selectedJourney);
     }
 
     private void AssignLeader(LeaderCandidate candidate)
@@ -429,6 +433,7 @@ public partial class PlannerDraft : ComponentBase
             _result.JourneyAssignments[_selectedJourney.Id] = [entry];
 
         RefreshSelectedJourney();
+        _selectedCandidates = GetCandidatesFor(_selectedJourney);
     }
 
     // ── Candidate helpers ──────────────────────────────────────
@@ -437,9 +442,9 @@ public partial class PlannerDraft : ComponentBase
     /// Returns every leader who has availability for the journey dates.
     /// Leaders with conflicts or MaxTrips exceeded are included but flagged.
     /// </summary>
-    private List<LeaderCandidate> GetCandidatesFor(JourneyViewModel? journey)
+    private List<LeaderCandidate> GetCandidatesFor(JourneyViewModel journey)
     {
-        if (journey is null || _request is null || _result is null) return [];
+        if (_request is null || _result is null) return [];
 
         var journeyInput = _request.Journeys.FirstOrDefault(j => j.Id == journey.Id);
         if (journeyInput is null) return [];
