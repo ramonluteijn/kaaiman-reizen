@@ -305,8 +305,6 @@ public partial class PlannerDraft : ComponentBase
         )).ToList();
     }
 
-    // ── Calendar journey list ───────────────────────────────────
-
     private IReadOnlyList<JourneyViewModel> BuildCalendarJourneys()
     {
         if (_request is null || _result is null) return [];
@@ -330,8 +328,6 @@ public partial class PlannerDraft : ComponentBase
         }).ToList();
     }
 
-    // ── Drawer handlers ────────────────────────────────────────
-
     private void HandleJourneyClick(JourneyViewModel journey)
     {
         _selectedJourney    = journey;
@@ -346,7 +342,6 @@ public partial class PlannerDraft : ComponentBase
         _selectedCandidates = [];
     }
 
-    /// <summary>Rebuilds _selectedJourney from _result so the drawer immediately reflects changes.</summary>
     private void RefreshSelectedJourney()
     {
         if (_selectedJourney is null || _request is null || _result is null) return;
