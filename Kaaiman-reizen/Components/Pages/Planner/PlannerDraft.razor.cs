@@ -42,6 +42,9 @@ public partial class PlannerDraft : ComponentBase
     private JourneyViewModel?     _selectedJourney;
     private List<LeaderCandidate> _selectedCandidates = [];
 
+    // ── Sidebar state ──────────────────────────────────────────
+    private bool _sidebarOpen = true;
+
     // ── Initialisation ─────────────────────────────────────────
 
     protected override async Task OnInitializedAsync()

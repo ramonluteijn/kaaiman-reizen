@@ -1,4 +1,5 @@
 @page "/planner/draft"
+@using Kaaiman_reizen.Components.Pages.Planner.Components
 @rendermode InteractiveServer
 
 <PageTitle>Draft Planning</PageTitle>
@@ -17,7 +18,8 @@
             <EntryModal
                 ActionInProgress="_entryActionInProgress"
                 AvailableDrafts="_availableDrafts"
-                @bind-SelectedDraftId="_selectedDraftId"
+                SelectedDraftId="_selectedDraftId"
+                SelectedDraftIdChanged="id => _selectedDraftId = id"
                 OnGenerateNew="GenerateNewPlanningFromModalAsync"
                 OnResumeDraft="ResumeSelectedDraftAsync"
                 OnClose="() => _showEntryModal = false" />
@@ -44,119 +46,95 @@
         {
             if (_result.IsSuccess)
             {
-                var leaderRows   = BuildLeaderRows();
-                var inPlanning   = leaderRows.Where(r => r.AssignedJourneys.Count > 0).ToList();
-                var notInPlanning = leaderRows.Where(r => r.AssignedJourneys.Count == 0).ToList();
+                var leaderRows = BuildLeaderRows();
 
-                <!-- Calendar preview -->
-                <CalendarView Journeys="BuildCalendarJourneys()"
-                              OnJourneyClick="HandleJourneyClick" />
+                <!-- Sidebar toggle -->
+                <div class="d-flex align-center gap-2 mb-2">
+                    <MudIconButton Icon="@Icons.Material.Filled.People"
+                                   Size="Size.Small"
+                                   Variant="Variant.Outlined"
+                                   Color="@(_sidebarOpen ? Color.Primary : Color.Default)"
+                                   OnClick="@(() => _sidebarOpen = !_sidebarOpen)"
+                                   title="Reisleiders tonen/verbergen" />
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Reisleiders</MudText>
+                </div>
 
-                @if (_result.JourneyWarnings.Any())
-                {
-                    <MudText Typo="Typo.h6" Class="mt-6 mb-2">
-                        <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning" Class="mr-1 mb-n1" Size="Size.Small" />
-                        Niet ingepland (@_result.JourneyWarnings.Count)
-                    </MudText>
-                    <MudStack Spacing="2" Class="mb-4">
-                        @foreach (var kvp in _result.JourneyWarnings)
-                        {
-                            var warnedJourney = _request!.Journeys.FirstOrDefault(j => j.Id == kvp.Key);
-                            if (warnedJourney is null) continue;
-                            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true">
-                                <b>@warnedJourney.Name</b>
-                                <span class="text-secondary ms-1">(@warnedJourney.Start.ToString("dd MMM") – @warnedJourney.End.ToString("dd MMM yyyy"))</span>
-                                — @kvp.Value
-                            </MudAlert>
-                        }
-                    </MudStack>
-                }
+                <!-- Calendar + sidebar layout -->
+                <div class="pd-layout">
 
-                <!-- Leader overview -->
-                <MudText Typo="Typo.h6" Class="mt-6 mb-2">Reisleiders overzicht</MudText>
-                <MudGrid>
-                    <!-- In de planning -->
-                    <MudItem xs="12" md="6">
-                        <MudText Typo="Typo.subtitle1" Class="mb-2">
-                            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Class="mr-1 mb-n1" Size="Size.Small" />
-                            In de planning (@inPlanning.Count)
-                        </MudText>
-                        <MudStack Spacing="2">
-                            @foreach (var row in inPlanning)
+                    @if (_sidebarOpen)
+                    {
+                        <aside class="pd-sidebar">
+                            <p class="pd-sidebar-title">Reisleiders (@leaderRows.Count)</p>
+                            @foreach (var row in leaderRows)
                             {
-                                <MudPaper Class="pa-3 pd-leader-paper pd-leader-paper--success" Elevation="1">
-                                    <MudText Typo="Typo.subtitle2"><b>@row.LeaderName</b></MudText>
-                                    <MudStack Spacing="1" Class="mt-1">
-                                        @foreach (var item in row.AssignedJourneys)
+                                var hasJourneys = row.AssignedJourneys.Count > 0;
+                                <div class="pd-sidebar-row @(hasJourneys ? "pd-sidebar-row--assigned" : "pd-sidebar-row--unassigned")">
+                                    <div class="pd-sidebar-avatar">@row.LeaderName[0]</div>
+                                    <div class="pd-sidebar-info">
+                                        <span class="pd-sidebar-name">@row.LeaderName</span>
+                                        @if (hasJourneys)
                                         {
-                                            <div class="d-flex align-center gap-2 flex-wrap">
-                                                <MudText Typo="Typo.body2">
-                                                    @item.Journey.Name
-                                                    <span class="text-secondary ms-1">
-                                                        (@item.Journey.Start.ToString("dd MMM") – @item.Journey.End.ToString("dd MMM yyyy"))
-                                                    </span>
-                                                </MudText>
-                                                @if (item.RankMatched.HasValue)
+                                            <span class="pd-sidebar-count">@row.AssignedJourneys.Count rei@(row.AssignedJourneys.Count == 1 ? "s" : "zen")</span>
+                                            <div class="pd-sidebar-journeys">
+                                                @foreach (var item in row.AssignedJourneys)
                                                 {
-                                                    <MudChip T="string" Size="Size.Small"
-                                                             Color="@(item.RankMatched == 1 ? Color.Success
-                                                                     : item.RankMatched == 2 ? Color.Info
-                                                                     : Color.Warning)">
-                                                        Keuze #@item.RankMatched
-                                                    </MudChip>
-                                                }
-                                                else
-                                                {
-                                                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">Geen voorkeur</MudChip>
-                                                }
-                                            </div>
-                                        }
-                                    </MudStack>
-                                </MudPaper>
-                            }
-                        </MudStack>
-                    </MudItem>
-
-                    <!-- Niet in de planning -->
-                    <MudItem xs="12" md="6">
-                        <MudText Typo="Typo.subtitle1" Class="mb-2">
-                            <MudIcon Icon="@Icons.Material.Filled.Cancel" Color="Color.Warning" Class="mr-1 mb-n1" Size="Size.Small" />
-                            Niet in de planning (@notInPlanning.Count)
-                        </MudText>
-                        @if (notInPlanning.Count == 0)
-                        {
-                            <MudAlert Severity="Severity.Success" Variant="Variant.Outlined" Dense="true">
-                                Alle reisleiders zijn toegewezen.
-                            </MudAlert>
-                        }
-                        else
-                        {
-                            <MudStack Spacing="2">
-                                @foreach (var row in notInPlanning)
-                                {
-                                    <MudPaper Class="pa-3 pd-leader-paper pd-leader-paper--warning" Elevation="1">
-                                        <MudText Typo="Typo.subtitle2"><b>@row.LeaderName</b></MudText>
-                                        @if (row.Preferences.Count > 0)
-                                        {
-                                            <div class="d-flex flex-wrap gap-1 mt-1">
-                                                @foreach (var pref in row.Preferences.OrderBy(p => p.Value))
-                                                {
-                                                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">
-                                                        @pref.Key (#@pref.Value)
-                                                    </MudChip>
+                                                    <div class="pd-sidebar-journey">
+                                                        <span class="pd-sidebar-journey-name">@item.Journey.Name</span>
+                                                        <span class="pd-sidebar-journey-dates">@item.Journey.Start.ToString("dd MMM") – @item.Journey.End.ToString("dd MMM")</span>
+                                                        @if (item.RankMatched.HasValue)
+                                                        {
+                                                            <span class="pd-sidebar-rank pd-sidebar-rank--@(item.RankMatched == 1 ? "1" : item.RankMatched == 2 ? "2" : "3")">
+                                                                #@item.RankMatched
+                                                            </span>
+                                                        }
+                                                    </div>
                                                 }
                                             </div>
                                         }
                                         else
                                         {
-                                            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-1">Geen voorkeuren opgegeven</MudText>
+                                            <span class="pd-sidebar-count pd-sidebar-count--none">Niet ingepland</span>
+                                            @if (row.Preferences.Count > 0)
+                                            {
+                                                <div class="pd-sidebar-prefs">
+                                                    @foreach (var pref in row.Preferences.OrderBy(p => p.Value))
+                                                    {
+                                                        <span class="pd-sidebar-pref">@pref.Key (#@pref.Value)</span>
+                                                    }
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <span class="pd-sidebar-no-prefs">Geen voorkeuren</span>
+                                            }
                                         }
-                                    </MudPaper>
+                                    </div>
+                                </div>
+                            }
+                        </aside>
+                    }
+
+                    <div class="pd-main">
+                        @if (_result.JourneyWarnings.Any())
+                        {
+                            <MudStack Spacing="1" Class="mb-3">
+                                @foreach (var kvp in _result.JourneyWarnings)
+                                {
+                                    var warnedJourney = _request!.Journeys.FirstOrDefault(j => j.Id == kvp.Key);
+                                    if (warnedJourney is null) continue;
+                                    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true">
+                                        <b>@warnedJourney.Name</b>
+                                        <span class="text-secondary ms-1">(@warnedJourney.Start.ToString("dd MMM") – @warnedJourney.End.ToString("dd MMM yyyy"))</span>
+                                        — @kvp.Value
+                                    </MudAlert>
                                 }
                             </MudStack>
                         }
-                    </MudItem>
-                </MudGrid>
+                        <CalendarView Journeys="BuildCalendarJourneys()"
+                                      OnJourneyClick="HandleJourneyClick" />
+                    </div>
+                </div>
 
                 <div class="pd-bottom-actions">
                     <div class="d-flex flex-wrap gap-2">
