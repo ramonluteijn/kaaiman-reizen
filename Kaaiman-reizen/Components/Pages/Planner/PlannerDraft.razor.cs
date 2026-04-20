@@ -309,7 +309,7 @@ public partial class PlannerDraft : ComponentBase
 
     private List<LeaderPlanningRow> BuildLeaderRows()
     {
-        if (_request is null || _result is null || !_result.IsSuccess) return [];
+        if (_request is null || _result is null) return [];
 
         return _request.Leaders.Select(leader => new LeaderPlanningRow(
             leader.Id,
@@ -329,7 +329,7 @@ public partial class PlannerDraft : ComponentBase
 
     private IReadOnlyList<JourneyViewModel> BuildCalendarJourneys()
     {
-        if (_request is null || _result is null || !_result.IsSuccess) return [];
+        if (_request is null || _result is null) return [];
 
         return _request.Journeys.Select(j =>
         {

@@ -52,6 +52,26 @@
                 <CalendarView Journeys="BuildCalendarJourneys()"
                               OnJourneyClick="HandleJourneyClick" />
 
+                @if (_result.JourneyWarnings.Any())
+                {
+                    <MudText Typo="Typo.h6" Class="mt-6 mb-2">
+                        <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning" Class="mr-1 mb-n1" Size="Size.Small" />
+                        Niet ingepland (@_result.JourneyWarnings.Count)
+                    </MudText>
+                    <MudStack Spacing="2" Class="mb-4">
+                        @foreach (var kvp in _result.JourneyWarnings)
+                        {
+                            var warnedJourney = _request!.Journeys.FirstOrDefault(j => j.Id == kvp.Key);
+                            if (warnedJourney is null) continue;
+                            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true">
+                                <b>@warnedJourney.Name</b>
+                                <span class="text-secondary ms-1">(@warnedJourney.Start.ToString("dd MMM") – @warnedJourney.End.ToString("dd MMM yyyy"))</span>
+                                — @kvp.Value
+                            </MudAlert>
+                        }
+                    </MudStack>
+                }
+
                 <!-- Leader overview -->
                 <MudText Typo="Typo.h6" Class="mt-6 mb-2">Reisleiders overzicht</MudText>
                 <MudGrid>
@@ -174,7 +194,7 @@
                     </div>
                 </div>
             }
-            else
+            else if (!string.IsNullOrEmpty(_result.ErrorMessage))
             {
                 <MudAlert Severity="Severity.Error" Variant="Variant.Filled">
                     <b>Genereren mislukt:</b> @_result.ErrorMessage
@@ -184,9 +204,6 @@
         }
     }
 </MudStack>
-
-<!-- ── Journey detail drawer ───────────────────────────────────── -->
-
 <JourneyDetailDrawer 
     IsOpen="_drawerOpen"
     SelectedJourney="_selectedJourney"
