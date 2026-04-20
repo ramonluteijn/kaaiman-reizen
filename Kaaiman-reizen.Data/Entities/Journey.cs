@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Kaaiman_reizen.Data.Enum;
 
 namespace Kaaiman_reizen.Data.Entities;
 
@@ -22,9 +23,7 @@ public class Journey : IValidatableObject
     [Range(1, int.MaxValue, ErrorMessage = "Aantal reizigers moet groter of gelijk aan 1 zijn.")]
     public int? Travelers { get; set; }
 
-    [Required(ErrorMessage = "Boekingsstatus is verplicht.")]
-    [Range(1, 3, ErrorMessage = "Boekingsstatus moet 1, 2 of 3 zijn.")]
-    public int? BookingStatus { get; set; }
+    public BookingStatus BookingStatus { get; set; }
 
     /// <summary>How many travel leaders must be assigned to this journey. Defaults to 1.</summary>
     [Range(1, int.MaxValue, ErrorMessage = "RequiredLeaders moet minimaal 1 zijn.")]
