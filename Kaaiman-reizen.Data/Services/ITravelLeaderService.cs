@@ -1,3 +1,6 @@
+using Kaaiman_reizen.Data.Entities;
+using static Kaaiman_reizen.Data.Services.TravelLeaderService;
+
 namespace Kaaiman_reizen.Data.Services;
 
 public interface ITravelLeaderService
@@ -8,4 +11,10 @@ public interface ITravelLeaderService
     Task DeleteTravelLeaderAsync(int id, CancellationToken cancellationToken = default);
     Task<Entities.TravelLeader?> GetTravelLeaderByIdAsync(int id, CancellationToken cancellationToken = default);
     Task UpdateTravelLeaderAsync(Entities.TravelLeader leader, CancellationToken cancellationToken = default);
+
+    Task<List<TravelLeader>> GetTravelLeadersWithoutPreferencesAsync();
+    Task<List<TravelLeader>> GetTravelLeadersWithoutJourneysAsync();
+    Task<List<TravelLeader>> GetTravelLeadersWithNotesAsync();
+    Task<List<Journey>> GetJourneysWithoutTravelLeadersAsync();
+    Task<List<OverlapData>> GetTravelLeadersWithOverlappingJourneys();
 }
