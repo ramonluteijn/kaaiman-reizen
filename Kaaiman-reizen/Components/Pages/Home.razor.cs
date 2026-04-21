@@ -16,6 +16,7 @@ public partial class Home : ComponentBase
     private bool _isReisleider;
     private List<PlanningVersion> _drafts = [];
     private List<Journey> _publishedJourneys = [];
+    private int _selectedYear = DateTime.UtcNow.Year;
 
     protected override async Task OnInitializedAsync()
     {
@@ -27,13 +28,13 @@ public partial class Home : ComponentBase
 
         if (_isPlanner)
         {
-            var drafts = await PlanningService.GetDraftsAsync();
+            var drafts = await PlanningService.GetDraftsAsync(_selectedYear);
             _drafts = drafts.ToList();
         }
 
         if (_isReisleider)
         {
-            var journeys = await JourneyService.GetJourneysWithPublishedPlanningAsync();
+            var journeys = await JourneyService.GetJourneysWithPublishedPlanningAsync(_selectedYear);
             _publishedJourneys = journeys.ToList();
         }
 

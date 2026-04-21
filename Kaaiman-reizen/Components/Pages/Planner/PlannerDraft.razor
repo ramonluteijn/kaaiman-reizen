@@ -1,4 +1,5 @@
 @page "/planner/draft"
+@using Kaaiman_reizen.Components.Pages.Planner.Components
 @rendermode InteractiveServer
 
 <PageTitle>Draft Planning</PageTitle>
@@ -14,67 +15,14 @@
     {
         @if (_showEntryModal)
         {
-            <div class="pd-entry-overlay">
-                <MudPaper Class="pd-entry-modal" Elevation="8">
-                    <div class="pd-entry-header">
-                        <MudText Typo="Typo.h6">Planning Action</MudText>
-                    </div>
-                    <div class="pd-entry-choices">
-                        <MudPaper Class="pa-4 pd-choice-card">
-                            <MudText Typo="Typo.subtitle1" Class="pd-block-title">Generate New Draft</MudText>
-                            <MudText Typo="Typo.body2" Class="mt-1 mb-4">
-                                Let the system generate a fresh planning from the current journeys and leader data.
-                            </MudText>
-                            <MudButton Variant="Variant.Filled"
-                                       Color="Color.Primary"
-                                       Size="Size.Medium"
-                                       Class="pd-action-btn"
-                                       Disabled="@_entryActionInProgress"
-                                       OnClick="GenerateNewPlanningFromModalAsync">
-                                Generate Draft
-                            </MudButton>
-                        </MudPaper>
-
-                        <MudPaper Class="pa-4 pd-choice-card">
-                            <MudText Typo="Typo.subtitle1" Class="pd-block-title">Continue Existing Draft</MudText>
-                            <MudText Typo="Typo.body2" Class="mt-1 mb-3">
-                                Select one of the saved draft plannings below. Latest edited is pre-selected.
-                            </MudText>
-
-                            @if (_availableDrafts.Count > 0)
-                            {
-                                <div class="pd-draft-list mb-4">
-                                    @foreach (var draft in _availableDrafts)
-                                    {
-                                        var isSelected = _selectedDraftId == draft.Id;
-                                        <button type="button"
-                                                class="pd-draft-item @(isSelected ? "pd-draft-item--selected" : "")"
-                                                @onclick="() => _selectedDraftId = draft.Id">
-                                            <span class="pd-draft-name">@draft.Name</span>
-                                            <span class="pd-draft-date">@draft.CreatedAt.ToLocalTime().ToString("dd-MM-yyyy HH:mm")</span>
-                                        </button>
-                                    }
-                                </div>
-                            }
-                            else
-                            {
-                                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mb-4">
-                                    Er zijn nog geen opgeslagen conceptplanningen.
-                                </MudAlert>
-                            }
-
-                            <MudButton Variant="Variant.Filled"
-                                       Color="Color.Default"
-                                       Class="pd-continue-btn"
-                                       Size="Size.Medium"
-                                       Disabled="@(_entryActionInProgress || _selectedDraftId is null)"
-                                       OnClick="ResumeSelectedDraftAsync">
-                                Continue
-                            </MudButton>
-                        </MudPaper>
-                    </div>
-                </MudPaper>
-            </div>
+            <EntryModal
+                ActionInProgress="_entryActionInProgress"
+                AvailableDrafts="_availableDrafts"
+                SelectedDraftId="_selectedDraftId"
+                SelectedDraftIdChanged="id => _selectedDraftId = id"
+                OnGenerateNew="GenerateNewPlanningFromModalAsync"
+                OnResumeDraft="ResumeSelectedDraftAsync"
+                OnClose="() => _showEntryModal = false" />
         }
 
         @if (!_showEntryModal)
@@ -98,99 +46,95 @@
         {
             if (_result.IsSuccess)
             {
-                var leaderRows   = BuildLeaderRows();
-                var inPlanning   = leaderRows.Where(r => r.AssignedJourneys.Count > 0).ToList();
-                var notInPlanning = leaderRows.Where(r => r.AssignedJourneys.Count == 0).ToList();
+                var leaderRows = BuildLeaderRows();
 
-                <!-- Calendar preview -->
-                <CalendarView Journeys="BuildCalendarJourneys()"
-                              OnJourneyClick="HandleJourneyClick" />
+                <!-- Sidebar toggle -->
+                <div class="d-flex align-center gap-2 mb-2">
+                    <MudIconButton Icon="@Icons.Material.Filled.People"
+                                   Size="Size.Small"
+                                   Variant="Variant.Outlined"
+                                   Color="@(_sidebarOpen ? Color.Primary : Color.Default)"
+                                   OnClick="@(() => _sidebarOpen = !_sidebarOpen)"
+                                   title="Reisleiders tonen/verbergen" />
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Reisleiders</MudText>
+                </div>
 
-                <!-- Leader overview -->
-                <MudText Typo="Typo.h6" Class="mt-6 mb-2">Reisleiders overzicht</MudText>
-                <MudGrid>
-                    <!-- In de planning -->
-                    <MudItem xs="12" md="6">
-                        <MudText Typo="Typo.subtitle1" Class="mb-2">
-                            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Class="mr-1 mb-n1" Size="Size.Small" />
-                            In de planning (@inPlanning.Count)
-                        </MudText>
-                        <MudStack Spacing="2">
-                            @foreach (var row in inPlanning)
+                <!-- Calendar + sidebar layout -->
+                <div class="pd-layout">
+
+                    @if (_sidebarOpen)
+                    {
+                        <aside class="pd-sidebar">
+                            <p class="pd-sidebar-title">Reisleiders (@leaderRows.Count)</p>
+                            @foreach (var row in leaderRows)
                             {
-                                <MudPaper Class="pa-3 pd-leader-paper pd-leader-paper--success" Elevation="1">
-                                    <MudText Typo="Typo.subtitle2"><b>@row.LeaderName</b></MudText>
-                                    <MudStack Spacing="1" Class="mt-1">
-                                        @foreach (var item in row.AssignedJourneys)
+                                var hasJourneys = row.AssignedJourneys.Count > 0;
+                                <div class="pd-sidebar-row @(hasJourneys ? "pd-sidebar-row--assigned" : "pd-sidebar-row--unassigned")">
+                                    <div class="pd-sidebar-avatar">@row.LeaderName[0]</div>
+                                    <div class="pd-sidebar-info">
+                                        <span class="pd-sidebar-name">@row.LeaderName</span>
+                                        @if (hasJourneys)
                                         {
-                                            <div class="d-flex align-center gap-2 flex-wrap">
-                                                <MudText Typo="Typo.body2">
-                                                    @item.Journey.Name
-                                                    <span class="text-secondary ms-1">
-                                                        (@item.Journey.Start.ToString("dd MMM") – @item.Journey.End.ToString("dd MMM yyyy"))
-                                                    </span>
-                                                </MudText>
-                                                @if (item.RankMatched.HasValue)
+                                            <span class="pd-sidebar-count">@row.AssignedJourneys.Count rei@(row.AssignedJourneys.Count == 1 ? "s" : "zen")</span>
+                                            <div class="pd-sidebar-journeys">
+                                                @foreach (var item in row.AssignedJourneys)
                                                 {
-                                                    <MudChip T="string" Size="Size.Small"
-                                                             Color="@(item.RankMatched == 1 ? Color.Success
-                                                                     : item.RankMatched == 2 ? Color.Info
-                                                                     : Color.Warning)">
-                                                        Keuze #@item.RankMatched
-                                                    </MudChip>
-                                                }
-                                                else
-                                                {
-                                                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">Geen voorkeur</MudChip>
-                                                }
-                                            </div>
-                                        }
-                                    </MudStack>
-                                </MudPaper>
-                            }
-                        </MudStack>
-                    </MudItem>
-
-                    <!-- Niet in de planning -->
-                    <MudItem xs="12" md="6">
-                        <MudText Typo="Typo.subtitle1" Class="mb-2">
-                            <MudIcon Icon="@Icons.Material.Filled.Cancel" Color="Color.Warning" Class="mr-1 mb-n1" Size="Size.Small" />
-                            Niet in de planning (@notInPlanning.Count)
-                        </MudText>
-                        @if (notInPlanning.Count == 0)
-                        {
-                            <MudAlert Severity="Severity.Success" Variant="Variant.Outlined" Dense="true">
-                                Alle reisleiders zijn toegewezen.
-                            </MudAlert>
-                        }
-                        else
-                        {
-                            <MudStack Spacing="2">
-                                @foreach (var row in notInPlanning)
-                                {
-                                    <MudPaper Class="pa-3 pd-leader-paper pd-leader-paper--warning" Elevation="1">
-                                        <MudText Typo="Typo.subtitle2"><b>@row.LeaderName</b></MudText>
-                                        @if (row.Preferences.Count > 0)
-                                        {
-                                            <div class="d-flex flex-wrap gap-1 mt-1">
-                                                @foreach (var pref in row.Preferences.OrderBy(p => p.Value))
-                                                {
-                                                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">
-                                                        @pref.Key (#@pref.Value)
-                                                    </MudChip>
+                                                    <div class="pd-sidebar-journey">
+                                                        <span class="pd-sidebar-journey-name">@item.Journey.Name</span>
+                                                        <span class="pd-sidebar-journey-dates">@item.Journey.Start.ToString("dd MMM") – @item.Journey.End.ToString("dd MMM")</span>
+                                                        @if (item.RankMatched.HasValue)
+                                                        {
+                                                            <span class="pd-sidebar-rank pd-sidebar-rank--@(item.RankMatched == 1 ? "1" : item.RankMatched == 2 ? "2" : "3")">
+                                                                #@item.RankMatched
+                                                            </span>
+                                                        }
+                                                    </div>
                                                 }
                                             </div>
                                         }
                                         else
                                         {
-                                            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-1">Geen voorkeuren opgegeven</MudText>
+                                            <span class="pd-sidebar-count pd-sidebar-count--none">Niet ingepland</span>
+                                            @if (row.Preferences.Count > 0)
+                                            {
+                                                <div class="pd-sidebar-prefs">
+                                                    @foreach (var pref in row.Preferences.OrderBy(p => p.Value))
+                                                    {
+                                                        <span class="pd-sidebar-pref">@pref.Key (#@pref.Value)</span>
+                                                    }
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <span class="pd-sidebar-no-prefs">Geen voorkeuren</span>
+                                            }
                                         }
-                                    </MudPaper>
+                                    </div>
+                                </div>
+                            }
+                        </aside>
+                    }
+
+                    <div class="pd-main">
+                        @if (_result.JourneyWarnings.Any())
+                        {
+                            <MudStack Spacing="1" Class="mb-3">
+                                @foreach (var kvp in _result.JourneyWarnings)
+                                {
+                                    var warnedJourney = _request!.Journeys.FirstOrDefault(j => j.Id == kvp.Key);
+                                    if (warnedJourney is null) continue;
+                                    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true">
+                                        <b>@warnedJourney.Name</b>
+                                        <span class="text-secondary ms-1">(@warnedJourney.Start.ToString("dd MMM") – @warnedJourney.End.ToString("dd MMM yyyy"))</span>
+                                        — @kvp.Value
+                                    </MudAlert>
                                 }
                             </MudStack>
                         }
-                    </MudItem>
-                </MudGrid>
+                        <CalendarView Journeys="BuildCalendarJourneys()"
+                                      OnJourneyClick="HandleJourneyClick" />
+                    </div>
+                </div>
 
                 <div class="pd-bottom-actions">
                     <div class="d-flex flex-wrap gap-2">
@@ -226,7 +170,7 @@
                     </div>
                 </div>
             }
-            else
+            else if (!string.IsNullOrEmpty(_result.ErrorMessage))
             {
                 <MudAlert Severity="Severity.Error" Variant="Variant.Filled">
                     <b>Genereren mislukt:</b> @_result.ErrorMessage
@@ -236,163 +180,12 @@
         }
     }
 </MudStack>
+<JourneyDrawer
+    IsOpen="_drawerOpen"
+    SelectedJourney="_selectedJourney"
+    Candidates="_selectedCandidates"
+    OnClose="CloseDrawer"
+    OnAssignLeader="AssignLeader"
+    OnRemoveLeader="RemoveLeader" />
 
-<!-- ── Journey detail drawer ───────────────────────────────────── -->
-
-@* Backdrop — clicking it closes the drawer *@
-<div class="jd-overlay @(_drawerOpen ? "jd-overlay--visible" : "")"
-     @onclick="CloseDrawer"></div>
-
-<aside class="jd-drawer @(_drawerOpen ? "jd-drawer--open" : "")">
-    @if (_selectedJourney is not null)
-    {
-        var candidates    = GetCandidatesFor(_selectedJourney);
-        var assignedCount = _selectedJourney.TravelLeaders.Count;
-        var required      = _selectedJourney.RequiredLeaders;
-        var isFull        = assignedCount >= required;
-
-        <!-- Header -->
-        <div class="jd-header">
-            <div class="jd-header-text">
-                <span class="jd-header-title">@_selectedJourney.Name</span>
-                <span class="jd-header-dates">
-                    @_selectedJourney.Start.ToString("dd MMM yyyy") – @_selectedJourney.End.ToString("dd MMM yyyy")
-                </span>
-            </div>
-            <button class="jd-close-btn" @onclick="CloseDrawer" aria-label="Sluiten">
-                <span class="material-icons">close</span>
-            </button>
-        </div>
-
-        <div class="jd-divider"></div>
-
-        <!-- Scrollable body -->
-        <div class="jd-body">
-
-            <!-- ── Section 1: Assigned leaders ── -->
-            <div class="jd-section-header">
-                <p class="jd-section-label">Toegewezen reisleiders</p>
-                <span class="jd-required-badge @(isFull ? "jd-required-badge--ok" : "jd-required-badge--gap")">
-                    @assignedCount / @required
-                    <span class="material-icons jd-required-icon">
-                        @(isFull ? "check_circle" : "warning_amber")
-                    </span>
-                </span>
-            </div>
-
-            @if (_selectedJourney.TravelLeaders.Any())
-            {
-                <div class="jd-leader-list">
-                    @foreach (var leader in _selectedJourney.TravelLeaders)
-                    {
-                        <div class="jd-leader-card">
-                            <div class="jd-avatar">@leader.Name[0]</div>
-                            <span class="jd-leader-name">@leader.Name</span>
-                            <button class="jd-remove-btn" @onclick="() => RemoveLeader(leader)"
-                                    title="Verwijder reisleider">
-                                <span class="material-icons">person_remove</span>
-                                Verwijderen
-                            </button>
-                        </div>
-                    }
-                </div>
-            }
-            else
-            {
-                <div class="jd-no-leader">
-                    <span class="material-icons jd-no-leader-icon">warning_amber</span>
-                    <span>Geen reisleider toegewezen.</span>
-                </div>
-            }
-
-            <div class="jd-divider jd-divider--section"></div>
-
-            <!-- ── Section 2: Available candidates ── -->
-            <div class="jd-section-header">
-                <p class="jd-section-label">Beschikbare reisleiders</p>
-                <span class="jd-count-badge">@candidates.Count</span>
-            </div>
-
-            @if (candidates.Count == 0)
-            {
-                <div class="jd-no-leader">
-                    <span class="material-icons">group_off</span>
-                    <span>Geen reisleiders beschikbaar voor deze reisdatums.</span>
-                </div>
-            }
-            else
-            {
-                <div class="jd-alt-list">
-                    @foreach (var c in candidates)
-                    {
-                        <div class="jd-alt-row @(c.IsAlreadyAssigned ? "jd-alt-row--assigned" : "")">
-                            <!-- Avatar + name + preference badge -->
-                            <div class="jd-alt-row-main">
-                                <div class="jd-avatar jd-avatar--sm">@c.LeaderName[0]</div>
-                                <div class="jd-alt-info">
-                                    <span class="jd-alt-name">@c.LeaderName</span>
-                                    <div class="jd-alt-badges">
-                                        @if (c.PreferenceRank.HasValue)
-                                        {
-                                            <span class="jd-pref-badge jd-pref-badge--@c.PreferenceRank">
-                                                Keuze @c.PreferenceRank
-                                            </span>
-                                        }
-                                        else
-                                        {
-                                            <span class="jd-pref-badge jd-pref-badge--none">Geen voorkeur</span>
-                                        }
-                                    </div>
-                                    <!-- Warning chips -->
-                                    @if (!string.IsNullOrEmpty(c.ValidationReason))
-                                    {
-                                        <div class="jd-warn-chip jd-warn-chip--validation">
-                                            <span class="material-icons" style="font-size:0.85rem;">error_outline</span>
-                                            @c.ValidationReason
-                                        </div>
-                                    }
-                                    else if (c.HasConflict)
-                                    {
-                                        <div class="jd-warn-chip jd-warn-chip--conflict">
-                                            <span class="material-icons jd-warn-icon">swap_horiz</span>
-                                            Overlapt: @c.ConflictJourneyName
-                                        </div>
-                                    }
-                                    else if (c.ExceedsMaxTrips)
-                                    {
-                                        <div class="jd-warn-chip jd-warn-chip--maxtrips">
-                                            <span class="material-icons jd-warn-icon">block</span>
-                                            Max trips bereikt (@c.CurrentAssignments/@c.MaxTrips)
-                                        </div>
-                                    }
-                                </div>
-                            </div>
-                            <!-- Action button -->
-                            @if (c.IsAlreadyAssigned)
-                            {
-                                <span class="jd-already-check" title="Al toegewezen">
-                                    <span class="material-icons">check</span>
-                                </span>
-                            }
-                            else if (isFull)
-                            {
-                                <span class="jd-assign-btn jd-assign-btn--disabled"
-                                      title="Limiet bereikt (@required/@required reisleiders)">
-                                    <span class="material-icons">lock</span>
-                                </span>
-                            }
-                            else
-                            {
-                                <button class="jd-assign-btn" @onclick="() => AssignLeader(c)"
-                                        title="Wijs toe">
-                                    <span class="material-icons">person_add</span>
-                                </button>
-                            }
-                        </div>
-                    }
-                </div>
-            }
-        </div>
-    }
-</aside>
 

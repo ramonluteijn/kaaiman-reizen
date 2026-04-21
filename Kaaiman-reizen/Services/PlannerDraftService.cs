@@ -1,4 +1,5 @@
 using Google.OrTools.Sat;
+using Kaaiman_reizen.Data.Enum;
 using Kaaiman_reizen.Data.Services;
 using Kaaiman_reizen.Models.Planner;
 
@@ -15,9 +16,10 @@ public class PlannerDraftService : IPlannerDraftService
         _journeyService = journeyService;
     }
 
-    public async Task<PlannerDraftRequest> BuildRequestAsync(CancellationToken ct = default)
+// 1. Voeg 'int year' toe als eerste parameter
+    public async Task<PlannerDraftRequest> BuildRequestAsync(int year, CancellationToken ct = default)
     {
-        var leaders = await _leaderService.GetTravelLeadersAsync(ct);
+        var leaders  = await _leaderService.GetTravelLeadersAsync(ct);
         var journeys = await _journeyService.GetJourneysAsync(ct);
 
         return new PlannerDraftRequest
@@ -37,13 +39,15 @@ public class PlannerDraftService : IPlannerDraftService
                     PreferredDestinations = l.PreferredDestinations.ToDictionary(p => p.Destination, p => p.Rank)
                 }).ToList(),
             Journeys = journeys
+                // 2. Filter hier direct op het meegegeven jaar!
+                .Where(j => j.BookingStatus == BookingStatus.Bezig && j.Start.Year == year)
                 .Select(j => new PlannerJourneyInput
                 {
-                    Id = j.Id,
-                    Name = j.Name,
-                    Start = j.Start,
-                    End = j.End,
-                    RequiredLeaders = j.RequiredLeaders   // ← carry through
+                    Id              = j.Id,
+                    Name            = j.Name,
+                    Start           = j.Start,
+                    End             = j.End,
+                    RequiredLeaders = j.RequiredLeaders
                 })
                 .ToList(),
         };
@@ -51,7 +55,7 @@ public class PlannerDraftService : IPlannerDraftService
 
     public PlannerDraftResult GenerateDraft(PlannerDraftRequest request)
     {
-        var result = new PlannerDraftResult();
+        var result  = new PlannerDraftResult();
         var leaders = request.Leaders;
         var journeys = request.Journeys;
 
@@ -60,41 +64,60 @@ public class PlannerDraftService : IPlannerDraftService
 
         if (L == 0)
         {
-            result.IsSuccess = false;
+            result.IsSuccess  = false;
             result.ErrorMessage = "Geen reisleiders of geen actieve reisleiders";
             return result;
         }
         if (J == 0)
         {
-            result.IsSuccess = false;
+            result.IsSuccess  = false;
             result.ErrorMessage = "Geen reizen gevonden";
             return result;
         }
 
+        // Pre-solve: separate journeys that have enough available leaders from those that don't
+        var solvable = new List<PlannerJourneyInput>();
+        foreach (var journey in journeys)
+        {
+            int eligible = leaders.Count(l => l.AvailabilityPeriods.Any(
+                p => p.Start <= journey.Start && p.End >= journey.End));
+
+            if (eligible < journey.RequiredLeaders)
+                result.JourneyWarnings[journey.Id] =
+                    $"Niet genoeg reisleiders beschikbaar ({eligible} van {journey.RequiredLeaders} vereist). " +
+                    "Controleer beschikbaarheidsperiodes of voeg actieve reisleiders toe.";
+            else
+                solvable.Add(journey);
+        }
+
+        result.IsSuccess = true;
+
+        if (solvable.Count == 0)
+            return result;
+
+        int Js = solvable.Count;
+
         var model = new CpModel();
 
-        //:: CREATES A 2D BOOLEAN ARRAY (LEADERS × JOURNEYS)
-        var x = new BoolVar[L, J];
+        var x = new BoolVar[L, Js];
         for (int l = 0; l < L; l++)
-            for (int j = 0; j < J; j++)
+            for (int j = 0; j < Js; j++)
                 x[l, j] = model.NewBoolVar($"x_{l}_{j}");
 
-        // Constraint A: each journey must have exactly RequiredLeaders leaders assigned
-        for (int j = 0; j < J; j++)
+        // Constraint A: each solvable journey can have at most RequiredLeaders assigned
+        for (int j = 0; j < Js; j++)
         {
             var vars = Enumerable.Range(0, L).Select(l => (ILiteral)x[l, j]).Cast<BoolVar>().ToList();
-            model.Add(LinearExpr.Sum(vars) == journeys[j].RequiredLeaders);
+            model.Add(LinearExpr.Sum(vars) <= solvable[j].RequiredLeaders);
         }
 
         // Constraint B: block leader if not available for the full journey dates
         for (int l = 0; l < L; l++)
         {
-            for (int j = 0; j < J; j++)
+            for (int j = 0; j < Js; j++)
             {
-                var leader = leaders[l];
-                var journey = journeys[j];
-                bool available = leader.AvailabilityPeriods.Any(
-                    p => p.Start <= journey.Start && p.End >= journey.End);
+                bool available = leaders[l].AvailabilityPeriods.Any(
+                    p => p.Start <= solvable[j].Start && p.End >= solvable[j].End);
                 if (!available)
                     model.Add(x[l, j] == 0);
             }
@@ -103,21 +126,20 @@ public class PlannerDraftService : IPlannerDraftService
         // Constraint C: each leader can be assigned at most MaxTrips journeys
         for (int l = 0; l < L; l++)
         {
-            var vars = Enumerable.Range(0, J).Select(j => x[l, j]).ToList();
+            var vars = Enumerable.Range(0, Js).Select(j => x[l, j]).ToList();
             model.Add(LinearExpr.Sum(vars) <= leaders[l].MaxTrips);
         }
 
         // Constraint D: a leader cannot have two overlapping journeys
         for (int l = 0; l < L; l++)
         {
-            for (int j1 = 0; j1 < J; j1++)
+            for (int j1 = 0; j1 < Js; j1++)
             {
-                for (int j2 = j1 + 1; j2 < J; j2++)
+                for (int j2 = j1 + 1; j2 < Js; j2++)
                 {
-                    var a = journeys[j1];
-                    var b = journeys[j2];
-                    bool overlaps = a.Start < b.End && b.Start < a.End;
-                    if (overlaps)
+                    var a = solvable[j1];
+                    var b = solvable[j2];
+                    if (a.Start < b.End && b.Start < a.End)
                         model.Add(x[l, j1] + x[l, j2] <= 1);
                 }
             }
@@ -126,52 +148,38 @@ public class PlannerDraftService : IPlannerDraftService
         // Objective: minimize total preference cost (rank 1 = cheapest, no preference = 10)
         var obj = LinearExpr.NewBuilder();
         for (int l = 0; l < L; l++)
-        {
-            for (int j = 0; j < J; j++)
+            for (int j = 0; j < Js; j++)
             {
-                int cost = leaders[l].PreferredDestinations.TryGetValue(
-                    journeys[j].Name, out int rank) ? rank : 10;
+                int cost = leaders[l].PreferredDestinations.TryGetValue(solvable[j].Name, out int rank) ? rank : 10;
                 obj.AddTerm(x[l, j], cost);
             }
+
+        // Penalise each missing leader slot — high enough to always prefer assigning over not
+        const int MissingLeaderPenalty = 1000;
+        for (int j = 0; j < Js; j++)
+        {
+            var colVars = Enumerable.Range(0, L).Select(l => x[l, j]).ToList();
+            var shortfall = model.NewIntVar(0, solvable[j].RequiredLeaders, $"shortfall_{j}");
+            model.Add(shortfall == solvable[j].RequiredLeaders - LinearExpr.Sum(colVars));
+            obj.AddTerm(shortfall, MissingLeaderPenalty);
         }
 
         // Fairness: penalise leaving an eligible leader unassigned
         const int UnassignedPenalty = 15;
         for (int l = 0; l < L; l++)
         {
-            bool eligible = Enumerable.Range(0, J).Any(j =>
+            bool eligible = Enumerable.Range(0, Js).Any(j =>
                 leaders[l].AvailabilityPeriods.Any(
-                    p => p.Start <= journeys[j].Start && p.End >= journeys[j].End));
+                    p => p.Start <= solvable[j].Start && p.End >= solvable[j].End));
             if (!eligible) continue;
 
             var assignedVar = model.NewBoolVar($"assigned_{l}");
-            var rowVars = Enumerable.Range(0, J).Select(j => x[l, j]).ToList();
+            var rowVars     = Enumerable.Range(0, Js).Select(j => x[l, j]).ToList();
             model.Add(LinearExpr.Sum(rowVars) >= assignedVar);
             obj.AddTerm(assignedVar, -UnassignedPenalty);
         }
 
         model.Minimize(obj);
-
-        // Pre-solve diagnostic: check that each journey has enough available leaders
-        var journeysWithoutEnoughLeaders = journeys
-            .Where(j =>
-            {
-                int eligible = leaders.Count(l => l.AvailabilityPeriods.Any(
-                    p => p.Start <= j.Start && p.End >= j.End));
-                return eligible < j.RequiredLeaders;
-            })
-            .ToList();
-
-        if (journeysWithoutEnoughLeaders.Any())
-        {
-            var names = string.Join(", ", journeysWithoutEnoughLeaders.Select(j =>
-                $"{j.Name} ({j.Start:dd MMM}–{j.End:dd MMM yyyy}, vereist: {j.RequiredLeaders})"));
-            result.IsSuccess = false;
-            result.ErrorMessage =
-                $"Niet genoeg reisleiders beschikbaar voor: {names}. " +
-                "Controleer beschikbaarheidsperiodes of verhoog het aantal actieve reisleiders.";
-            return result;
-        }
 
         var solver = new CpSolver();
         solver.StringParameters = "max_time_in_seconds:10";
@@ -179,42 +187,39 @@ public class PlannerDraftService : IPlannerDraftService
 
         if (status == CpSolverStatus.Optimal || status == CpSolverStatus.Feasible)
         {
-            result.IsSuccess = true;
-
-            // Collect ALL assigned leaders per journey into a list
-            for (int j = 0; j < J; j++)
+            for (int j = 0; j < Js; j++)
             {
                 var assignments = new List<JourneyAssignmentResult>();
                 for (int l = 0; l < L; l++)
                 {
                     if (solver.Value(x[l, j]) == 1L)
                     {
-                        var leader = leaders[l];
-                        var journey = journeys[j];
-                        int? rankMatched = leader.PreferredDestinations
-                            .TryGetValue(journey.Name, out int r) ? r : null;
+                        int? rankMatched = leaders[l].PreferredDestinations
+                            .TryGetValue(solvable[j].Name, out int r) ? r : null;
 
                         assignments.Add(new JourneyAssignmentResult
                         {
-                            LeaderId = leader.Id,
-                            LeaderName = leader.Name,
+                            LeaderId    = leaders[l].Id,
+                            LeaderName  = leaders[l].Name,
                             RankMatched = rankMatched
                         });
                     }
                 }
                 if (assignments.Count > 0)
-                    result.JourneyAssignments[journeys[j].Id] = assignments;
+                    result.JourneyAssignments[solvable[j].Id] = assignments;
+
+                if (assignments.Count < solvable[j].RequiredLeaders)
+                    result.JourneyWarnings[solvable[j].Id] =
+                        $"Niet volledig ingepland ({assignments.Count} van {solvable[j].RequiredLeaders} reisleiders). " +
+                        "Wijs de overige handmatig toe.";
             }
         }
         else
         {
-            var availableSlots = leaders.Sum(l => l.MaxTrips);
-            var totalRequired = journeys.Sum(j => j.RequiredLeaders);
-            result.IsSuccess = false;
-            result.ErrorMessage =
-                $"De planning kon niet worden opgesteld. " +
-                $"Er zijn {totalRequired} benodigde reisleider-slots maar slechts {availableSlots} beschikbare plaatsen. " +
-                "Mogelijke oorzaken: te weinig reisleiders, te lage MaxTrips-instellingen, of te veel overlappende reizen.";
+            foreach (var journey in solvable)
+                result.JourneyWarnings[journey.Id] =
+                    "Kon niet worden ingepland door conflicten of capaciteitsproblemen. " +
+                    "Controleer MaxTrips-instellingen of overlappende reizen. Wijs handmatig toe.";
         }
 
         return result;

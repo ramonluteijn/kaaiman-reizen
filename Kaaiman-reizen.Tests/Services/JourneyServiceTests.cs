@@ -4,6 +4,7 @@ using Kaaiman_reizen.Data.Services;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Threading.Tasks;
+using Kaaiman_reizen.Data.Enum;
 using Xunit;
 
 namespace Kaaiman_reizen.Tests.Services
@@ -33,7 +34,7 @@ namespace Kaaiman_reizen.Tests.Services
                 End = new DateOnly(0001, 1, 2),
                 Busses = 1,
                 Travelers = 1,
-                BookingStatus = 1,
+                BookingStatus = BookingStatus.Bezig,
             };
             await service.AddJourneyAsync(journey, new List<int>());
 
@@ -56,7 +57,7 @@ namespace Kaaiman_reizen.Tests.Services
                 End = new DateOnly(0001, 1, 2),
                 Busses = 1,
                 Travelers = 1,
-                BookingStatus = 1,
+                BookingStatus = BookingStatus.Geweest,
             };
             await service.AddJourneyAsync(journey, new List<int>());
 
@@ -82,8 +83,8 @@ namespace Kaaiman_reizen.Tests.Services
                 End = new DateOnly(0001, 1, 2),
                 Busses = 1,
                 Travelers = 1,
-                BookingStatus = 1,
-            };
+                BookingStatus = BookingStatus.Bezig,
+            }; 
             await service.AddJourneyAsync(journey, new List<int>());
 
             var savedJourney = (await service.GetJourneysAsync()).First();
@@ -107,8 +108,8 @@ namespace Kaaiman_reizen.Tests.Services
                 End = new DateOnly(0001, 1, 2),
                 Busses = 1,
                 Travelers = 1,
-                BookingStatus = 1,
-            };
+                BookingStatus = BookingStatus.Geweest,
+            }; 
             await service.AddJourneyAsync(journey, new List<int>());
 
             var savedJourney = (await service.GetJourneysAsync()).First();
@@ -128,7 +129,7 @@ namespace Kaaiman_reizen.Tests.Services
                 End = new DateOnly(0001, 1, 1),
                 Busses = 1,
                 Travelers = 1,
-                BookingStatus = 1,
+                BookingStatus = BookingStatus.Bezig,
             };
 
             var results = journey.Validate(new System.ComponentModel.DataAnnotations.ValidationContext(journey)).ToList();
