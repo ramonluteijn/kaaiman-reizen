@@ -59,7 +59,14 @@ namespace Kaaiman_reizen.Data.Migrations
             migrationBuilder.InsertData(
                 table: "Journey",
                 columns: new[] { "Id", "Busses", "Country", "End", "Start", "Travelers" },
-                values: new object[] { 1, 1, "Italië", new DateTime(2026, 7, 14, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 10 });
+                values: new object[,]
+                {
+                    { 1, 1, "Italië", new DateTime(2026, 7, 14, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2026, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 10 },
+                    { 2, 2, "Spanje", new DateTime(2026, 3, 20, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2026, 3, 10, 0, 0, 0, 0, DateTimeKind.Unspecified), 15 },
+                    { 3, 1, "Oostenrijk", new DateTime(2026, 4, 3, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2026, 3, 25, 0, 0, 0, 0, DateTimeKind.Unspecified), 8 },
+                    { 4, 3, "Griekenland", new DateTime(2026, 4, 15, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2026, 4, 5, 0, 0, 0, 0, DateTimeKind.Unspecified), 25 },
+                    { 5, 2, "Kroatië", new DateTime(2026, 5, 10, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2026, 4, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), 12 }
+                });
 
             migrationBuilder.CreateIndex(
                 name: "IX_JourneyTravelLeader_TravelLeadersId",

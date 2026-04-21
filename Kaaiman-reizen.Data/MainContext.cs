@@ -16,6 +16,7 @@ public class MainContext : IdentityDbContext<ApplicationUser>
     public DbSet<PreferredDestination> PreferredDestinations { get; set; }
     public DbSet<AvailabilityPeriod> AvailabilityPeriods { get; set; }
     public DbSet<Journey> Journey { get; set; }
+    public DbSet<JourneyTravelLeader> JourneyTravelLeaders { get; set; }
     public DbSet<Rule> Rule { get; set; }
     public DbSet<PlanningVersion> PlanningVersions { get; set; }
     public DbSet<PlanningAssignment> PlanningAssignments { get; set; }
@@ -55,6 +56,7 @@ public class MainContext : IdentityDbContext<ApplicationUser>
                 Note = ""
             }
         );
+
         builder.Entity<PreferredDestination>().HasData(
             new PreferredDestination { Id = 1, TravelLeaderId = 1, Rank = 1, Destination = "Italië" },
             new PreferredDestination { Id = 2, TravelLeaderId = 1, Rank = 2, Destination = "Griekenland" },
@@ -63,18 +65,25 @@ public class MainContext : IdentityDbContext<ApplicationUser>
             new PreferredDestination { Id = 5, TravelLeaderId = 2, Rank = 2, Destination = "Oostenrijk" },
             new PreferredDestination { Id = 6, TravelLeaderId = 2, Rank = 3, Destination = "Griekenland" }
         );
+
         // Jan is available for spring (Griekenland, Kroatië) and summer (Italië)
         // Maria is available for the early spring trips (Spanje, Oostenrijk) and into summer
         builder.Entity<AvailabilityPeriod>().HasData(
             new AvailabilityPeriod { Id = 1, TravelLeaderId = 1, Start = new DateOnly(2026, 4, 1), End = new DateOnly(2026, 7, 31) },
             new AvailabilityPeriod { Id = 2, TravelLeaderId = 2, Start = new DateOnly(2026, 3, 1), End = new DateOnly(2026, 5, 31) }
         );
+
         builder.Entity<Journey>().HasData(
             new Journey { Id = 1, Name = "Italië",      Start = new DateOnly(2026, 7, 1),  End = new DateOnly(2026, 7, 14), Busses = 1, Travelers = 10, RequiredLeaders = 1, BookingStatus = BookingStatus.Bezig },
             new Journey { Id = 2, Name = "Spanje",      Start = new DateOnly(2026, 3, 10), End = new DateOnly(2026, 3, 20), Busses = 2, Travelers = 15, RequiredLeaders = 1, BookingStatus = BookingStatus.Bezig },
             new Journey { Id = 3, Name = "Oostenrijk",  Start = new DateOnly(2026, 3, 25), End = new DateOnly(2026, 4, 3),  Busses = 1, Travelers = 8,  RequiredLeaders = 1, BookingStatus = BookingStatus.Geweest },
             new Journey { Id = 4, Name = "Griekenland", Start = new DateOnly(2026, 4, 5),  End = new DateOnly(2026, 4, 15), Busses = 3, Travelers = 25, RequiredLeaders = 2, BookingStatus = BookingStatus.Geanuleerd },
             new Journey { Id = 5, Name = "Kroatië",     Start = new DateOnly(2026, 4, 28), End = new DateOnly(2026, 5, 10), Busses = 2, Travelers = 12, RequiredLeaders = 1, BookingStatus = BookingStatus.Geanuleerd }
+        );
+
+        builder.Entity<JourneyTravelLeader>().HasData(
+            new JourneyTravelLeader { JourneyId = 2, TravelLeaderId = 1 },
+            new JourneyTravelLeader { JourneyId = 3, TravelLeaderId = 1 }
         );
 
         builder.Entity<Rule>().HasData(
@@ -101,7 +110,22 @@ public class MainContext : IdentityDbContext<ApplicationUser>
 
         builder.Entity<Journey>()
            .HasMany(a => a.TravelLeaders)
-           .WithMany(r => r.Journeys);
+           .WithMany(r => r.Journeys)
+           .UsingEntity<JourneyTravelLeader>(
+                right => right
+                    .HasOne(join => join.TravelLeader)
+                    .WithMany()
+                    .HasForeignKey(join => join.TravelLeaderId),
+                left => left
+                    .HasOne(join => join.Journey)
+                    .WithMany()
+                    .HasForeignKey(join => join.JourneyId),
+                join =>
+                {
+                    join.HasKey(x => new { x.JourneyId, x.TravelLeaderId });
+                    join.Property(x => x.JourneyId).HasColumnName("JourneysId");
+                    join.Property(x => x.TravelLeaderId).HasColumnName("TravelLeadersId");
+                });
 
         builder.Entity<PlanningAssignment>()
             .HasOne(assignment => assignment.PlanningVersion)

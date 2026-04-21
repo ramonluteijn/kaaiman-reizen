@@ -113,6 +113,11 @@ public partial class TravelLeaders
         return $"/travelleaders/edit/{leader.Id}";
     }
 
+    private static string GetJourneyHref(int journeyId)
+    {
+        return $"/journeys/edit/{journeyId}";
+    }
+
     private async Task ToggleActive(TravelLeaderViewModel? leader)
     {
         if (leader == null)
