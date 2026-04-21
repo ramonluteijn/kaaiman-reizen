@@ -11,8 +11,7 @@ public class PlanningService : IPlanningService
     {
         _db = db;
     }
-
-    // SC-1: Alle ophaal-methodes hebben nu een 'int year' parameter nodig
+    
     public Task<PlanningVersion?> GetLatestDraftAsync(int year, CancellationToken cancellationToken = default)
     {
         return GetLatestPlanningVersionAsync(year, isPublished: false, cancellationToken);
@@ -46,8 +45,7 @@ public class PlanningService : IPlanningService
     {
         return GetLatestPlanningVersionAsync(year, isPublished: true, cancellationToken);
     }
-
-    // SC-2: Opslaan logica is drastisch verbeterd
+    
     public async Task<PlanningVersion> SavePlanningAsync(
         int year,
         string name,
@@ -59,8 +57,6 @@ public class PlanningService : IPlanningService
 
         if (isPublished)
         {
-            // PUBLICEREN:
-            // 1. De-activeer de huidige actieve live planning van DIT jaar
             var publishedVersions = await _db.PlanningVersions
                 .Where(v => v.IsPublished && v.PlanningYear == year)
                 .ToListAsync(cancellationToken);
@@ -69,22 +65,17 @@ public class PlanningService : IPlanningService
             {
                 publishedVersion.IsPublished = false;
             }
-
-            // 2. Maak altijd een NIEUW record aan bij publiceren, zodat we de historie behouden (SC-3)
             version = CreateNewVersionObject(year, name, true, journeyAssignments);
             _db.PlanningVersions.Add(version);
         }
         else
         {
-            // CONCEPT OPSLAAN (D2 Fix - Eén concept per jaar):
-            // 1. Kijk of er al een concept bestaat voor dit jaar
             version = await _db.PlanningVersions
                 .Include(v => v.Assignments)
                 .FirstOrDefaultAsync(v => !v.IsPublished && v.PlanningYear == year, cancellationToken);
 
             if (version == null)
             {
-                // Bestaat niet? Maak hem aan.
                 version = CreateNewVersionObject(year, name, false, journeyAssignments);
                 _db.PlanningVersions.Add(version);
             }
@@ -93,11 +84,7 @@ public class PlanningService : IPlanningService
                 // Bestaat wel? Overschrijf de oude data (Update)
                 version.Name = name;
                 version.CreatedAt = DateTime.UtcNow; // Werk tijdstempel bij naar nu
-                
-                // Gooi oude toewijzingen weg...
                 _db.RemoveRange(version.Assignments);
-                
-                // ...en zet de nieuwe erin
                 version.Assignments = MapAssignments(journeyAssignments);
             }
         }

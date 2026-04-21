@@ -104,11 +104,11 @@ public class PlannerDraftService : IPlannerDraftService
             for (int j = 0; j < Js; j++)
                 x[l, j] = model.NewBoolVar($"x_{l}_{j}");
 
-        // Constraint A: each solvable journey needs exactly RequiredLeaders assigned
+        // Constraint A: each solvable journey can have at most RequiredLeaders assigned
         for (int j = 0; j < Js; j++)
         {
             var vars = Enumerable.Range(0, L).Select(l => (ILiteral)x[l, j]).Cast<BoolVar>().ToList();
-            model.Add(LinearExpr.Sum(vars) == solvable[j].RequiredLeaders);
+            model.Add(LinearExpr.Sum(vars) <= solvable[j].RequiredLeaders);
         }
 
         // Constraint B: block leader if not available for the full journey dates
@@ -154,6 +154,16 @@ public class PlannerDraftService : IPlannerDraftService
                 obj.AddTerm(x[l, j], cost);
             }
 
+        // Penalise each missing leader slot — high enough to always prefer assigning over not
+        const int MissingLeaderPenalty = 1000;
+        for (int j = 0; j < Js; j++)
+        {
+            var colVars = Enumerable.Range(0, L).Select(l => x[l, j]).ToList();
+            var shortfall = model.NewIntVar(0, solvable[j].RequiredLeaders, $"shortfall_{j}");
+            model.Add(shortfall == solvable[j].RequiredLeaders - LinearExpr.Sum(colVars));
+            obj.AddTerm(shortfall, MissingLeaderPenalty);
+        }
+
         // Fairness: penalise leaving an eligible leader unassigned
         const int UnassignedPenalty = 15;
         for (int l = 0; l < L; l++)
@@ -197,11 +207,15 @@ public class PlannerDraftService : IPlannerDraftService
                 }
                 if (assignments.Count > 0)
                     result.JourneyAssignments[solvable[j].Id] = assignments;
+
+                if (assignments.Count < solvable[j].RequiredLeaders)
+                    result.JourneyWarnings[solvable[j].Id] =
+                        $"Niet volledig ingepland ({assignments.Count} van {solvable[j].RequiredLeaders} reisleiders). " +
+                        "Wijs de overige handmatig toe.";
             }
         }
         else
         {
-            // Solver couldn't find a solution — warn per solvable journey so the user can assign manually
             foreach (var journey in solvable)
                 result.JourneyWarnings[journey.Id] =
                     "Kon niet worden ingepland door conflicten of capaciteitsproblemen. " +
