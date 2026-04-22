@@ -24,6 +24,7 @@ public class TravelLeaderService : ITravelLeaderService
         return await _db.TravelLeader
             .Include(t => t.PreferredDestinations)
             .Include(t => t.AvailabilityPeriods)
+            .Include(t => t.Journeys)
             .OrderBy(t => t.Name)
             .ToListAsync(cancellationToken);
     }
@@ -54,6 +55,7 @@ public class TravelLeaderService : ITravelLeaderService
         return await _db.TravelLeader
             .Include(t => t.PreferredDestinations)
             .Include(t => t.AvailabilityPeriods)
+            .Include(t => t.Journeys)
             .FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
     }
 

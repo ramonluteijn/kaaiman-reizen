@@ -23,7 +23,18 @@ public static class TravelLeaderExtensions
             MinTrips = leader.MinTrips,
             MaxTrips = leader.MaxTrips,
             IsActive = leader.IsActive,
-            Availability = availability
+            Availability = availability,
+            JourneyHistory = leader.Journeys?
+                .OrderByDescending(j => j.End)
+                .ThenByDescending(j => j.Start)
+                .Select(j => new TravelHistoryItemViewModel
+                {
+                    JourneyId = j.Id,
+                    JourneyName = j.Name,
+                    Start = j.Start,
+                    End = j.End
+                })
+                .ToList() ?? []
         };
     }
 

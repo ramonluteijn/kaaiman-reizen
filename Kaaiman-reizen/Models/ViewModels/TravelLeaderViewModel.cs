@@ -16,6 +16,8 @@ public sealed class TravelLeaderViewModel
     // Key = Country/Destination string, Value = Rank (1, 2, or 3)
     public Dictionary<string, int> PreferredDestinations { get; set; } = new();
 
+    public List<TravelHistoryItemViewModel> JourneyHistory { get; init; } = [];
+
     public TravelLeader ToEntity()
     {
         return new TravelLeader
@@ -29,4 +31,12 @@ public sealed class TravelLeaderViewModel
             IsActive = this.IsActive,
         };
     }
+}
+
+public sealed class TravelHistoryItemViewModel
+{
+    public int JourneyId { get; init; }
+    public string JourneyName { get; init; } = string.Empty;
+    public DateOnly Start { get; init; }
+    public DateOnly End { get; init; }
 }
