@@ -30,6 +30,7 @@ public class PlannerDraftService : IPlannerDraftService
                 {
                     Id = l.Id,
                     Name = l.Name,
+                    Note = l.Note,
                     AmountOfTrips = l.AmountOfTrips ?? 0,
                     MinTrips = l.MinTrips ?? 0,
                     MaxTrips = l.MaxTrips ?? 0,
