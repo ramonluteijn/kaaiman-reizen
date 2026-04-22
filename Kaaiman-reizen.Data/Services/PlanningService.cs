@@ -11,16 +11,16 @@ public class PlanningService : IPlanningService
     {
         _db = db;
     }
-
-    public Task<PlanningVersion?> GetLatestDraftAsync(CancellationToken cancellationToken = default)
+    
+    public Task<PlanningVersion?> GetLatestDraftAsync(int year, CancellationToken cancellationToken = default)
     {
-        return GetLatestPlanningVersionAsync(isPublished: false, cancellationToken);
+        return GetLatestPlanningVersionAsync(year, isPublished: false, cancellationToken);
     }
 
-    public async Task<IReadOnlyList<PlanningVersion>> GetDraftsAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<PlanningVersion>> GetDraftsAsync(int year, CancellationToken cancellationToken = default)
     {
         return await _db.PlanningVersions
-            .Where(version => !version.IsPublished)
+            .Where(version => !version.IsPublished && version.PlanningYear == year)
             .Include(version => version.Assignments)
                 .ThenInclude(assignment => assignment.TravelLeader)
             .Include(version => version.Assignments)
@@ -41,55 +41,64 @@ public class PlanningService : IPlanningService
             .FirstOrDefaultAsync(cancellationToken);
     }
 
-    public Task<PlanningVersion?> GetLatestPublishedAsync(CancellationToken cancellationToken = default)
+    public Task<PlanningVersion?> GetLatestPublishedAsync(int year, CancellationToken cancellationToken = default)
     {
-        return GetLatestPlanningVersionAsync(isPublished: true, cancellationToken);
+        return GetLatestPlanningVersionAsync(year, isPublished: true, cancellationToken);
     }
-
+    
     public async Task<PlanningVersion> SavePlanningAsync(
+        int year,
         string name,
         bool isPublished,
         IReadOnlyDictionary<int, IReadOnlyCollection<int>> journeyAssignments,
         CancellationToken cancellationToken = default)
     {
+        PlanningVersion version;
+
         if (isPublished)
         {
             var publishedVersions = await _db.PlanningVersions
-                .Where(version => version.IsPublished)
+                .Where(v => v.IsPublished && v.PlanningYear == year)
                 .ToListAsync(cancellationToken);
 
             foreach (var publishedVersion in publishedVersions)
             {
                 publishedVersion.IsPublished = false;
             }
+            version = CreateNewVersionObject(year, name, true, journeyAssignments);
+            _db.PlanningVersions.Add(version);
+        }
+        else
+        {
+            version = await _db.PlanningVersions
+                .Include(v => v.Assignments)
+                .FirstOrDefaultAsync(v => !v.IsPublished && v.PlanningYear == year, cancellationToken);
+
+            if (version == null)
+            {
+                version = CreateNewVersionObject(year, name, false, journeyAssignments);
+                _db.PlanningVersions.Add(version);
+            }
+            else
+            {
+                // Bestaat wel? Overschrijf de oude data (Update)
+                version.Name = name;
+                version.CreatedAt = DateTime.UtcNow; // Werk tijdstempel bij naar nu
+                _db.RemoveRange(version.Assignments);
+                version.Assignments = MapAssignments(journeyAssignments);
+            }
         }
 
-        var version = new PlanningVersion
-        {
-            Name = name,
-            CreatedAt = DateTime.UtcNow,
-            IsPublished = isPublished,
-            Assignments = journeyAssignments
-                .SelectMany(
-                    pair => pair.Value.Distinct(),
-                    (pair, leaderId) => new PlanningAssignment
-                    {
-                        JourneyId = pair.Key,
-                        TravelLeaderId = leaderId
-                    })
-                .ToList()
-        };
-
-        _db.PlanningVersions.Add(version);
         await _db.SaveChangesAsync(cancellationToken);
 
         return version;
     }
 
-    private Task<PlanningVersion?> GetLatestPlanningVersionAsync(bool isPublished, CancellationToken cancellationToken)
+    // Helper methode: Omdat we nu een filter hebben op PlanningYear
+    private Task<PlanningVersion?> GetLatestPlanningVersionAsync(int year, bool isPublished, CancellationToken cancellationToken)
     {
         return _db.PlanningVersions
-            .Where(version => version.IsPublished == isPublished)
+            .Where(version => version.IsPublished == isPublished && version.PlanningYear == year)
             .Include(version => version.Assignments)
                 .ThenInclude(assignment => assignment.TravelLeader)
             .Include(version => version.Assignments)
@@ -97,5 +106,31 @@ public class PlanningService : IPlanningService
             .OrderByDescending(version => version.CreatedAt)
             .ThenByDescending(version => version.Id)
             .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    // Helper methode: Voorkomt dubbele code bij het aanmaken van een PlanningVersion
+    private static PlanningVersion CreateNewVersionObject(
+        int year, string name, bool isPublished, IReadOnlyDictionary<int, IReadOnlyCollection<int>> journeyAssignments)
+    {
+        return new PlanningVersion
+        {
+            PlanningYear = year,
+            Name = name,
+            CreatedAt = DateTime.UtcNow,
+            IsPublished = isPublished,
+            Assignments = MapAssignments(journeyAssignments)
+        };
+    }
+
+    // Helper methode: Mapt de dictionary naar EF Core objecten
+    private static List<PlanningAssignment> MapAssignments(IReadOnlyDictionary<int, IReadOnlyCollection<int>> dict)
+    {
+        return dict.SelectMany(
+            pair => pair.Value.Distinct(),
+            (pair, leaderId) => new PlanningAssignment
+            {
+                JourneyId = pair.Key,
+                TravelLeaderId = leaderId
+            }).ToList();
     }
 }

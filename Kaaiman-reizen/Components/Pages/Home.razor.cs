@@ -18,6 +18,7 @@ public partial class Home : ComponentBase
     private bool _isReisleider;
     private List<PlanningVersion> _drafts = [];
     private List<Journey> _publishedJourneys = [];
+    private int _selectedYear = DateTime.UtcNow.Year;
 
     private List<TravelLeader> _travelLeadersWithoutPreferences = [];
     private List<TravelLeader> _travelLeadersWithoutJourneys = [];
@@ -35,7 +36,7 @@ public partial class Home : ComponentBase
 
         if (_isPlanner)
         {
-            var drafts = await PlanningService.GetDraftsAsync();
+            var drafts = await PlanningService.GetDraftsAsync(_selectedYear);
             _drafts = drafts.ToList();
 
             _travelLeadersWithoutPreferences = await TravelLeaderService.GetTravelLeadersWithoutPreferencesAsync();
@@ -48,7 +49,7 @@ public partial class Home : ComponentBase
 
         if (_isReisleider)
         {
-            var journeys = await JourneyService.GetJourneysWithPublishedPlanningAsync();
+            var journeys = await JourneyService.GetJourneysWithPublishedPlanningAsync(_selectedYear);
             _publishedJourneys = journeys.ToList();
         }
 

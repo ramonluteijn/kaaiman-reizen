@@ -29,13 +29,21 @@ public class JourneyService : IJourneyService
             .OrderBy(j => j.Name)
             .ToListAsync(cancellationToken);
     }
-
-    public async Task<IReadOnlyList<Journey>> GetJourneysWithPublishedPlanningAsync(CancellationToken cancellationToken = default)
+    
+    public async Task<IReadOnlyList<Journey>> GetJourneysWithPublishedPlanningAsync(int year, CancellationToken cancellationToken = default)
     {
-        var journeys = await GetJourneysAsync(cancellationToken);
-        var publishedPlanning = await _planningService.GetLatestPublishedAsync(cancellationToken);
+        // 1. Haal de reizen op filter on year.
+        var allJourneys = await GetJourneysAsync(cancellationToken);
+    
+        var journeysForThisYear = allJourneys
+            .Where(j => j.Start.Year == year)
+            .ToList();
 
-        return ApplyPlanningVersion(journeys, publishedPlanning);
+        // 2. Haal de gepubliceerde planning van DIT jaar op
+        var publishedPlanning = await _planningService.GetLatestPublishedAsync(year, cancellationToken);
+
+        // 3. Pas de planning toe op alleen de reizen van dit jaar
+        return ApplyPlanningVersion(journeysForThisYear, publishedPlanning);
     }
 
     public async Task AddJourneyAsync(Entities.Journey journey, List<int> selectedLeaders, CancellationToken cancellationToken = default)
@@ -75,8 +83,11 @@ public class JourneyService : IJourneyService
         {
             return null;
         }
-
-        var publishedPlanning = await _planningService.GetLatestPublishedAsync(cancellationToken);
+        
+        int journeyYear = journey.Start.Year;
+        
+        var publishedPlanning = await _planningService.GetLatestPublishedAsync(journeyYear, cancellationToken);
+    
         return ApplyPlanningVersion([journey], publishedPlanning).SingleOrDefault();
     }
 
