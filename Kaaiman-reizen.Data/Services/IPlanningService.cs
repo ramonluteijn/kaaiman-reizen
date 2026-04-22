@@ -14,4 +14,6 @@ public interface IPlanningService
         bool isPublished,
         IReadOnlyDictionary<int, IReadOnlyCollection<int>> journeyAssignments,
         CancellationToken cancellationToken = default);
+    Task<List<Journey>> GetAllJourneysWithTravelLeadersFromLatestPublishedPlanning();
+    bool PublishedPlanningExists();
 }

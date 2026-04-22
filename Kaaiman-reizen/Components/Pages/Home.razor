@@ -1,6 +1,8 @@
 ﻿@page "/"
-@using Kaaiman_reizen.Data.Entities
+
 @using Microsoft.AspNetCore.Components.Authorization
+
+@rendermode InteractiveServer
 
 <PageTitle>Home</PageTitle>
 
@@ -29,6 +31,22 @@ else
             {
                 <section>
                     <MudGrid Class="mt-1">
+                        @if (_publishedPlanning)
+                        {
+                            <MudItem xs="12">
+                                <MudCard Elevation="2">
+                                    <MudCardContent>
+                                        <MudText Typo="Typo.h6" Class="mb-3">Definitieve planning</MudText>
+                                        <MudButton Variant="Variant.Filled"
+                                                   Color="Color.Primary"
+                                                   OnClick="HandlePrintPdf"
+                                                   EndIcon="@Icons.Material.Filled.PictureAsPdf">
+                                            Download als PDF
+                                        </MudButton>
+                                    </MudCardContent>
+                                </MudCard>
+                            </MudItem>
+                        }
                         <MudItem xs="12">
                             <MudCard Elevation="2">
                                 <MudCardContent>

@@ -1,7 +1,11 @@
 using Kaaiman_reizen.Data.Entities;
 using Kaaiman_reizen.Data.Services;
+using Kaaiman_reizen.Exports;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.JSInterop;
+using QuestPDF.Fluent;
+using System.Diagnostics;
 using static Kaaiman_reizen.Data.Services.TravelLeaderService;
 
 namespace Kaaiman_reizen.Components.Pages;
@@ -12,6 +16,7 @@ public partial class Home : ComponentBase
     [Inject] private ITravelLeaderService TravelLeaderService { get; set; } = default!;
     [Inject] private IJourneyService JourneyService { get; set; } = default!;
     [Inject] private AuthenticationStateProvider AuthenticationStateProvider { get; set; } = default!;
+    [Inject] private IJSRuntime JS { get; set; }
 
     private bool _loading = true;
     private bool _isPlanner;
@@ -19,6 +24,8 @@ public partial class Home : ComponentBase
     private List<PlanningVersion> _drafts = [];
     private List<Journey> _publishedJourneys = [];
     private int _selectedYear = DateTime.UtcNow.Year;
+    private bool _publishedPlanning;
+    private List<Journey> _plannedJourneysWithTravelLeaders;
 
     private List<TravelLeader> _travelLeadersWithoutPreferences = [];
     private List<TravelLeader> _travelLeadersWithoutJourneys = [];
@@ -44,6 +51,9 @@ public partial class Home : ComponentBase
             _travelLeadersWithNotes = await TravelLeaderService.GetTravelLeadersWithNotesAsync();
             _journeysWithoutTravelLeaders = await TravelLeaderService.GetJourneysWithoutTravelLeadersAsync(_selectedYear);
             _travelLeadersWithOverlappingJourneys = await TravelLeaderService.GetTravelLeadersWithOverlappingJourneys();
+
+            _publishedPlanning = PlanningService.PublishedPlanningExists();
+            _plannedJourneysWithTravelLeaders = await PlanningService.GetAllJourneysWithTravelLeadersFromLatestPublishedPlanning();
         }
 
 
@@ -65,5 +75,27 @@ public partial class Home : ComponentBase
         }
 
         return string.Join("; ", leaders.OrderBy(leader => leader.Name).Select(leader => leader.Name));
+    }
+
+    private async Task HandlePrintPdf()
+    {
+        Debug.WriteLine("test");
+
+        try
+        {
+            var journeys = await PlanningService.GetAllJourneysWithTravelLeadersFromLatestPublishedPlanning();
+            var document = new PlanningDocument(journeys);
+            byte[] pdfBytes = document.GeneratePdf();
+
+            Console.WriteLine($"PDF gegenereerd: {pdfBytes.Length} bytes"); // Zie je dit in je output?
+
+            using var stream = new MemoryStream(pdfBytes);
+            using var streamRef = new DotNetStreamReference(stream);
+            await JS.InvokeVoidAsync("downloadFileFromStream", "Planning.pdf", streamRef);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
     }
 }

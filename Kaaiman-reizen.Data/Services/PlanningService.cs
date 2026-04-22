@@ -133,4 +133,40 @@ public class PlanningService : IPlanningService
                 TravelLeaderId = leaderId
             }).ToList();
     }
+
+   public async Task<List<Journey>> GetAllJourneysWithTravelLeadersFromLatestPublishedPlanning()
+   {
+      List<Journey> result = new();
+
+      int? latestPlanningId = await _db.PlanningVersions
+         .Where(planning => planning.IsPublished)
+         .OrderByDescending(planning => planning.CreatedAt)
+         .Select(planning => planning.Id)
+         .FirstOrDefaultAsync();
+
+        if (latestPlanningId == 0)
+        {
+            return result;
+        }
+
+        var assignments = await _db.PlanningAssignments
+         .Where(a => a.PlanningVersionId == latestPlanningId)
+         .Include(a => a.Journey)
+         .Include(a => a.TravelLeader)
+         .ToListAsync();
+
+        result = assignments
+            .GroupBy(a => a.JourneyId)
+            .Select(g =>
+            {
+                var journey = g.First().Journey;
+                journey.TravelLeaders = g.Select(a => a.TravelLeader).ToList();
+                return journey;
+            }).ToList();
+
+        return result;
+    }
+
+    public bool PublishedPlanningExists() => _db.PlanningVersions.Any(planning => planning.IsPublished);
+
 }
