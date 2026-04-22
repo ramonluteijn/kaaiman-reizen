@@ -160,3 +160,22 @@
     flex: 1 1 0;
     min-width: 0;
 }
+
+@media (max-width: 1200px) {
+    .pd-layout {
+        flex-direction: column;
+    }
+    .pd-main {
+        width: 100%;
+    }
+    .pd-sidebar {
+        max-height: none;
+        width: 100%;
+    }
+    .pd-sidebar-info {
+        width: 100%;
+    }
+    .pd-sidebar-journeys {
+        flex-direction: row;
+    }
+}
