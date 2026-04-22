@@ -41,7 +41,7 @@
                                     <td>@journey.Name</td>
                                     <td>@journey.Start.ToString("dd-MM-yyyy")</td>
                                     <td>@journey.End.ToString("dd-MM-yyyy")</td>
-                                    <td>@GetBookingStatusBadge(journey.BookingStatus ?? 0)</td>
+                                    <td>@GetBookingStatusBadge((int)journey.BookingStatus)</td>
                                 </tr>
                             }
                         </tbody>
