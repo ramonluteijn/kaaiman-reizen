@@ -88,10 +88,12 @@ public class TravelLeaderService : ITravelLeaderService
             .ToListAsync();
     }
 
-    public async Task<List<TravelLeader>> GetTravelLeadersWithoutJourneysAsync()
+    public async Task<List<TravelLeader>> GetTravelLeadersWithoutJourneysAsync(int year)
     {
         return await _db.TravelLeader
-            .Where(travelLeader => travelLeader.Journeys.Any() == false)
+            .AsNoTracking()
+            .Where(travelLeader => !_db.PlanningAssignments
+                .Any(assignment => assignment.TravelLeaderId == travelLeader.Id && assignment.PlanningVersion.PlanningYear == year))
             .ToListAsync();
     }
 
@@ -102,11 +104,13 @@ public class TravelLeaderService : ITravelLeaderService
             .ToListAsync();
     }
 
-    public async Task<List<Journey>> GetJourneysWithoutTravelLeadersAsync()
+    public async Task<List<Journey>> GetJourneysWithoutTravelLeadersAsync(int year)
     {
         return await _db.Journey
-            .Include(journey => journey.TravelLeaders)
-            .Where(journey => journey.TravelLeaders.Any() == false)
+            .AsNoTracking()
+            .Where(journey => journey.Start.Year == year)
+            .Where(journey => !_db.PlanningAssignments
+                .Any(assignment => assignment.JourneyId == journey.Id && assignment.PlanningVersion.PlanningYear == year))
             .ToListAsync();
     }
 

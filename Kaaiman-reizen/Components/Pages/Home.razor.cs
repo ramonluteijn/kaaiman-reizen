@@ -40,9 +40,9 @@ public partial class Home : ComponentBase
             _drafts = drafts.ToList();
 
             _travelLeadersWithoutPreferences = await TravelLeaderService.GetTravelLeadersWithoutPreferencesAsync();
-            _travelLeadersWithoutJourneys = await TravelLeaderService.GetTravelLeadersWithoutJourneysAsync();
+            _travelLeadersWithoutJourneys = await TravelLeaderService.GetTravelLeadersWithoutJourneysAsync(_selectedYear);
             _travelLeadersWithNotes = await TravelLeaderService.GetTravelLeadersWithNotesAsync();
-            _journeysWithoutTravelLeaders = await TravelLeaderService.GetJourneysWithoutTravelLeadersAsync();
+            _journeysWithoutTravelLeaders = await TravelLeaderService.GetJourneysWithoutTravelLeadersAsync(_selectedYear);
             _travelLeadersWithOverlappingJourneys = await TravelLeaderService.GetTravelLeadersWithOverlappingJourneys();
         }
 

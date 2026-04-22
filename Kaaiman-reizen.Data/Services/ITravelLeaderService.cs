@@ -13,8 +13,8 @@ public interface ITravelLeaderService
     Task UpdateTravelLeaderAsync(Entities.TravelLeader leader, CancellationToken cancellationToken = default);
 
     Task<List<TravelLeader>> GetTravelLeadersWithoutPreferencesAsync();
-    Task<List<TravelLeader>> GetTravelLeadersWithoutJourneysAsync();
+    Task<List<TravelLeader>> GetTravelLeadersWithoutJourneysAsync(int year);
     Task<List<TravelLeader>> GetTravelLeadersWithNotesAsync();
-    Task<List<Journey>> GetJourneysWithoutTravelLeadersAsync();
+    Task<List<Journey>> GetJourneysWithoutTravelLeadersAsync(int year);
     Task<List<OverlapData>> GetTravelLeadersWithOverlappingJourneys();
 }
