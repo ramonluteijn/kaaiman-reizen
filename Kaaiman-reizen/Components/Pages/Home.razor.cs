@@ -2,12 +2,14 @@ using Kaaiman_reizen.Data.Entities;
 using Kaaiman_reizen.Data.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
+using static Kaaiman_reizen.Data.Services.TravelLeaderService;
 
 namespace Kaaiman_reizen.Components.Pages;
 
 public partial class Home : ComponentBase
 {
     [Inject] private IPlanningService PlanningService { get; set; } = default!;
+    [Inject] private ITravelLeaderService TravelLeaderService { get; set; } = default!;
     [Inject] private IJourneyService JourneyService { get; set; } = default!;
     [Inject] private AuthenticationStateProvider AuthenticationStateProvider { get; set; } = default!;
 
@@ -17,6 +19,12 @@ public partial class Home : ComponentBase
     private List<PlanningVersion> _drafts = [];
     private List<Journey> _publishedJourneys = [];
     private int _selectedYear = DateTime.UtcNow.Year;
+
+    private List<TravelLeader> _travelLeadersWithoutPreferences = [];
+    private List<TravelLeader> _travelLeadersWithoutJourneys = [];
+    private List<TravelLeader> _travelLeadersWithNotes = [];
+    private List<Journey> _journeysWithoutTravelLeaders = [];
+    private List<OverlapData> _travelLeadersWithOverlappingJourneys = [];
 
     protected override async Task OnInitializedAsync()
     {
@@ -30,7 +38,14 @@ public partial class Home : ComponentBase
         {
             var drafts = await PlanningService.GetDraftsAsync(_selectedYear);
             _drafts = drafts.ToList();
+
+            _travelLeadersWithoutPreferences = await TravelLeaderService.GetTravelLeadersWithoutPreferencesAsync();
+            _travelLeadersWithoutJourneys = await TravelLeaderService.GetTravelLeadersWithoutJourneysAsync(_selectedYear);
+            _travelLeadersWithNotes = await TravelLeaderService.GetTravelLeadersWithNotesAsync();
+            _journeysWithoutTravelLeaders = await TravelLeaderService.GetJourneysWithoutTravelLeadersAsync(_selectedYear);
+            _travelLeadersWithOverlappingJourneys = await TravelLeaderService.GetTravelLeadersWithOverlappingJourneys();
         }
+
 
         if (_isReisleider)
         {

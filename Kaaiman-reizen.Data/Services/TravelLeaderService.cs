@@ -1,3 +1,4 @@
+using Kaaiman_reizen.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kaaiman_reizen.Data.Services;
@@ -5,6 +6,7 @@ namespace Kaaiman_reizen.Data.Services;
 public class TravelLeaderService : ITravelLeaderService
 {
     private readonly MainContext _db;
+    private const string EMPTYSTRING = "";
 
     public TravelLeaderService(MainContext db)
     {
@@ -79,5 +81,80 @@ public class TravelLeaderService : ITravelLeaderService
 
         _db.TravelLeader.Update(leader);
         await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<List<TravelLeader>> GetTravelLeadersWithoutPreferencesAsync()
+    {
+        return await _db.TravelLeader
+            .Where(travelLeader => travelLeader.AvailabilityPeriods.Any() == false && travelLeader.PreferredDestinations.Any() == false)
+            .ToListAsync();
+    }
+
+    public async Task<List<TravelLeader>> GetTravelLeadersWithoutJourneysAsync(int year)
+    {
+        return await _db.TravelLeader
+            .AsNoTracking()
+            .Where(travelLeader => !_db.PlanningAssignments
+                .Any(assignment => assignment.TravelLeaderId == travelLeader.Id && assignment.PlanningVersion.PlanningYear == year))
+            .ToListAsync();
+    }
+
+    public async Task<List<TravelLeader>> GetTravelLeadersWithNotesAsync()
+    {
+        return await _db.TravelLeader
+            .Where(travelLeader => travelLeader.Note != null && travelLeader.Note != EMPTYSTRING)
+            .ToListAsync();
+    }
+
+    public async Task<List<Journey>> GetJourneysWithoutTravelLeadersAsync(int year)
+    {
+        return await _db.Journey
+            .AsNoTracking()
+            .Where(journey => journey.Start.Year == year)
+            .Where(journey => !_db.PlanningAssignments
+                .Any(assignment => assignment.JourneyId == journey.Id && assignment.PlanningVersion.PlanningYear == year))
+            .ToListAsync();
+    }
+
+    public async Task<List<OverlapData>> GetTravelLeadersWithOverlappingJourneys()
+    {
+        var travelLeadersWithJourneys = await _db.TravelLeader
+            .Include(tl => tl.Journeys)
+            .ToListAsync();
+
+        List<OverlapData> overlaps = new ();
+
+        travelLeadersWithJourneys.ForEach(travelLeader =>
+        {
+            List<Journey> journeys = travelLeader.Journeys;
+
+            for (int outer = 0; outer < journeys.Count; outer++)
+            {
+                for (int inner = outer + 1; inner < journeys.Count; inner++)
+                {
+                    var subjectJourney = journeys[outer];
+                    var comparisonJourney = journeys[inner];
+
+                    if (subjectJourney.Start < comparisonJourney.End && comparisonJourney.Start < subjectJourney.End)
+                    {
+                        overlaps.Add(new OverlapData()
+                        {
+                            travelLeader = travelLeader,
+                            subjectJourney = subjectJourney,
+                            overlappingJourney = comparisonJourney
+                        });
+                    }
+                }
+            }
+        });
+
+        return overlaps;
+    }
+
+    public class OverlapData
+    {
+        public TravelLeader travelLeader { get; set; }
+        public Journey subjectJourney { get; set; }
+        public Journey overlappingJourney { get; set; }
     }
 }
