@@ -19,6 +19,8 @@ public partial class Home : ComponentBase
     private List<PlanningVersion> _drafts = [];
     private List<Journey> _publishedJourneys = [];
     private int _selectedYear = DateTime.UtcNow.Year;
+    private bool _publishedPlanning;
+    private List<Journey> _plannedJourneysWithTravelLeaders;
 
     private List<TravelLeader> _travelLeadersWithoutPreferences = [];
     private List<TravelLeader> _travelLeadersWithoutJourneys = [];
@@ -44,6 +46,9 @@ public partial class Home : ComponentBase
             _travelLeadersWithNotes = await TravelLeaderService.GetTravelLeadersWithNotesAsync();
             _journeysWithoutTravelLeaders = await TravelLeaderService.GetJourneysWithoutTravelLeadersAsync(_selectedYear);
             _travelLeadersWithOverlappingJourneys = await TravelLeaderService.GetTravelLeadersWithOverlappingJourneys();
+
+            _publishedPlanning = PlanningService.PublishedPlanningExists();
+            _plannedJourneysWithTravelLeaders = await PlanningService.GetAllJourneysWithTravelLeadersFromLatestPublishedPlanning();
         }
 
 
