@@ -1,0 +1,65 @@
+﻿@if (IsOpen && Leader is not null)
+{
+    <div class="pd-note-overlay" @onclick="OnClose">
+        <MudPaper Class="pd-note-modal" Elevation="8" @onclick:stopPropagation="true">
+            <div class="pd-note-header">
+                <MudText Typo="Typo.h6">@Leader.Name</MudText>
+                <MudIconButton Icon="@Icons.Material.Filled.Close"
+                               Size="Size.Small"
+                               OnClick="OnClose"
+                               aria-label="Sluiten" />
+            </div>
+
+            <MudStack Spacing="2" Class="pa-4">
+                <MudPaper Class="pa-3" Outlined="true">
+                    <MudText Typo="Typo.subtitle2">Notitie</MudText>
+                    <MudText Typo="Typo.body2">@DisplayNote</MudText>
+                </MudPaper>
+
+                <MudPaper Class="pa-3" Outlined="true">
+                    <MudText Typo="Typo.subtitle2">Voorkeuren</MudText>
+                    @if (Leader.PreferredDestinations.Count == 0)
+                    {
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">Geen voorkeuren</MudText>
+                    }
+                    else
+                    {
+                        <MudStack Spacing="1">
+                            @foreach (var pref in Leader.PreferredDestinations.OrderBy(p => p.Value))
+                            {
+                                <MudText Typo="Typo.body2">@pref.Key (#@pref.Value)</MudText>
+                            }
+                        </MudStack>
+                    }
+                </MudPaper>
+
+                <MudPaper Class="pa-3" Outlined="true">
+                    <MudText Typo="Typo.subtitle2">Ingeplande reizen (@AssignedJourneys.Count)</MudText>
+                    @if (AssignedJourneys.Count == 0)
+                    {
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">Niet ingepland</MudText>
+                    }
+                    else
+                    {
+                        <MudStack Spacing="1">
+                            @foreach (var journey in AssignedJourneys.OrderBy(j => j.Start))
+                            {
+                                <MudText Typo="Typo.body2">
+                                    @journey.Name (@journey.Start.ToString("dd MMM") - @journey.End.ToString("dd MMM"))
+                                    @if (journey.RankMatched.HasValue)
+                                    {
+                                        <span> #@journey.RankMatched</span>
+                                    }
+                                </MudText>
+                            }
+                        </MudStack>
+                    }
+                </MudPaper>
+
+                <div>
+                    <MudButton Variant="Variant.Outlined" OnClick="OnClose">Sluiten</MudButton>
+                </div>
+            </MudStack>
+        </MudPaper>
+    </div>
+}

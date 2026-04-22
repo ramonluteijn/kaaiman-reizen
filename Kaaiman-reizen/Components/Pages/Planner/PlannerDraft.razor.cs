@@ -1,5 +1,6 @@
 using Kaaiman_reizen.Models.Planner;
 using Kaaiman_reizen.Models.ViewModels;
+using Kaaiman_reizen.Components.Pages.Planner.Components;
 using Kaaiman_reizen.Services;
 using Kaaiman_reizen.Data.Services;
 using Kaaiman_reizen.Data.Entities;
@@ -39,6 +40,8 @@ public partial class PlannerDraft : ComponentBase
     private JourneyViewModel?     _selectedJourney;
     private List<LeaderCandidate> _selectedCandidates = [];
     private bool _sidebarOpen = true;
+    private bool _noteModalOpen;
+    private LeaderPlanningRow? _selectedLeaderRow;
 
     protected override async Task OnInitializedAsync()
     {
@@ -162,26 +165,54 @@ public partial class PlannerDraft : ComponentBase
     }
 
     private record LeaderPlanningRow(
-        string LeaderName,
-        List<(PlannerJourneyInput Journey, int? RankMatched)> AssignedJourneys,
-        Dictionary<string, int> Preferences
-    );
+        PlannerLeaderInput Leader,
+        List<(PlannerJourneyInput Journey, int? RankMatched)> AssignedJourneys)
+    {
+        public string LeaderName => Leader.Name;
+        public Dictionary<string, int> Preferences => Leader.PreferredDestinations;
+    }
+    
+    
 
     private List<LeaderPlanningRow> BuildLeaderRows()
     {
         if (_request is null || _result is null) return [];
 
         return _request.Leaders.Select(leader => new LeaderPlanningRow(
-            leader.Name,
+            leader,
             _result.JourneyAssignments
                 .Where(kvp => kvp.Value.Any(a => a.LeaderId == leader.Id))
                 .Select(kvp => (
                     Journey:     _request.Journeys.First(j => j.Id == kvp.Key),
                     RankMatched: kvp.Value.First(a => a.LeaderId == leader.Id).RankMatched
                 ))
-                .ToList(),
-            leader.PreferredDestinations
+                .ToList()
         )).ToList();
+    }
+
+    private void OpenLeaderDetails(LeaderPlanningRow row)
+    {
+        _selectedLeaderRow = row;
+        _noteModalOpen = true;
+    }
+
+    private void CloseLeaderDetails()
+    {
+        _noteModalOpen = false;
+        _selectedLeaderRow = null;
+    }
+
+    private List<NoteModal.JourneyDetail> GetSelectedLeaderJourneys()
+    {
+        if (_selectedLeaderRow is null) return [];
+
+        return _selectedLeaderRow.AssignedJourneys
+            .Select(item => new NoteModal.JourneyDetail(
+                item.Journey.Name,
+                item.Journey.Start,
+                item.Journey.End,
+                item.RankMatched))
+            .ToList();
     }
 
     private IReadOnlyList<JourneyViewModel> BuildCalendarJourneys()
