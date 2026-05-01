@@ -4,7 +4,7 @@
 <div class="d-flex flex-column nav-shell">
     <div class="border-bottom p-3 nav-brand d-flex align-items-center">
         <div class="d-flex flex-grow-1">
-            <a href="/">
+            <a href="/" @onclick="CloseMenu">
                 <img src="images/kaaiman-logo-footer-1920x405.png.webp" class="navbar-brand img-fluid nav-brand-logo"
                      alt="Logo Kaaiman-reizen" />
             </a>
@@ -16,7 +16,7 @@
     </div>
 
     <div class="nav-scrollable flex-grow-1 d-flex flex-column overflow-auto @(navExpanded ? "" : "nav-collapsed")">
-        <nav class="nav flex-column h-100 flex-nowrap">
+        <nav class="nav flex-column h-100 flex-nowrap" @onclick="CloseMenu">
 
             <div class="nav-item">
                 <NavLink class="nav-link d-flex align-items-center rounded-0" href="" Match="NavLinkMatch.All">
@@ -103,5 +103,10 @@
     private void ToggleNav()
     {
         navExpanded = !navExpanded;
+    }
+
+    private void CloseMenu()
+    {
+        navExpanded = false;
     }
 }
