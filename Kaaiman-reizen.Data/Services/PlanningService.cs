@@ -11,7 +11,7 @@ public class PlanningService : IPlanningService
     {
         _db = db;
     }
-    
+
     public Task<PlanningVersion?> GetLatestDraftAsync(int year, CancellationToken cancellationToken = default)
     {
         return GetLatestPlanningVersionAsync(year, isPublished: false, cancellationToken);
@@ -45,7 +45,7 @@ public class PlanningService : IPlanningService
     {
         return GetLatestPlanningVersionAsync(year, isPublished: true, cancellationToken);
     }
-    
+
     public async Task<PlanningVersion> SavePlanningAsync(
         int year,
         string name,
@@ -134,15 +134,15 @@ public class PlanningService : IPlanningService
             }).ToList();
     }
 
-   public async Task<List<Journey>> GetAllJourneysWithTravelLeadersFromLatestPublishedPlanning()
-   {
-      List<Journey> result = new();
+    public async Task<List<Journey>> GetAllJourneysWithTravelLeadersFromLatestPublishedPlanning()
+    {
+        List<Journey> result = new();
 
-      int? latestPlanningId = await _db.PlanningVersions
-         .Where(planning => planning.IsPublished)
-         .OrderByDescending(planning => planning.CreatedAt)
-         .Select(planning => planning.Id)
-         .FirstOrDefaultAsync();
+        int? latestPlanningId = await _db.PlanningVersions
+           .Where(planning => planning.IsPublished)
+           .OrderByDescending(planning => planning.CreatedAt)
+           .Select(planning => planning.Id)
+           .FirstOrDefaultAsync();
 
         if (latestPlanningId == 0)
         {

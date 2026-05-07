@@ -45,10 +45,10 @@ public class PlannerDraftResult
 
     /// <summary>Maps journey ID list of all assigned leaders (may be more than one).</summary>
     public Dictionary<int, List<JourneyAssignmentResult>> JourneyAssignments { get; set; } = [];
-    
-    public int Rank1Matches        => JourneyAssignments.Values.SelectMany(l => l).Count(a => a.RankMatched == 1);
-    public int Rank2Matches        => JourneyAssignments.Values.SelectMany(l => l).Count(a => a.RankMatched == 2);
-    public int Rank3Matches        => JourneyAssignments.Values.SelectMany(l => l).Count(a => a.RankMatched == 3);
+
+    public int Rank1Matches => JourneyAssignments.Values.SelectMany(l => l).Count(a => a.RankMatched == 1);
+    public int Rank2Matches => JourneyAssignments.Values.SelectMany(l => l).Count(a => a.RankMatched == 2);
+    public int Rank3Matches => JourneyAssignments.Values.SelectMany(l => l).Count(a => a.RankMatched == 3);
     public int NoPreferenceMatches => JourneyAssignments.Values.SelectMany(l => l).Count(a => a.RankMatched == null);
 }
 

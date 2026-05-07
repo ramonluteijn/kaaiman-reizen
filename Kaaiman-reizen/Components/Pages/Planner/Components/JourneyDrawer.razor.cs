@@ -12,7 +12,7 @@ public partial class JourneyDrawer : ComponentBase
     [Parameter] public EventCallback OnClose { get; set; }
     [Parameter] public JourneyViewModel? SelectedJourney { get; set; }
     [Parameter] public List<LeaderCandidate> Candidates { get; set; } = new();
-    
+
     [Parameter] public EventCallback<TravelLeaderViewModel> OnRemoveLeader { get; set; }
     [Parameter] public EventCallback<LeaderCandidate> OnAssignLeader { get; set; }
 }
