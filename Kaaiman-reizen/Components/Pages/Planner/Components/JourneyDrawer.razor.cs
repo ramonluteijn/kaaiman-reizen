@@ -1,8 +1,6 @@
 using Kaaiman_reizen.Models.Planner;
 using Kaaiman_reizen.Models.ViewModels;
 using Microsoft.AspNetCore.Components;
-using System.Collections.Generic;
-using Kaaiman_reizen.Models.Planner;
 
 namespace Kaaiman_reizen.Components.Pages.Planner.Components;
 
