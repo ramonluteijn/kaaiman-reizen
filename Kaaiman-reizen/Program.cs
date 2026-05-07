@@ -67,8 +67,17 @@ builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
 
 builder.Services.Configure<Kaaiman_reizen.Services.SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
-builder.Services.AddTransient<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender, Kaaiman_reizen.Services.SmtpEmailSender>();
-builder.Services.AddTransient<IEmailSender<ApplicationUser>, Kaaiman_reizen.Services.SmtpEmailSender>();
+
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddTransient<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender, Kaaiman_reizen.Services.ConsoleEmailSender>();
+    builder.Services.AddTransient<IEmailSender<ApplicationUser>, Kaaiman_reizen.Services.ConsoleEmailSender>();
+}
+else
+{
+    builder.Services.AddTransient<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender, Kaaiman_reizen.Services.SmtpEmailSender>();
+    builder.Services.AddTransient<IEmailSender<ApplicationUser>, Kaaiman_reizen.Services.SmtpEmailSender>();
+}
 
 builder.Services.AddScoped<IEmailDispatcher, Kaaiman_reizen.Services.EmailDispatcher>();
 
