@@ -3,13 +3,12 @@ using Kaaiman_reizen.Components.Account;
 using Kaaiman_reizen.Data;
 using Kaaiman_reizen.Data.Identity;
 using Kaaiman_reizen.Data.Services;
+using Kaaiman_reizen.Extensions;
 using Kaaiman_reizen.Helpers;
 using Kaaiman_reizen.Services;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using MudBlazor.Services;
-using System.Security.Claims;
 using QuestPDF.Infrastructure;
 
 // Licentie voor QuestPDF
@@ -36,6 +35,7 @@ if (string.IsNullOrWhiteSpace(connectionString))
 
 builder.Services.AddMainContext(connectionString);
 builder.Services.AddDataServices();
+builder.Services.AddDevSeeder(builder.Environment);
 builder.Services.AddMudServices();
 builder.Services.AddRazorPages();
 
@@ -75,103 +75,32 @@ builder.Services.AddAuthorization();
 var google = builder.Configuration.GetSection("Authentication:Google");
 var microsoft = builder.Configuration.GetSection("Authentication:Microsoft");
 
-authBuilder.AddGoogle(options =>
-                {
-                    options.ClientId = google["ClientId"]!;
-                    options.ClientSecret = google["ClientSecret"]!;
-                    options.CallbackPath = "/login-google";
-                    options.Events.OnTicketReceived = ExternalLoginHandler.HandleExternalLogin;
-                })
-                .AddMicrosoftAccount(options =>
-                {
-                    options.ClientId = microsoft["ClientId"]!;
-                    options.ClientSecret = microsoft["ClientSecret"]!;
-                    options.CallbackPath = "/login-microsoft";
-                    options.AuthorizationEndpoint = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize";
-                    options.TokenEndpoint = "https://login.microsoftonline.com/common/oauth2/v2.0/token";
-                    options.Events.OnTicketReceived = ExternalLoginHandler.HandleExternalLogin;
-                });
+if (!string.IsNullOrWhiteSpace(google["ClientId"]))
+    authBuilder.AddGoogle(options =>
+    {
+        options.ClientId = google["ClientId"]!;
+        options.ClientSecret = google["ClientSecret"]!;
+        options.CallbackPath = "/login-google";
+        options.Events.OnTicketReceived = ExternalLoginHandler.HandleExternalLogin;
+    });
+
+if (!string.IsNullOrWhiteSpace(microsoft["ClientId"]))
+    authBuilder.AddMicrosoftAccount(options =>
+    {
+        options.ClientId = microsoft["ClientId"]!;
+        options.ClientSecret = microsoft["ClientSecret"]!;
+        options.CallbackPath = "/login-microsoft";
+        options.AuthorizationEndpoint = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize";
+        options.TokenEndpoint = "https://login.microsoftonline.com/common/oauth2/v2.0/token";
+        options.Events.OnTicketReceived = ExternalLoginHandler.HandleExternalLogin;
+    });
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 var app = builder.Build();
 
-// Seed roles for Identity framework
-using var scope = app.Services.CreateScope();
-
-var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-var dbContext = scope.ServiceProvider.GetRequiredService<MainContext>();
-
-List<string> roles = ["Planner", "Reisleider"];
-
-foreach (var role in roles)
-{
-    if (await roleManager.RoleExistsAsync(role) is false)
-        await roleManager.CreateAsync(new IdentityRole(role));
-}
-
-// Create one account for each role and optionally link to a TravelLeader profile.
-var users = new[]
-{
-    new { Email = "planner@kaaiman.nl", Role = "Planner", TravelLeaderName = (string?)null },
-    new { Email = "reisleider@kaaiman.nl", Role = "Reisleider", TravelLeaderName = (string?)"Jan de Vries" }
-};
-
-foreach (var user in users)
-{
-    var account = await userManager.FindByEmailAsync(user.Email);
-
-    if (account is null)
-    {
-        account = new ApplicationUser
-        {
-            UserName = user.Email,
-            Email = user.Email,
-            EmailConfirmed = true
-        };
-
-        var result = await userManager.CreateAsync(account, "Kaaiman26!");
-        if (result.Succeeded is false)
-            continue;
-    }
-
-    if (await userManager.IsInRoleAsync(account, user.Role) is false)
-        await userManager.AddToRoleAsync(account, user.Role);
-
-    if (string.IsNullOrWhiteSpace(user.TravelLeaderName))
-        continue;
-
-    var travelLeader = await dbContext.TravelLeader
-        .FirstOrDefaultAsync(t => t.Name == user.TravelLeaderName);
-
-    if (travelLeader is null)
-        continue;
-
-    var claims = await userManager.GetClaimsAsync(account);
-    var expectedLeaderId = travelLeader.Id.ToString();
-
-    var currentLeaderIdClaim = claims.FirstOrDefault(c => c.Type == "TravelLeaderId");
-    if (currentLeaderIdClaim is null)
-    {
-        await userManager.AddClaimAsync(account, new Claim("TravelLeaderId", expectedLeaderId));
-    }
-    else if (currentLeaderIdClaim.Value != expectedLeaderId)
-    {
-        await userManager.ReplaceClaimAsync(account, currentLeaderIdClaim, new Claim("TravelLeaderId", expectedLeaderId));
-    }
-
-    var currentNameClaim = claims.FirstOrDefault(c => c.Type == ClaimTypes.Name);
-    if (currentNameClaim is null)
-    {
-        await userManager.AddClaimAsync(account, new Claim(ClaimTypes.Name, travelLeader.Name));
-    }
-    else if (currentNameClaim.Value != travelLeader.Name)
-    {
-        await userManager.ReplaceClaimAsync(account, currentNameClaim, new Claim(ClaimTypes.Name, travelLeader.Name));
-    }
-}
+await app.MigrateAndSeedAsync();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
