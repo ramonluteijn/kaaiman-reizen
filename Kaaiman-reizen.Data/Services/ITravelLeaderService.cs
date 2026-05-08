@@ -10,7 +10,6 @@ public interface ITravelLeaderService
     Task AddTravelLeaderAsync(Entities.TravelLeader leader, CancellationToken cancellationToken = default);
     Task DeleteTravelLeaderAsync(int id, CancellationToken cancellationToken = default);
     Task<Entities.TravelLeader?> GetTravelLeaderByIdAsync(int id, CancellationToken cancellationToken = default);
-    Task<Entities.TravelLeader?> GetJourneysOfTravelLeaderByIdAsync(int id, CancellationToken cancellationToken = default);
     Task UpdateTravelLeaderAsync(Entities.TravelLeader leader, CancellationToken cancellationToken = default);
 
     Task<List<TravelLeader>> GetTravelLeadersWithoutPreferencesAsync();

@@ -1,82 +1,62 @@
-using Kaaiman_reizen.Components.Pages.Planner.Components;
 using Kaaiman_reizen.Data.Entities;
 using Kaaiman_reizen.Data.Services;
-using Kaaiman_reizen.Models.Planner;
 using Kaaiman_reizen.Models.ViewModels;
-using Kaaiman_reizen.Services;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Authorization;
-using MudBlazor;
-using System.Security.Claims;
 
 namespace Kaaiman_reizen.Components.Pages.TravelLeaders.Calendar;
 
 public partial class TravelLeaderCalendar : ComponentBase
 {
-    private const int SaveMessageDisplayMs = 5000;
-
-    [SupplyParameterFromQuery(Name = "versionId")]
-    public int? VersionId { get; set; }
-
-    [Inject] private ITravelLeaderService TravelLeaderService { get; set; } = default!;
-
     [Inject]
-    private AuthenticationStateProvider AuthenticationStateProvider { get; set; } = default!;
+    private ITravelLeaderService LeaderService { get; set; } = default!;
 
-    protected bool _loading = true;
-    protected string _statusMessage = string.Empty;
+    [Parameter]
+    public int? Id { get; set; }
+
+    private TravelLeader _leader = new();
+    private bool _loading = true;
+    private bool _notFound = false;
     protected List<Journey> _journeys = [];
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
         _loading = true;
-        _statusMessage = string.Empty;
+        _notFound = false;
 
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
-
-        if (user.Identity?.IsAuthenticated is not true)
+        TravelLeader? item = null;
+        if (Id.HasValue && Id.Value > 0)
         {
-            _statusMessage = "Log in om je reisgeschiedenis te bekijken.";
+            item = await LeaderService.GetTravelLeaderByIdAsync(Id.Value);
+        }
+        else
+        {
+            var all = await LeaderService.GetTravelLeadersAsync();
+            item = all.FirstOrDefault();
+            if (item != null)
+                Id = item.Id;
+        }
+
+        if (item == null)
+        {
+            _notFound = true;
             _loading = false;
             return;
         }
 
-        var leaders = await TravelLeaderService.GetTravelLeadersAsync();
-        var leader = FindCurrentLeader(leaders, user);
+        _leader = item;
 
-        if (leader is null)
-        {
-            _statusMessage = "Geen gekoppelde reisleider gevonden voor dit account.";
-            _loading = false;
-            return;
-        }
-
-        _journeys = (leader.Journeys ?? [])
-            .OrderByDescending(journey => journey.End)
-            .ThenByDescending(journey => journey.Start)
-            .ToList();
+        _journeys = (_leader.Journeys ?? [])
+           .OrderByDescending(journey => journey.End)
+           .ThenByDescending(journey => journey.Start)
+           .ToList();
 
         _loading = false;
     }
-    private static TravelLeader? FindCurrentLeader(IEnumerable<TravelLeader> leaders, ClaimsPrincipal user)
-    {
-        var leaderIdClaim = user.FindFirstValue("TravelLeaderId");
-        if (int.TryParse(leaderIdClaim, out var leaderId))
-        {
-            var matchedById = leaders.FirstOrDefault(leader => leader.Id == leaderId);
-            if (matchedById is not null)
-            {
-                return matchedById;
-            }
-        }
 
-        return null;
-    }
 
     private IReadOnlyList<JourneyViewModel> GetCalendarJourneys()
     {
-        return _journeys.Select(j =>
+        return _leader.Journeys.Select(j =>
         {
             var leaders = new List<TravelLeaderViewModel>();
             foreach (var t in j.TravelLeaders)

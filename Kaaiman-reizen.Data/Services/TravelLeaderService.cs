@@ -61,13 +61,6 @@ public class TravelLeaderService : ITravelLeaderService
             .FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
     }
 
-    public async Task<Entities.TravelLeader?> GetJourneysOfTravelLeaderByIdAsync(int id, CancellationToken cancellationToken = default)
-    {
-        return await _db.TravelLeader
-            .Include(t => t.Journeys)
-            .FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
-    }
-
     public async Task UpdateTravelLeaderAsync(Entities.TravelLeader leader, CancellationToken cancellationToken = default)
     {
         // Explicitly remove old child records so they don't accumulate as orphans.
