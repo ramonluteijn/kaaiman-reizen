@@ -1,0 +1,26 @@
+@page "/travelleaders/agenda"
+@attribute [Authorize(Roles = "Reisleider")]
+@rendermode InteractiveServer
+
+<PageTitle>Mijn Reizen</PageTitle>
+
+<h1 class="h4">Mijn Reizen</h1>
+
+<div class="pd-main">
+    @* @if (_result.JourneyWarnings.Any())
+    {
+        <MudStack Spacing="1" Class="mb-3">
+            @foreach (var kvp in _result.JourneyWarnings)
+            {
+                var warnedJourney = _request!.Journeys.FirstOrDefault(j => j.Id == kvp.Key);
+                if (warnedJourney is null) continue;
+                <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true">
+                    <b>@warnedJourney.Name</b>
+                    <span class="text-secondary ms-1">(@warnedJourney.Start.ToString("dd MMM") – @warnedJourney.End.ToString("dd MMM yyyy"))</span>
+                    — @kvp.Value
+                </MudAlert>
+            }
+        </MudStack>
+    } *@
+    <CalendarView Journeys="GetCalendarJourneys()"/>
+</div>
