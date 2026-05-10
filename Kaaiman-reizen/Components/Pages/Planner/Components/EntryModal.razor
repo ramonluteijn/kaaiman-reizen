@@ -48,9 +48,14 @@
                 }
                 else
                 {
-                    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mb-4">
-                        Er zijn nog geen opgeslagen conceptplanningen.
-                    </MudAlert>
+                    <MudPaper Class="pa-4 mb-4 pd-empty-state" Outlined="true">
+                        <MudStack Spacing="1">
+                            <MudText Typo="Typo.subtitle2">Geen conceptplanningen</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                Er zijn nog geen opgeslagen conceptplanningen.
+                            </MudText>
+                        </MudStack>
+                    </MudPaper>
                 }
 
                 <MudButton Variant="Variant.Filled"
