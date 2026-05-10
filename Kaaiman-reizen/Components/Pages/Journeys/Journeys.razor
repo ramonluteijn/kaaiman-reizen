@@ -13,13 +13,11 @@
 <div class="card">
     <div class="card-body">
         <div class="mb-3">
-            <input class="form-control"
-                   placeholder="Zoek op land..."
-                   @bind="_searchTerm"
-                   @bind:event="oninput" />
+            <input class="form-control" placeholder="Zoek op land..." @bind="_searchTerm" @bind:event="oninput" />
         </div>
 
-        <Table TItem="Journey" Items="FilteredJourneys" OnDelete="@OnDelete" Path="journeys" CreateText="Nieuwe reis" EditHrefSelector="@GetEditHref">
+        <Table TItem="Journey" Items="FilteredJourneys" OnDelete="@OnDelete" Path="journeys" CreateText="Nieuwe reis"
+               EditHrefSelector="@GetEditHref">
             <HeaderContent>
                 <th @onclick='() => SortBy("Name")'>
                     Reis @(GetSortIcon("Name"))
@@ -43,21 +41,22 @@
             </HeaderContent>
             <RowTemplate>
                 <td>@context.Name</td>
-                <td>@context.Start</td>
-                <td>@context.End</td>
+                <td>@DateDisplay.FormatDate(context.Start)</td>
+                <td>@DateDisplay.FormatDate(context.End)</td>
                 <td>
-                    @if (context.TravelLeaders != null && context.TravelLeaders.Any()) {
+                    @if (context.TravelLeaders != null && context.TravelLeaders.Any())
+                    {
                         @FormatTravelLeaders(context)
                     }
                 </td>
                 <td>
                     <span class="badge @(context.BookingStatus switch
-                                       {
-                                           BookingStatus.Bezig   => "bg-secondary",
-                                           BookingStatus.Geweest     => "bg-success",
-                                           BookingStatus.Geanuleerd     => "bg-primary",
-                                           _                         => "bg-danger"
-                                       })">@context.BookingStatus</span>
+                                              {
+                                                  BookingStatus.Bezig => "bg-secondary",
+                                                  BookingStatus.Geweest => "bg-success",
+                                                  BookingStatus.Geanuleerd => "bg-primary",
+                                                  _ => "bg-danger"
+                                              })">@context.BookingStatus</span>
                 </td>
                 <td>
                     <span class="badge @(context.Busses > 0 ? "bg-warning" : "bg-secondary")">
@@ -94,7 +93,7 @@
             .Select(l => $"{l.Name}"));
     }
 
-    private IEnumerable<Journey> FilteredJourneys => 
+    private IEnumerable<Journey> FilteredJourneys =>
         ApplySorting(
             _journeys.Where(j =>
                 string.IsNullOrWhiteSpace(_searchTerm) ||

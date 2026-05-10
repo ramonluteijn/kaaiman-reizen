@@ -8,7 +8,7 @@
 ├── Models                 # Entity models representing database tables
 ├── Resources              # Resource files for localization (if applicable)
 ├── Rules                  # Business rules and validation logic
-├── Services               # Service classes implementing business logic  
+├── Services               # Service classes implementing business logic
 ```
 
 ## Migrations
@@ -42,7 +42,7 @@ dotnet ef database update 0 -p .\Kaaiman-reizen\
 - Step 2: Reapply all migrations
 
 ```
-dotnet ef database update -p .\Kaaiman-reizen\
+dotnet ef database update --project .\Kaaiman-reizen.Data\ --startup-project .\Kaaiman-reizen\ --context MainContext
 ```
 
 Adjust the migration name and project names as needed for other migrations.

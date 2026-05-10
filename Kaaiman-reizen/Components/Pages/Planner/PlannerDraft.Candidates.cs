@@ -1,4 +1,5 @@
 using Kaaiman_reizen.Data.Entities;
+using Kaaiman_reizen.Helpers;
 using Kaaiman_reizen.Models.Planner;
 using Kaaiman_reizen.Models.ViewModels;
 
@@ -142,7 +143,7 @@ public partial class PlannerDraft
             IsAlreadyAssigned: assignedToThis.Contains(leader.Id),
             HasConflict: conflictJourney is not null,
             ConflictJourneyName: conflictJourney is not null
-                ? $"{conflictJourney.Name} ({conflictJourney.Start:dd MMM}–{conflictJourney.End:dd MMM})"
+                ? $"{conflictJourney.Name} ({DateDisplay.FormatDate(conflictJourney.Start)}-{DateDisplay.FormatDate(conflictJourney.End)})"
                 : string.Empty,
             ExceedsMaxTrips: currentCount >= leader.MaxTrips,
             CurrentAssignments: currentCount,
