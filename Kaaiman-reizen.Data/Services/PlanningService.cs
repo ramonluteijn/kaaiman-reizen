@@ -95,7 +95,7 @@ public class PlanningService : IPlanningService
                     }
                     catch
                     {
-                        
+
                     }
                 });
             }
