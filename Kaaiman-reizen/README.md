@@ -39,3 +39,33 @@ After that you can run migrations using:
 ```bash
 dotnet ef database update --project Kaaiman-reizen.Data --startup-project Kaaiman-reizen --context MainContext
 ```
+
+## Email System
+
+The application is configured to send emails using a dual-mode approach based on the environment:
+
+### Development Environment
+When running locally in Development mode (`if (builder.Environment.IsDevelopment())`), the application uses a **`ConsoleEmailSender`**. 
+- Emails are **not** genuinely sent to real inboxes.
+- Instead, the content, subject, and recipient address are directly logged to the Visual Studio output console/terminal. Look for the `===== DUMMY EMAIL VERZONDEN NAAR =====` banners in your console to verify email dispatches.
+- No real SMTP configuration is required for local testing of application flow.
+
+### Production / Production-Like Environments
+For environments that are not "Development", the system automatically registers the **`SmtpEmailSender`** and utilizes real SMTP network transport.
+- You must supply legitimate `.NET User Secrets` or deployment environment variables under the `SmtpSettings` section to avoid crashes upon email dispatch operations.
+- The `SmtpSettings` section requires the following schema:
+```json
+"SmtpSettings": {
+  "Host": "smtp.yourprovider.com",
+  "Port": 587,
+  "Username": "your_smtp_username",
+  "Password": "your_smtp_password",
+  "SenderEmail": "no-reply@kaaiman-reizen.nl",
+  "SenderName": "Kaaiman Reizen"
+}
+```
+
+### Dispatching Emails In Code
+The core of the email logic relies on `IEmailDispatcher`. If you want to send an email programmatically within the services:
+1. Inject `IEmailDispatcher`.
+2. Await `SendEmailToUsersAsync(emailAddresses, subject, message)` or `SendEmailAsync(email, subject, message)`.
