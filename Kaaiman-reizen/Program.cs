@@ -116,6 +116,9 @@ var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityR
 var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 var dbContext = scope.ServiceProvider.GetRequiredService<MainContext>();
 
+// Ensure all pending migrations are applied before startup queries/seeding run.
+await dbContext.Database.MigrateAsync();
+
 List<string> roles = ["Planner", "Reisleider"];
 
 foreach (var role in roles)
