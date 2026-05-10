@@ -20,6 +20,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IJourneyService, JourneyService>();
         services.AddScoped<IPlanningService, PlanningService>();
         services.AddScoped<IRuleService, RuleService>();
+        services.AddScoped<INotificationService, NotificationService>();
         return services;
     }
 }

@@ -11,6 +11,16 @@ namespace Kaaiman_reizen.Tests.Services
 {
     public class JourneyServiceTests
     {
+        private class DummyServiceProvider : IServiceProvider
+        {
+            public object GetService(Type serviceType) => null;
+        }
+
+        private IServiceProvider GetMockServiceProvider()
+        {
+            return new DummyServiceProvider();
+        }
+
         // Helper: create a fresh in-memory database for each test
         private MainContext GetInMemoryDb()
         {
@@ -24,7 +34,7 @@ namespace Kaaiman_reizen.Tests.Services
         public async Task AddJourney_Should_Add_Journey()
         {
             var db = GetInMemoryDb();
-            var planningService = new PlanningService(db);
+            var planningService = new PlanningService(db, GetMockServiceProvider());
             var service = new JourneyService(db, planningService);
 
             var journey = new Journey
@@ -47,7 +57,7 @@ namespace Kaaiman_reizen.Tests.Services
         public async Task UpdateJourney_Should_Update_Journey()
         {
             var db = GetInMemoryDb();
-            var planningService = new PlanningService(db);
+            var planningService = new PlanningService(db, GetMockServiceProvider());
             var service = new JourneyService(db, planningService);
 
             var journey = new Journey
@@ -73,7 +83,7 @@ namespace Kaaiman_reizen.Tests.Services
         public async Task DeleteJourney_Should_Remove_Journey()
         {
             var db = GetInMemoryDb();
-            var planningService = new PlanningService(db);
+            var planningService = new PlanningService(db, GetMockServiceProvider());
             var service = new JourneyService(db, planningService);
 
             var journey = new Journey
@@ -98,7 +108,7 @@ namespace Kaaiman_reizen.Tests.Services
         public async Task GetJourneyById_Should_Return_Correct_Journey()
         {
             var db = GetInMemoryDb();
-            var planningService = new PlanningService(db);
+            var planningService = new PlanningService(db, GetMockServiceProvider());
             var service = new JourneyService(db, planningService);
 
             var journey = new Journey
