@@ -6,10 +6,12 @@ namespace Kaaiman_reizen.Data.Services;
 public class PlanningService : IPlanningService
 {
     private readonly MainContext _db;
+    private readonly IServiceProvider _serviceProvider;
 
-    public PlanningService(MainContext db)
+    public PlanningService(MainContext db, IServiceProvider serviceProvider)
     {
         _db = db;
+        _serviceProvider = serviceProvider;
     }
     
     public Task<PlanningVersion?> GetLatestDraftAsync(int year, CancellationToken cancellationToken = default)
@@ -67,6 +69,36 @@ public class PlanningService : IPlanningService
             }
             version = CreateNewVersionObject(year, name, true, journeyAssignments);
             _db.PlanningVersions.Add(version);
+
+            var allUsers = await _db.Users.ToListAsync(cancellationToken);
+            var notifications = allUsers.Select(u => new Notification
+            {
+                ApplicationUserId = u.Id,
+                Message = $"De definitieve planning voor {year} is gepubliceerd. Bekijk het dashboard en geef uw input.",
+                CreatedAt = DateTime.UtcNow,
+                IsRead = false
+            });
+            _db.Notifications.AddRange(notifications);
+
+            var emails = allUsers.Where(u => !string.IsNullOrWhiteSpace(u.Email)).Select(u => u.Email!).ToList();
+            if (emails.Any())
+            {
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        using var scope = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.CreateScope(_serviceProvider);
+                        var emailDispatcher = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<IEmailDispatcher>(scope.ServiceProvider);
+                        var subject = $"Nieuwe planning gepubliceerd voor {year}";
+                        var message = $"De definitieve planning voor {year} is gepubliceerd. Log in op het dashboard om de planning te bekijken en uw input te geven.";
+                        await emailDispatcher.SendEmailToUsersAsync(emails, subject, message);
+                    }
+                    catch
+                    {
+                        
+                    }
+                });
+            }
         }
         else
         {

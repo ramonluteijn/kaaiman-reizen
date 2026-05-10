@@ -16,6 +16,8 @@ public partial class Home : ComponentBase
     [Inject] private ITravelLeaderService TravelLeaderService { get; set; } = default!;
     [Inject] private IJourneyService JourneyService { get; set; } = default!;
     [Inject] private AuthenticationStateProvider AuthenticationStateProvider { get; set; } = default!;
+    [Inject] private Microsoft.AspNetCore.Identity.UserManager<Kaaiman_reizen.Data.Identity.ApplicationUser> UserManager { get; set; } = default!;
+    [Inject] private INotificationService NotificationService { get; set; } = default!;
     [Inject] private IJSRuntime JS { get; set; }
 
     private bool _loading = true;
@@ -26,6 +28,9 @@ public partial class Home : ComponentBase
     private int _selectedYear = DateTime.UtcNow.Year;
     private bool _publishedPlanning;
     private List<Journey> _plannedJourneysWithTravelLeaders;
+
+    private List<Notification> _notifications = [];
+    private string _currentUserId = string.Empty;
 
     private List<TravelLeader> _travelLeadersWithoutPreferences = [];
     private List<TravelLeader> _travelLeadersWithoutJourneys = [];
@@ -40,6 +45,13 @@ public partial class Home : ComponentBase
 
         _isPlanner = user.IsInRole("Planner");
         _isReisleider = user.IsInRole("Reisleider");
+
+        var appUser = await UserManager.GetUserAsync(user);
+        if (appUser != null)
+        {
+            _currentUserId = appUser.Id;
+            _notifications = await NotificationService.GetUnreadNotificationsAsync(_currentUserId);
+        }
 
         if (_isPlanner)
         {
@@ -64,6 +76,12 @@ public partial class Home : ComponentBase
         }
 
         _loading = false;
+    }
+
+    private async Task MarkNotificationAsRead(Notification notification)
+    {
+        await NotificationService.MarkAsReadAsync(notification.Id, _currentUserId);
+        _notifications.Remove(notification);
     }
 
     private static string FormatTravelLeaders(Journey journey)

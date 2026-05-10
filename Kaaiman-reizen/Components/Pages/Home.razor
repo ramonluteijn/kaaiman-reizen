@@ -27,6 +27,19 @@ else
             </div>
         </NotAuthorized>
         <Authorized>
+            @if (_notifications.Any())
+            {
+                <section class="mb-4">
+                    <MudText Typo="Typo.h6" Class="mb-3">Notificaties</MudText>
+                    @foreach (var notification in _notifications)
+                    {
+                        <MudAlert Severity="Severity.Info" ShowCloseIcon="true" CloseIconClicked="@(() => MarkNotificationAsRead(notification))" Class="mb-2">
+                            @notification.Message
+                        </MudAlert>
+                    }
+                </section>
+            }
+
             @if (_isPlanner)
             {
                 <section>
