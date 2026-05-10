@@ -91,7 +91,7 @@
                                                 {
                                                     <div class="pd-sidebar-journey">
                                                         <span class="pd-sidebar-journey-name">@item.Journey.Name</span>
-                                                        <span class="pd-sidebar-journey-dates">@item.Journey.Start.ToString("dd MMM") – @item.Journey.End.ToString("dd MMM")</span>
+                                                        <span class="pd-sidebar-journey-dates">@DateDisplay.FormatDate(item.Journey.Start) - @DateDisplay.FormatDate(item.Journey.End)</span>
                                                         @if (item.RankMatched.HasValue)
                                                         {
                                                             <span class="pd-sidebar-rank pd-sidebar-rank--@(item.RankMatched == 1 ? "1" : item.RankMatched == 2 ? "2" : "3")">
@@ -135,7 +135,7 @@
                                     if (warnedJourney is null) continue;
                                     <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true">
                                         <b>@warnedJourney.Name</b>
-                                        <span class="text-secondary ms-1">(@warnedJourney.Start.ToString("dd MMM") – @warnedJourney.End.ToString("dd MMM yyyy"))</span>
+                                        <span class="text-secondary ms-1">(@DateDisplay.FormatDate(warnedJourney.Start) - @DateDisplay.FormatDate(warnedJourney.End))</span>
                                         — @kvp.Value
                                     </MudAlert>
                                 }

@@ -1,4 +1,5 @@
 using Kaaiman_reizen.Data.Entities;
+using Kaaiman_reizen.Helpers;
 using Kaaiman_reizen.Models.ViewModels;
 
 namespace Kaaiman_reizen.Extensions;
@@ -12,7 +13,7 @@ public static class TravelLeaderExtensions
             ? "-"
             : string.Join("; ", periods
                 .OrderBy(p => p.Start)
-                .Select(p => $"{p.Start:dd MMM} - {p.End:dd MMM}"));
+                .Select(p => $"{DateDisplay.FormatDate(p.Start)} - {DateDisplay.FormatDate(p.End)}"));
 
         return new TravelLeaderViewModel
         {

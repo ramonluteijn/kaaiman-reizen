@@ -4,7 +4,9 @@ using Kaaiman_reizen.Components.Pages.Planner.Components;
 using Kaaiman_reizen.Services;
 using Kaaiman_reizen.Data.Services;
 using Kaaiman_reizen.Data.Entities;
+using Kaaiman_reizen.Helpers;
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 using MudBlazor;
 
 namespace Kaaiman_reizen.Components.Pages.Planner;
@@ -20,32 +22,66 @@ public partial class PlannerDraft : ComponentBase
     [Inject] private IPlanningService PlanningService { get; set; } = default!;
     [Inject] private IRuleService RuleService { get; set; } = default!;
     [Inject] private ISnackbar Snackbar { get; set; } = default!;
+    [Inject] private IJSRuntime JS { get; set; } = default!;
 
     private int _selectedYear = DateTime.UtcNow.Year;
     private PlannerDraftRequest? _request;
-    private PlannerDraftResult?  _result;
-    private bool _loading            = true;
-    private bool _isGenerating       = false;
-    private bool _isSaving           = false;
-    private bool _showEntryModal     = true;
+    private PlannerDraftResult? _result;
+    private bool _loading = true;
+    private bool _isGenerating = false;
+    private bool _isSaving = false;
+    private bool _showEntryModal = true;
     private bool _entryActionInProgress;
-    private string?   _saveMessage;
-    private Severity  _saveMessageSeverity = Severity.Info;
+    private string? _saveMessage;
+    private Severity _saveMessageSeverity = Severity.Info;
     private List<PlanningVersion> _availableDrafts = [];
     private int? _selectedDraftId;
     private CancellationTokenSource? _saveMessageCts;
     private Kaaiman_reizen.Data.Rules.CheckRules.RuleSettings _ruleSettings =
         Kaaiman_reizen.Data.Rules.CheckRules.GetDefaultSettings();
-    private bool                  _drawerOpen         = false;
-    private JourneyViewModel?     _selectedJourney;
+    private bool _drawerOpen = false;
+    private JourneyViewModel? _selectedJourney;
     private List<LeaderCandidate> _selectedCandidates = [];
     private bool _sidebarOpen = true;
     private bool _noteModalOpen;
     private LeaderPlanningRow? _selectedLeaderRow;
+    private int _userTimezoneOffsetMinutes;
+    private bool _userTimezoneOffsetLoaded;
 
     protected override async Task OnInitializedAsync()
     {
         await LoadDataForYearAsync(_selectedYear);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        await EnsureUserTimezoneOffsetAsync();
+    }
+
+    private async Task EnsureUserTimezoneOffsetAsync()
+    {
+        if (_userTimezoneOffsetLoaded) return;
+
+        try
+        {
+            _userTimezoneOffsetMinutes = await JS.InvokeAsync<int>("kaaimanDateTime.getTimezoneOffsetMinutes");
+        }
+        catch
+        {
+            _userTimezoneOffsetMinutes = 0;
+        }
+        finally
+        {
+            _userTimezoneOffsetLoaded = true;
+        }
+    }
+
+    private async Task<DateTime> GetUserLocalNowAsync()
+    {
+        await EnsureUserTimezoneOffsetAsync();
+        return DateDisplay.ToUserLocal(DateTime.UtcNow, _userTimezoneOffsetMinutes);
     }
 
     private async Task LoadDataForYearAsync(int year)
@@ -152,8 +188,8 @@ public partial class PlannerDraft : ComponentBase
 
                 assignmentsForJourney.Add(new JourneyAssignmentResult
                 {
-                    LeaderId    = assignment.TravelLeaderId,
-                    LeaderName  = leader.Name,
+                    LeaderId = assignment.TravelLeaderId,
+                    LeaderName = leader.Name,
                     RankMatched = rank
                 });
             }
@@ -171,8 +207,8 @@ public partial class PlannerDraft : ComponentBase
         public string LeaderName => Leader.Name;
         public Dictionary<string, int> Preferences => Leader.PreferredDestinations;
     }
-    
-    
+
+
 
     private List<LeaderPlanningRow> BuildLeaderRows()
     {
@@ -183,7 +219,7 @@ public partial class PlannerDraft : ComponentBase
             _result.JourneyAssignments
                 .Where(kvp => kvp.Value.Any(a => a.LeaderId == leader.Id))
                 .Select(kvp => (
-                    Journey:     _request.Journeys.First(j => j.Id == kvp.Key),
+                    Journey: _request.Journeys.First(j => j.Id == kvp.Key),
                     RankMatched: kvp.Value.First(a => a.LeaderId == leader.Id).RankMatched
                 ))
                 .ToList()
@@ -228,12 +264,12 @@ public partial class PlannerDraft : ComponentBase
 
             return new JourneyViewModel
             {
-                Id              = j.Id,
-                Name            = j.Name,
-                Start           = j.Start,
-                End             = j.End,
+                Id = j.Id,
+                Name = j.Name,
+                Start = j.Start,
+                End = j.End,
                 RequiredLeaders = j.RequiredLeaders,
-                TravelLeaders   = leaders
+                TravelLeaders = leaders
             };
         }).ToList();
     }
