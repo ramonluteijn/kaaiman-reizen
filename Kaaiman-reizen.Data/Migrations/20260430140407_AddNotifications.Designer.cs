@@ -4,6 +4,7 @@ using Kaaiman_reizen.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Kaaiman_reizen.Data.Migrations
 {
     [DbContext(typeof(MainContext))]
-    partial class MainContextModelSnapshot : ModelSnapshot
+    [Migration("20260430140407_AddNotifications")]
+    partial class AddNotifications
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -43,7 +46,7 @@ namespace Kaaiman_reizen.Data.Migrations
 
                     b.HasIndex("TravelLeaderId");
 
-                    b.ToTable("AvailabilityPeriods", (string)null);
+                    b.ToTable("AvailabilityPeriods");
 
                     b.HasData(
                         new
@@ -94,7 +97,7 @@ namespace Kaaiman_reizen.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Journey", (string)null);
+                    b.ToTable("Journey");
 
                     b.HasData(
                         new
@@ -168,7 +171,7 @@ namespace Kaaiman_reizen.Data.Migrations
 
                     b.HasIndex("TravelLeaderId");
 
-                    b.ToTable("JourneyTravelLeaders", (string)null);
+                    b.ToTable("JourneyTravelLeaders");
 
                     b.HasData(
                         new
@@ -209,7 +212,7 @@ namespace Kaaiman_reizen.Data.Migrations
 
                     b.HasIndex("ApplicationUserId");
 
-                    b.ToTable("Notifications", (string)null);
+                    b.ToTable("Notifications");
                 });
 
             modelBuilder.Entity("Kaaiman_reizen.Data.Entities.PlanningAssignment", b =>
@@ -237,7 +240,7 @@ namespace Kaaiman_reizen.Data.Migrations
 
                     b.HasIndex("TravelLeaderId");
 
-                    b.ToTable("PlanningAssignments", (string)null);
+                    b.ToTable("PlanningAssignments");
                 });
 
             modelBuilder.Entity("Kaaiman_reizen.Data.Entities.PlanningVersion", b =>
@@ -263,7 +266,7 @@ namespace Kaaiman_reizen.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("PlanningVersions", (string)null);
+                    b.ToTable("PlanningVersions");
                 });
 
             modelBuilder.Entity("Kaaiman_reizen.Data.Entities.PreferredDestination", b =>
@@ -288,7 +291,7 @@ namespace Kaaiman_reizen.Data.Migrations
 
                     b.HasIndex("TravelLeaderId");
 
-                    b.ToTable("PreferredDestinations", (string)null);
+                    b.ToTable("PreferredDestinations");
 
                     b.HasData(
                         new
@@ -362,7 +365,7 @@ namespace Kaaiman_reizen.Data.Migrations
                     b.HasIndex("Key")
                         .IsUnique();
 
-                    b.ToTable("Rule", (string)null);
+                    b.ToTable("Rule");
 
                     b.HasData(
                         new
@@ -431,7 +434,7 @@ namespace Kaaiman_reizen.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("TravelLeader", (string)null);
+                    b.ToTable("TravelLeader");
 
                     b.HasData(
                         new
