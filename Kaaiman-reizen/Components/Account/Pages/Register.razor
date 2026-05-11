@@ -1,6 +1,15 @@
 ﻿@page "/Account/Register"
 @layout AuthLayout
+@inject NavigationManager NavigationManager
 
+@code {
+    protected override void OnInitialized()
+    {
+        NavigationManager.NavigateTo("Account/Login");
+    }
+}
+
+@* 
 @using System.ComponentModel.DataAnnotations
 @using System.Text
 @using System.Text.Encodings.Web
@@ -149,4 +158,4 @@
         [Compare("Password", ErrorMessage = "Wachtwoorden komen niet overeen...")]
         public string ConfirmPassword { get; set; } = "";
     }
-}
+} *@
