@@ -4,6 +4,7 @@
 @inject IJourneyService JourneyService
 @inject ITravelLeaderService LeaderService
 @inject NavigationManager Navigation
+@rendermode InteractiveServer
 
 <PageTitle>Nieuwe reis</PageTitle>
 
@@ -74,9 +75,7 @@
 </div>
 
 @code {
-    [SupplyParameterFromForm]
     private Journey _model { get; set; } = new();
-
     private string[] _preferred = new string[3];
     private List<TravelLeader> _leaders = new();
     private List<int> _selectedLeaderIds = new();
