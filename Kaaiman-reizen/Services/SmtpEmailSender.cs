@@ -33,7 +33,7 @@ public class SmtpEmailSender : IEmailSender, IEmailSender<ApplicationUser>
                 Credentials = new NetworkCredential(_settings.Username, _settings.Password),
                 EnableSsl = true
             };
-            
+
             var senderEmail = !string.IsNullOrEmpty(_settings.SenderEmail) ? _settings.SenderEmail : _settings.Username;
             var fromAddress = new MailAddress(senderEmail, _settings.SenderName);
 
