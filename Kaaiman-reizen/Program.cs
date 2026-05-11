@@ -119,7 +119,7 @@ builder.Services.AddAuthorization();
 var google = builder.Configuration.GetSection("Authentication:Google");
 var microsoft = builder.Configuration.GetSection("Authentication:Microsoft");
 
-authBuilder.AddGoogle(options => 
+authBuilder.AddGoogle(options =>
     {
         options.ClientId = google["ClientId"]!;
         options.ClientSecret = google["ClientSecret"]!;
