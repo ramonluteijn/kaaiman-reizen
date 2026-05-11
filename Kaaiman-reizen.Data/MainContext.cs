@@ -115,10 +115,12 @@ public class MainContext : IdentityDbContext<ApplicationUser>
                 right => right
                     .HasOne(join => join.TravelLeader)
                     .WithMany()
+                    .OnDelete(DeleteBehavior.Cascade)
                     .HasForeignKey(join => join.TravelLeaderId),
                 left => left
                     .HasOne(join => join.Journey)
                     .WithMany()
+                    .OnDelete(DeleteBehavior.Cascade)
                     .HasForeignKey(join => join.JourneyId),
                 join =>
                 {
