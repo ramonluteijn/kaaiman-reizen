@@ -74,11 +74,11 @@ public class MainContext : IdentityDbContext<ApplicationUser>
         );
 
         builder.Entity<Journey>().HasData(
-            new Journey { Id = 1, Name = "Italië",      Start = new DateOnly(2026, 7, 1),  End = new DateOnly(2026, 7, 14), Busses = 1, Travelers = 10, RequiredLeaders = 1, BookingStatus = BookingStatus.Bezig },
-            new Journey { Id = 2, Name = "Spanje",      Start = new DateOnly(2026, 3, 10), End = new DateOnly(2026, 3, 20), Busses = 2, Travelers = 15, RequiredLeaders = 1, BookingStatus = BookingStatus.Bezig },
-            new Journey { Id = 3, Name = "Oostenrijk",  Start = new DateOnly(2026, 3, 25), End = new DateOnly(2026, 4, 3),  Busses = 1, Travelers = 8,  RequiredLeaders = 1, BookingStatus = BookingStatus.Geweest },
-            new Journey { Id = 4, Name = "Griekenland", Start = new DateOnly(2026, 4, 5),  End = new DateOnly(2026, 4, 15), Busses = 3, Travelers = 25, RequiredLeaders = 2, BookingStatus = BookingStatus.Geanuleerd },
-            new Journey { Id = 5, Name = "Kroatië",     Start = new DateOnly(2026, 4, 28), End = new DateOnly(2026, 5, 10), Busses = 2, Travelers = 12, RequiredLeaders = 1, BookingStatus = BookingStatus.Geanuleerd }
+            new Journey { Id = 1, Name = "Italië", Start = new DateOnly(2026, 7, 1), End = new DateOnly(2026, 7, 14), Busses = 1, Travelers = 10, RequiredLeaders = 1, BookingStatus = BookingStatus.Bezig },
+            new Journey { Id = 2, Name = "Spanje", Start = new DateOnly(2026, 3, 10), End = new DateOnly(2026, 3, 20), Busses = 2, Travelers = 15, RequiredLeaders = 1, BookingStatus = BookingStatus.Bezig },
+            new Journey { Id = 3, Name = "Oostenrijk", Start = new DateOnly(2026, 3, 25), End = new DateOnly(2026, 4, 3), Busses = 1, Travelers = 8, RequiredLeaders = 1, BookingStatus = BookingStatus.Geweest },
+            new Journey { Id = 4, Name = "Griekenland", Start = new DateOnly(2026, 4, 5), End = new DateOnly(2026, 4, 15), Busses = 3, Travelers = 25, RequiredLeaders = 2, BookingStatus = BookingStatus.Geanuleerd },
+            new Journey { Id = 5, Name = "Kroatië", Start = new DateOnly(2026, 4, 28), End = new DateOnly(2026, 5, 10), Busses = 2, Travelers = 12, RequiredLeaders = 1, BookingStatus = BookingStatus.Geanuleerd }
         );
 
         builder.Entity<JourneyTravelLeader>().HasData(
