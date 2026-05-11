@@ -122,7 +122,7 @@ public class TravelLeaderService : ITravelLeaderService
             .Include(tl => tl.Journeys)
             .ToListAsync();
 
-        List<OverlapData> overlaps = new ();
+        List<OverlapData> overlaps = new();
 
         travelLeadersWithJourneys.ForEach(travelLeader =>
         {
