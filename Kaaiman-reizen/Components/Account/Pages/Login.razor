@@ -30,7 +30,7 @@
                     <div class="form-floating mb-5">
                         <InputText @bind-Value="Input.Email" class="form-control rounded-3" autocomplete="username" />
                         <label>E-mailadres</label>
-                        <ValidationMessage For="() => Input.Email" class="text-danger" />
+                        <ValidationMessage For="() => Input.Email" class="text-danger mt-2" />
                     </div>
 
                     <div class="form-floating position-relative mb-5">
@@ -48,8 +48,7 @@
                                 style="z-index: 10; width: 48px; background: transparent; outline: none !important; box-shadow: none !important;">
                             <span class="material-icons" style="font-size: 1.25rem; color:grey">visibility</span>
                         </button>
-
-                        <ValidationMessage For="() => Input.Password" class="text-danger" />
+                        <ValidationMessage For="() => Input.Password" class="text-danger mt-2" />
                     </div>
 
                     <div class="d-flex flex-column flex-sm-row justify-content-sm-between align-items-sm-center mb-5 gap-2">
@@ -147,7 +146,7 @@
     private sealed class InputModel
     {
         [Required(ErrorMessage = "Vul een e-mailadres in")]
-        [EmailAddress(ErrorMessage = "Dit is geen geldig e-mailadres")]
+        [EmailAddress(ErrorMessage = "Vul een geldig e-mailadres in")]
         public string Email { get; set; } = "";
 
         [Required(ErrorMessage = "Vul een wachtwoord in")]

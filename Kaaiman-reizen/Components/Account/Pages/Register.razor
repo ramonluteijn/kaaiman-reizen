@@ -24,7 +24,7 @@
         <div class="card rounded-4 border-0 shadow-lg">
             <div class="card-body p-5">
                 
-                <img src="images/Kaaiman-reizen-logo.webp" class="navbar-brand img-fluid mb-5 auth-logo" alt="Logo Kaaiman-reizen" />
+                <img src="images/Kaaiman-reizen-logo.webp" class="navbar-brand img-fluid auth-logo mb-5" alt="Logo Kaaiman-reizen" />
 
                 <StatusMessage Message="@Message" />
 
@@ -34,19 +34,19 @@
                     <div class="form-floating mb-5">
                         <InputText @bind-Value="Input.Email" class="form-control rounded-3" autocomplete="username" aria-required="true" />
                         <label>E-mailadres</label>
-                        <ValidationMessage For="() => Input.Email" class="text-danger" />
+                        <ValidationMessage For="() => Input.Email" class="text-danger mt-2" />
                     </div>
 
                     <div class="form-floating mb-5">
                         <InputText type="password" @bind-Value="Input.Password" class="form-control rounded-3" autocomplete="new-password" aria-required="true" />
                         <label>Wachtwoord</label>
-                        <ValidationMessage For="() => Input.Password" class="text-danger" />
+                        <ValidationMessage For="() => Input.Password" class="text-danger mt-2" />
                     </div>
 
                     <div class="form-floating mb-5">
                         <InputText type="password" @bind-Value="Input.ConfirmPassword" class="form-control rounded-3" autocomplete="new-password" aria-required="true" />
                         <label>Bevestig wachtwoord</label>
-                        <ValidationMessage For="() => Input.ConfirmPassword" class="text-danger" />
+                        <ValidationMessage For="() => Input.ConfirmPassword" class="text-danger mt-2" />
                     </div>
 
                     <button type="submit" class="w-100 btn btn-dark btn-lg rounded-3 mb-5 mt-5 py-2">Account aanmaken</button>
