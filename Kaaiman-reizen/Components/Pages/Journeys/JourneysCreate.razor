@@ -74,7 +74,9 @@
 </div>
 
 @code {
-    private Journey _model = new();
+    [SupplyParameterFromForm]
+    private Journey _model { get; set; } = new();
+
     private string[] _preferred = new string[3];
     private List<TravelLeader> _leaders = new();
     private List<int> _selectedLeaderIds = new();
