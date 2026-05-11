@@ -7,9 +7,10 @@
 }
 else if (!string.IsNullOrWhiteSpace(Error))
 {
-    <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">
-        <MudText Typo="Typo.body2" Class="data-loader-error-text">@Error</MudText>
-    </MudAlert>
+    <AlertModal IsOpen="true"
+                Title="Laadfout"
+                Severity="Severity.Error"
+                Message="@Error" />
 }
 else if (Items.Count == 0)
 {

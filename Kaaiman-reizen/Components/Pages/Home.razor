@@ -22,22 +22,32 @@ else
 {
     <AuthorizeView>
         <NotAuthorized>
-            <div class="alert alert-info">
-                Log in om jouw planningsoverzicht te bekijken.
-            </div>
+            <AlertModal IsOpen="true"
+                        Title="Planningsoverzicht"
+                        Severity="Severity.Info"
+                        Message="Log in om jouw planningsoverzicht te bekijken." />
         </NotAuthorized>
         <Authorized>
             @if (_notifications.Any())
             {
-                <section class="mb-4">
-                    <MudText Typo="Typo.h6" Class="mb-3">Notificaties</MudText>
-                    @foreach (var notification in _notifications)
-                    {
-                        <MudAlert Severity="Severity.Info" ShowCloseIcon="true" CloseIconClicked="@(() => MarkNotificationAsRead(notification))" Class="mb-2">
-                            @notification.Message
-                        </MudAlert>
-                    }
-                </section>
+                <AlertModal IsOpen="true"
+                            Title="Notificaties"
+                            Severity="Severity.Info"
+                            Dismissible="false"
+                            CloseOnBackdropClick="false">
+                    <MudStack Spacing="1">
+                        @foreach (var notification in _notifications)
+                        {
+                            <MudPaper Class="pa-3 d-flex align-center justify-space-between gap-3" Outlined="true">
+                                <MudText Typo="Typo.body2">@notification.Message</MudText>
+                                <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                               Size="Size.Small"
+                                               OnClick="@(() => MarkNotificationAsRead(notification))"
+                                               aria-label="Melding sluiten" />
+                            </MudPaper>
+                        }
+                    </MudStack>
+                </AlertModal>
             }
 
             @if (_isPlanner)
@@ -117,9 +127,10 @@ else
 
                                     @if (!_journeysWithoutTravelLeaders.Any())
                                     {
-                                        <MudAlert Severity="Severity.Success" Variant="Variant.Outlined" Dense="true">
-                                            Alle reizen zijn voorzien van reisleiders.
-                                        </MudAlert>
+                                        <AlertModal IsOpen="true"
+                                                    Title="Reisplanning compleet"
+                                                    Severity="Severity.Success"
+                                                    Message="Alle reizen zijn voorzien van reisleiders." />
                                     }
                                     else
                                     {
