@@ -4,7 +4,7 @@
 <div class="d-flex flex-column nav-shell">
     <div class="border-bottom p-3 nav-brand d-flex align-items-center">
         <div class="d-flex flex-grow-1">
-            <a href="/">
+            <a href="/" @onclick="CloseMenu">
                 <img src="images/kaaiman-logo-footer-1920x405.png.webp" class="navbar-brand img-fluid nav-brand-logo"
                      alt="Logo Kaaiman-reizen" />
             </a>
@@ -16,54 +16,23 @@
     </div>
 
     <div class="nav-scrollable flex-grow-1 @(navExpanded ? "" : "nav-collapsed")">
-        <nav class="nav flex-column flex-nowrap">
-
+        <nav class="nav flex-column h-100 flex-nowrap" @onclick="CloseMenu">
             <div class="nav-item">
                 <NavLink class="nav-link d-flex align-items-center rounded-0" href="" Match="NavLinkMatch.All">
                     <i class="bi bi-house-door-fill nav-icon me-3"></i> Home
                 </NavLink>
             </div>
-
-            <AuthorizeView Roles="Planner">
-                <div class="nav-item">
-                    <NavLink class="nav-link d-flex align-items-center rounded-0" href="travelleaders">
-                        <i class="bi bi-people-fill nav-icon me-3"></i> Reisleiders
-                    </NavLink>
-                </div>
-
-                <div class="nav-item">
-                    <NavLink class="nav-link d-flex align-items-center rounded-0" href="journeys">
-                        <i class="bi bi-compass-fill nav-icon me-3"></i> Reizen
-                    </NavLink>
-                </div>
-
-                <div class="nav-item">
-                    <NavLink class="nav-link d-flex align-items-center rounded-0" href="planner/draft">
-                        <i class="bi bi-calendar-check nav-icon me-3"></i> Planner
-                    </NavLink>
-                </div>
-
-                <div class="nav-item">
-                    <NavLink class="nav-link d-flex align-items-center rounded-0" href="rules">
-                        <i class="bi bi-gear-fill nav-icon me-3"></i> Regels
-                    </NavLink>
-                </div>
-            </AuthorizeView>
-
-            <AuthorizeView Roles="Reisleider">
-                <div class="nav-item">
-                    <NavLink class="nav-link d-flex align-items-center rounded-0" href="travelleaders/preferences">
-                        <i class="bi bi-journal-check nav-icon me-3"></i> Mijn Voorkeuren
-                    </NavLink>
-                </div>
-
-                <div class="nav-item">
-                    <NavLink class="nav-link d-flex align-items-center rounded-0" href="travelleaders/history">
-                        <i class="bi bi-clock-history nav-icon me-3"></i> Mijn Reisgeschiedenis
-                    </NavLink>
-                </div>
-            </AuthorizeView>
-
+            
+            @foreach (var route in routes)
+            {
+                <AuthorizeView Roles="@route.role">
+                    <div class="nav-item">
+                        <NavLink class="nav-link d-flex align-items-center rounded-0" href="@route.Path">
+                            <i class="@route.Icon nav-icon me-3"></i> @route.Label
+                        </NavLink>
+                    </div>
+                </AuthorizeView>
+            }
         </nav>
     </div>
 
@@ -99,9 +68,23 @@
 
 @code {
     private bool navExpanded = false;
-
+    private List<(string Path, string Label, string Icon, string role)> routes =
+    [
+        ("/travelleaders", "Reisleiders", "bi bi-people-fill", "Planner"),
+        ("/journeys", "Reizen", "bi bi-compass-fill", "Planner"),
+        ("/planner/draft", "Planner", "bi bi-calendar-check", "Planner"),
+        ("/rules", "Regels", "bi bi-gear-fill", "Planner"),
+        ("/travelleaders/preferences", "Mijn Voorkeuren", "bi bi-journal-check", "Reisleider"),
+        ("/travelleaders/history", "Mijn Reisgeschiedenis", "bi bi-clock-history", "Reisleider")
+    ];
+    
     private void ToggleNav()
     {
         navExpanded = !navExpanded;
+    }
+
+    private void CloseMenu()
+    {
+        navExpanded = false;
     }
 }
