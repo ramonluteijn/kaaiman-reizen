@@ -143,24 +143,4 @@ public partial class TravelLeaders
     {
         return $"/journeys/edit/{journeyId}";
     }
-
-    private async Task ToggleActive(TravelLeaderViewModel? leader)
-    {
-        if (leader == null)
-            return;
-
-        var entity = await LeaderService.GetTravelLeaderByIdAsync(leader.Id);
-        if (entity != null)
-        {
-            entity.IsActive = !entity.IsActive;
-            await LeaderService.UpdateTravelLeaderAsync(entity);
-
-            var idx = _leaders.FindIndex(l => l.Id == leader.Id);
-            if (idx >= 0)
-            {
-                _leaders[idx] = entity.ToViewModel();
-                StateHasChanged();
-            }
-        }
-    }
 }
