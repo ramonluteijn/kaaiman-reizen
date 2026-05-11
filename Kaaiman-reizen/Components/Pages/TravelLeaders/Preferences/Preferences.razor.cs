@@ -1,10 +1,11 @@
+using Kaaiman_reizen.Data.Entities;
+using Kaaiman_reizen.Data.Services;
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Kaaiman_reizen.Data.Entities;
-using Kaaiman_reizen.Data.Services;
-using Microsoft.AspNetCore.Components;
 
 namespace Kaaiman_reizen.Components.Pages.TravelLeaders.Preferences;
 
@@ -15,6 +16,9 @@ public partial class Preferences : ComponentBase
 
     [Inject]
     private NavigationManager Navigation { get; set; } = default!;
+
+    [Inject]
+    private AuthenticationStateProvider _authProvider { get; set; } = default!;
 
     [Parameter]
     public int? Id { get; set; }
@@ -37,16 +41,23 @@ public partial class Preferences : ComponentBase
         _notFound = false;
 
         TravelLeader? item = null;
-        if (Id.HasValue && Id.Value > 0)
+
+        var authState = await _authProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        bool isPlanner = user.IsInRole("Planner");
+
+        if (isPlanner && Id.HasValue && Id.Value > 0)
         {
             item = await LeaderService.GetTravelLeaderByIdAsync(Id.Value);
         }
         else
         {
-            var all = await LeaderService.GetTravelLeadersAsync();
-            item = all.FirstOrDefault();
-            if (item != null)
-                Id = item.Id;
+            var email = authState.User.Identity?.Name;
+
+            if (!string.IsNullOrEmpty(email))
+            {
+                item = await LeaderService.GetTravelLeaderByEmailAsync(email);
+            }
         }
 
         if (item == null)

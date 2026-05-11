@@ -12,7 +12,11 @@ public partial class TravelLeadersCreate : ComponentBase
     [Inject]
     private NavigationManager Navigation { get; set; } = default!;
 
+    [Inject]
+    private AccountService _accountService { get; set; } = default!;
+
     private TravelLeader _model = new();
+    private string _email = string.Empty;
     private string[] _preferred = new string[3];
     private List<PeriodModel> _periods = new();
 
@@ -57,6 +61,16 @@ public partial class TravelLeadersCreate : ComponentBase
             .ToList();
 
         await LeaderService.AddTravelLeaderAsync(_model);
-        Navigation.NavigateTo("/travelleaders");
+
+        try
+        {
+            await _accountService.CreateIdentityUserForTravelLeaderAsync(_model.Email, _model.PhoneNumber, _model.Name, _model.Id);
+
+            Navigation.NavigateTo("/travelleaders");
+        }
+        catch (Exception ex)
+        {
+            // TODO
+        }
     }
 }

@@ -37,6 +37,7 @@ public class MainContext : IdentityDbContext<ApplicationUser>
             {
                 Id = 1,
                 Name = "Jan de Vries",
+                Email = "j.devries@kaaiman.nl",
                 PhoneNumber = "06-12345678",
                 AmountOfTrips = 8,
                 MinTrips = 2,
@@ -48,6 +49,7 @@ public class MainContext : IdentityDbContext<ApplicationUser>
             {
                 Id = 2,
                 Name = "Maria Jansen",
+                Email = "m.jansen@kaaiman.nl",
                 PhoneNumber = "06-87654321",
                 AmountOfTrips = 12,
                 MinTrips = 3,

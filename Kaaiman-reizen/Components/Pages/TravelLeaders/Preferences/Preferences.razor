@@ -1,4 +1,4 @@
-@page "/travelleaders/preferences"
+﻿@page "/travelleaders/preferences"
 @page "/travelleaders/preferences/{Id:int}"
 @rendermode InteractiveServer
 @using Kaaiman_reizen.Data.Entities
@@ -48,7 +48,7 @@
                     <InputTextArea class="form-control" @bind-Value="_model.Note" />
                 </div>
 
-                <div class="mb-3 form-check">
+                <div class="form-check mb-3">
                     <InputCheckbox class="form-check-input" @bind-Value="_model.IsActive" />
                     <label class="form-check-label">Actief</label>
                 </div>

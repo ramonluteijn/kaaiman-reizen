@@ -10,7 +10,12 @@ public class TravelLeader : IValidatableObject
     [Required(ErrorMessage = "Naam is verplicht.")]
     public string Name { get; set; } = string.Empty;
 
+    [Required(ErrorMessage = "E-mailadres is verplicht.")]
+    [EmailAddress(ErrorMessage = "Vul een geldig e-mailadres in.")]
+    public string Email { get; set; } = string.Empty;
+
     [Required(ErrorMessage = "Telefoon is verplicht.")]
+    [Phone(ErrorMessage = "Vul een geldig telefoonnummer in.")]
     public string PhoneNumber { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Aantal reizen is verplicht.")]

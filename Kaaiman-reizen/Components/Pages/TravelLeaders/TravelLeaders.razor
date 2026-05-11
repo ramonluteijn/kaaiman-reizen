@@ -26,6 +26,7 @@
                 <th @onclick='() => SortBy("Name")'>
                     Naam @(GetSortIcon("Name"))
                 </th>
+                <th>E-mailadres</th>
                 <th>Telefoon</th>
                 <th @onclick='() => SortBy("Experience")'>
                     Reizen Ervaring @(GetSortIcon("Experience"))
@@ -44,6 +45,7 @@
             </HeaderContent>
             <RowTemplate>
                 <td>@context.Name</td>
+                <td>@context.Email</td>
                 <td>@context.PhoneNumber</td>
                 <td>@context.AmountOfTrips</td>
                 <td>@context.MinTrips</td>
