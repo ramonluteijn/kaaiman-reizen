@@ -4,6 +4,7 @@
 @inject IJourneyService JourneyService
 @inject ITravelLeaderService LeaderService
 @inject NavigationManager Navigation
+@rendermode InteractiveServer
 
 <PageTitle>Bewerk reis</PageTitle>
 
@@ -70,7 +71,10 @@
                     <select multiple class="form-control mb-3 app-multiselect" @onchange="OnLeadersChanged">
                         @foreach (var leader in _leaders)
                         {
-                            <option value="@leader.Id">@leader.Name</option>
+                            <option value="@leader.Id"
+                                    selected="@_selectedLeaderIds.Contains(leader.Id)">
+                                @leader.Name
+                            </option>
                         }
                     </select>
                 </div>
