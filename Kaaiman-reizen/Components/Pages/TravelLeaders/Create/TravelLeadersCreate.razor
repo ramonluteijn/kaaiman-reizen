@@ -9,6 +9,14 @@
 
 <h1 class="h4">Nieuwe reisleider</h1>
 
+  @if (!string.IsNullOrEmpty(_errorMessage))
+{
+    <div class="alert alert-danger alert-dismissible fade show my-4" role="alert" id="error-alert">
+        <strong>Oeps!</strong> @_errorMessage
+        <button type="button" class="btn-close" @onclick="() => _errorMessage = null" aria-label="Close"></button>
+    </div>
+}
+
 <div class="card">
     <div class="card-body">
         <EditForm Model="_model" OnValidSubmit="HandleValidSubmit" FormName="CreateTravelLeaderForm">
@@ -126,5 +134,3 @@
         </EditForm>
     </div>
 </div>
-
-

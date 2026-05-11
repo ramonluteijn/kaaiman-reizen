@@ -1,6 +1,7 @@
 using Kaaiman_reizen.Data.Entities;
 using Kaaiman_reizen.Data.Services;
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 
 namespace Kaaiman_reizen.Components.Pages.TravelLeaders.Create;
 
@@ -10,10 +11,15 @@ public partial class TravelLeadersCreate : ComponentBase
     private ITravelLeaderService LeaderService { get; set; } = default!;
 
     [Inject]
+    private IJSRuntime JS { get; set; } = default!;
+
+    [Inject]
     private NavigationManager Navigation { get; set; } = default!;
 
     [Inject]
     private AccountService _accountService { get; set; } = default!;
+
+    private string? _errorMessage;
 
     private TravelLeader _model = new();
     private string _email = string.Empty;
@@ -70,7 +76,10 @@ public partial class TravelLeadersCreate : ComponentBase
         }
         catch (Exception ex)
         {
-            // TODO
+            _errorMessage = ex.Message;
+            _model.Id = 0;
+            await JS.InvokeVoidAsync("window.scrollTo", new { top = 0, behavior = "smooth" });
+            StateHasChanged();
         }
     }
 }
