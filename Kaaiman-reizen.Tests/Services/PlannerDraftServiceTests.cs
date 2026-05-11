@@ -15,9 +15,9 @@ public class PlannerDraftServiceTests
             Journeys = [new PlannerJourneyInput { Id = 1, Name = "Noorwegen" }],
             Leaders = []
         };
-        
+
         var result = _service.GenerateDraft(request);
-        
+
         Assert.False(result.IsSuccess);
         Assert.Contains("Geen reisleiders", result.ErrorMessage);
     }
@@ -28,14 +28,14 @@ public class PlannerDraftServiceTests
         var request = new PlannerDraftRequest
         {
             Journeys = [
-                new PlannerJourneyInput 
-                { 
-                    Id = 10, Name = "Italië", RequiredLeaders = 1, 
-                    Start = new DateOnly(2026, 6, 1), End = new DateOnly(2026, 6, 10) 
+                new PlannerJourneyInput
+                {
+                    Id = 10, Name = "Italië", RequiredLeaders = 1,
+                    Start = new DateOnly(2026, 6, 1), End = new DateOnly(2026, 6, 10)
                 }
             ],
             Leaders = [
-                new PlannerLeaderInput 
+                new PlannerLeaderInput
                 {
                     Id = 99, Name = "Jan", MaxTrips = 5,
                     AvailabilityPeriods = [ (new DateOnly(2026, 5, 1), new DateOnly(2026, 7, 1)) ], // Ruim beschikbaar
@@ -44,7 +44,7 @@ public class PlannerDraftServiceTests
             ]
         };
         var result = _service.GenerateDraft(request);
-        
+
         Assert.True(result.IsSuccess);
         Assert.Single(result.JourneyAssignments[10]); // Er moet precies 1 toewijzing zijn
         Assert.Equal(99, result.JourneyAssignments[10].First().LeaderId); // Jan is toegewezen
@@ -56,24 +56,24 @@ public class PlannerDraftServiceTests
         var request = new PlannerDraftRequest
         {
             Journeys = [
-                new PlannerJourneyInput 
-                { 
-                    Id = 1, Name = "Spanje", RequiredLeaders = 1, 
+                new PlannerJourneyInput
+                {
+                    Id = 1, Name = "Spanje", RequiredLeaders = 1,
                     Start = new DateOnly(2026, 8, 1), End = new DateOnly(2026, 8, 15) // Reis in Augustus
                 }
             ],
             Leaders = [
-                new PlannerLeaderInput 
+                new PlannerLeaderInput
                 {
                     Id = 1, Name = "Piet", MaxTrips = 5,
                     AvailabilityPeriods = [ (new DateOnly(2026, 6, 1), new DateOnly(2026, 6, 30)) ] // Beschikbaar in Juni
                 }
             ]
         };
-        
+
         var result = _service.GenerateDraft(request);
-        
-        Assert.True(result.IsSuccess); 
+
+        Assert.True(result.IsSuccess);
         Assert.Empty(result.JourneyAssignments); // There is no that can be planned in
         Assert.True(result.JourneyWarnings.ContainsKey(1)); // There is a warning containing the problem.
     }
@@ -88,14 +88,14 @@ public class PlannerDraftServiceTests
                 new PlannerJourneyInput { Id = 2, Name = "Reis B", RequiredLeaders = 1, Start = new DateOnly(2026, 6, 20), End = new DateOnly(2026, 6, 30) }
             ],
             Leaders = [
-                new PlannerLeaderInput 
+                new PlannerLeaderInput
                 {
                     Id = 1, Name = "Klaas", MaxTrips = 1,
                     AvailabilityPeriods = [ (new DateOnly(2026, 1, 1), new DateOnly(2026, 12, 31)) ]
                 }
             ]
         };
-        
+
         var result = _service.GenerateDraft(request);
         Assert.True(result.IsSuccess);
         var totalAssignmentsForKlaas = result.JourneyAssignments.Values
