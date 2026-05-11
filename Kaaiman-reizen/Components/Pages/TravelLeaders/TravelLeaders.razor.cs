@@ -5,8 +5,6 @@ using Kaaiman_reizen.Helpers;
 using Kaaiman_reizen.Models.ViewModels;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Hosting;
-using Microsoft.JSInterop;
-using MudBlazor;
 
 namespace Kaaiman_reizen.Components.Pages.TravelLeaders;
 
@@ -14,9 +12,6 @@ public partial class TravelLeaders
 {
     [Inject]
     private ITravelLeaderService LeaderService { get; set; } = default!;
-
-    [Inject]
-    private IDialogService DialogService { get; set; } = default!;
 
     [Inject]
     private ILogger<TravelLeaders> Logger { get; set; } = default!;
@@ -30,6 +25,8 @@ public partial class TravelLeaders
     private string _searchTerm = string.Empty;
     private string _sortColumn = "Name";
     private bool _sortAscending = true;
+    private bool _isDeleteModalOpen;
+    private TravelLeaderViewModel? _leaderPendingDelete;
 
     protected override async Task OnInitializedAsync()
     {
@@ -96,16 +93,45 @@ public partial class TravelLeaders
         if (leader == null)
             return;
 
-        var parameters = new DialogParameters<DeleteTravelLeaderDialog>
-        {
-            { x => x.LeaderName, leader.Name }
-        };
-        var confirm = await JS.InvokeAsync<bool>("confirm", $"Weet je zeker dat je reisleider '{leader.Name}' wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.");
-        if (!confirm)
-            return;
+        _leaderPendingDelete = leader;
+        _isDeleteModalOpen = true;
+    }
 
-        await LeaderService.DeleteTravelLeaderAsync(leader.Id);
-        _leaders.RemoveAll(l => l.Id == leader.Id);
+    private string _deleteModalMessage => _leaderPendingDelete is null
+        ? "Weet je zeker dat je deze reisleider wilt verwijderen?"
+        : $"Weet je zeker dat je reisleider '{_leaderPendingDelete.Name}' wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.";
+
+    private Task HandleDeleteModalChanged(bool isOpen)
+    {
+        _isDeleteModalOpen = isOpen;
+        if (!isOpen)
+        {
+            _leaderPendingDelete = null;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private Task CloseDeleteModalAsync()
+    {
+        _isDeleteModalOpen = false;
+        _leaderPendingDelete = null;
+        return Task.CompletedTask;
+    }
+
+    private async Task ConfirmDeleteAsync()
+    {
+        if (_leaderPendingDelete is null)
+        {
+            return;
+        }
+
+        var leaderId = _leaderPendingDelete.Id;
+        await LeaderService.DeleteTravelLeaderAsync(leaderId);
+        _leaders.RemoveAll(l => l.Id == leaderId);
+
+        _isDeleteModalOpen = false;
+        _leaderPendingDelete = null;
     }
 
     private static string GetEditHref(TravelLeaderViewModel leader)

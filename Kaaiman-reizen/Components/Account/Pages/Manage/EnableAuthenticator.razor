@@ -39,7 +39,14 @@ else
             </li>
             <li>
                 <p>Scan the QR Code or enter this key <kbd>@sharedKey</kbd> into your two factor authenticator app. Spaces and casing do not matter.</p>
-                <div class="alert alert-info">Learn how to <a href="https://go.microsoft.com/fwlink/?Linkid=852423">enable QR code generation</a>.</div>
+                <AlertModal IsOpen="true"
+                            Title="QR code"
+                            Severity="Severity.Info"
+                            Message="Learn how to enable QR code generation.">
+                    <MudText Typo="Typo.body2">
+                        <a href="https://go.microsoft.com/fwlink/?Linkid=852423">Learn how to enable QR code generation</a>.
+                    </MudText>
+                </AlertModal>
                 <div></div>
                 <div data-url="@authenticatorUri"></div>
             </li>

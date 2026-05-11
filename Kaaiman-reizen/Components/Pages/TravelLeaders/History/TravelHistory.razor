@@ -14,7 +14,10 @@
         }
         else if (!string.IsNullOrWhiteSpace(_statusMessage))
         {
-            <div class="alert alert-info">@_statusMessage</div>
+            <AlertModal IsOpen="true"
+                        Title="Reisgeschiedenis"
+                        Severity="Severity.Info"
+                        Message="@_statusMessage" />
         }
         else
         {
