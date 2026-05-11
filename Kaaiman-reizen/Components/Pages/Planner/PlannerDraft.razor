@@ -30,17 +30,24 @@
         @if (!string.IsNullOrWhiteSpace(_saveMessage)
              && !_saveMessage.StartsWith("Concept geladen", System.StringComparison.OrdinalIgnoreCase))
         {
-            <MudAlert Severity="@_saveMessageSeverity" Variant="Variant.Outlined" Dense="true">
-                @_saveMessage
-            </MudAlert>
+            <AlertModal IsOpen="true"
+                        Title="Concept opslaan"
+                        Severity="@_saveMessageSeverity"
+                        Message="@_saveMessage" />
         }
 
         @if (_isGenerating)
         {
-            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
-                OR-Tools optimaliseert de planning...
+            <AlertModal IsOpen="true"
+                        Title="Planning genereren"
+                        Severity="Severity.Info"
+                        Dismissible="false"
+                        CloseOnBackdropClick="false">
+                <MudText Typo="Typo.body1">
+                    OR-Tools optimaliseert de planning...
+                </MudText>
                 <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mt-2" />
-            </MudAlert>
+            </AlertModal>
         }
         else if (_result != null)
         {
@@ -128,18 +135,23 @@
                     <div class="pd-main">
                         @if (_result.JourneyWarnings.Any())
                         {
-                            <MudStack Spacing="1" Class="mb-3">
+                            <AlertModal IsOpen="true"
+                                        Title="Waarschuwingen"
+                                        Severity="Severity.Warning">
+                                <MudStack Spacing="1">
                                 @foreach (var kvp in _result.JourneyWarnings)
                                 {
                                     var warnedJourney = _request!.Journeys.FirstOrDefault(j => j.Id == kvp.Key);
                                     if (warnedJourney is null) continue;
+
                                     <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true">
                                         <b>@warnedJourney.Name</b>
                                         <span class="text-secondary ms-1">(@DateDisplay.FormatDate(warnedJourney.Start) - @DateDisplay.FormatDate(warnedJourney.End))</span>
-                                        — @kvp.Value
+                                        - @kvp.Value
                                     </MudAlert>
                                 }
-                            </MudStack>
+                                </MudStack>
+                            </AlertModal>
                         }
                         <CalendarView Journeys="BuildCalendarJourneys()"
                                       OnJourneyClick="HandleJourneyClick" />
@@ -182,9 +194,10 @@
             }
             else if (!string.IsNullOrEmpty(_result.ErrorMessage))
             {
-                <MudAlert Severity="Severity.Error" Variant="Variant.Filled">
-                    <b>Genereren mislukt:</b> @_result.ErrorMessage
-                </MudAlert>
+                <AlertModal IsOpen="true"
+                            Title="Genereren mislukt"
+                            Severity="Severity.Error"
+                            Message="@_result.ErrorMessage" />
             }
         }
         }

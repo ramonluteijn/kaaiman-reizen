@@ -2,9 +2,10 @@
 @if (!string.IsNullOrEmpty(DisplayMessage))
 {
     var statusMessageClass = DisplayMessage.StartsWith("Error") ? "danger" : "success";
-    <div class="alert alert-@statusMessageClass" role="alert">
-        @DisplayMessage
-    </div>
+    <AlertModal IsOpen="true"
+                Title="Status"
+                Message="@DisplayMessage"
+                Severity="@(statusMessageClass == "danger" ? Severity.Error : Severity.Success)" />
 }
 
 @code {
