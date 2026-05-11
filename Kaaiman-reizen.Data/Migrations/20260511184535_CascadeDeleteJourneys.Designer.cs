@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Kaaiman_reizen.Data.Migrations
 {
     [DbContext(typeof(MainContext))]
-    [Migration("20260511182633_CascadeDeleteJourneys")]
+    [Migration("20260511184535_CascadeDeleteJourneys")]
     partial class CascadeDeleteJourneys
     {
         /// <inheritdoc />
@@ -703,7 +703,7 @@ namespace Kaaiman_reizen.Data.Migrations
                     b.HasOne("Kaaiman_reizen.Data.Entities.Journey", "Journey")
                         .WithMany()
                         .HasForeignKey("JourneyId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("Kaaiman_reizen.Data.Entities.PlanningVersion", "PlanningVersion")

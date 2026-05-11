@@ -700,7 +700,7 @@ namespace Kaaiman_reizen.Data.Migrations
                     b.HasOne("Kaaiman_reizen.Data.Entities.Journey", "Journey")
                         .WithMany()
                         .HasForeignKey("JourneyId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("Kaaiman_reizen.Data.Entities.PlanningVersion", "PlanningVersion")

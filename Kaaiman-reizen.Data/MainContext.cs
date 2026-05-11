@@ -139,7 +139,7 @@ public class MainContext : IdentityDbContext<ApplicationUser>
             .HasOne(assignment => assignment.Journey)
             .WithMany()
             .HasForeignKey(assignment => assignment.JourneyId)
-            .OnDelete(DeleteBehavior.Restrict);
+            .OnDelete(DeleteBehavior.Cascade);
 
         builder.Entity<PlanningAssignment>()
             .HasOne(assignment => assignment.TravelLeader)
