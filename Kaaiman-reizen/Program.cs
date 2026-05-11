@@ -94,6 +94,11 @@ authBuilder.AddGoogle(options =>
                     options.ClientSecret = google["ClientSecret"]!;
                     options.CallbackPath = "/login-google";
                     options.Events.OnTicketReceived = ExternalLoginHandler.HandleExternalLogin;
+                    options.Events.OnRedirectToAuthorizationEndpoint = context =>
+                    {
+                        context.Response.Redirect(context.RedirectUri + "&prompt=select_account");
+                        return Task.CompletedTask;
+                    };
                 })
                 .AddMicrosoftAccount(options =>
                 {

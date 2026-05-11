@@ -88,14 +88,18 @@
     {
         if (HttpMethods.IsGet(HttpContext.Request.Method))
         {
-            // Verwijder bestaande externe cookie voor een schone login
+            if (HttpContext.Request.Cookies.TryGetValue("ExternalLoginError", out var error))
+            {
+                errorMessage = error;
+                HttpContext.Response.Cookies.Delete("ExternalLoginError");
+            }
+
             await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
         }
     }
 
     public async Task LoginUser(EditContext editContext)
     {
-        // 1. Controleer op Passkey fouten
         if (!string.IsNullOrEmpty(Input.Passkey?.Error))
         {
             errorMessage = $"Error: {Input.Passkey.Error}";
@@ -104,14 +108,12 @@
 
         SignInResult result;
 
-        // 2. Probeer Passkey inlog
         if (!string.IsNullOrEmpty(Input.Passkey?.CredentialJson))
         {
             result = await SignInManager.PasskeySignInAsync(Input.Passkey.CredentialJson);
         }
         else
         {
-            // 3. Probeer Wachtwoord inlog (valideer eerst de velden)
             if (!editContext.Validate())
             {
                 return;
@@ -120,7 +122,6 @@
             result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
         }
 
-        // 4. Resultaat afhandeling
         if (result.Succeeded)
         {
             Logger.LogInformation("User logged in.");
