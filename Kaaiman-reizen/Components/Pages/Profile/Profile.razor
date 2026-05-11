@@ -48,7 +48,10 @@
 
                 @if (!string.IsNullOrEmpty(statusMessage))
                 {
-                    <div class="alert alert-@statusColor">@statusMessage</div>
+                    <AlertModal IsOpen="true"
+                                Title="Wachtwoord wijzigen"
+                                Severity="@(statusColor == "danger" ? Severity.Error : Severity.Success)"
+                                Message="@statusMessage" />
                 }
 
                 <EditForm Model="passwordModel" OnValidSubmit="ChangePassword" FormName="changePassword" Context="editContext">
@@ -82,9 +85,10 @@
                 </EditForm>
             </Authorized>
             <NotAuthorized>
-                <div class="alert alert-info">
-                    Log in om uw profiel te bekijken.
-                </div>
+                <AlertModal IsOpen="true"
+                            Title="Profiel"
+                            Severity="Severity.Info"
+                            Message="Log in om uw profiel te bekijken." />
             </NotAuthorized>
         </AuthorizeView>
     </div>
