@@ -33,9 +33,22 @@
                         <ValidationMessage For="() => Input.Email" class="text-danger" />
                     </div>
 
-                    <div class="form-floating mb-5">
-                        <InputText type="password" @bind-Value="Input.Password" class="form-control rounded-3" autocomplete="current-password" />
-                        <label>Wachtwoord</label>
+                    <div class="form-floating position-relative mb-5">
+                        <InputText type="password"
+                                   @bind-Value="Input.Password"
+                                   class="form-control rounded-3"
+                                   id="pw-field"
+                                   style="padding-right: 48px;" />
+
+                        <label for="pw-field">Wachtwoord</label>
+
+                        <button type="button"
+                                class="btn position-absolute h-100 d-flex align-items-center end-0 top-0 border-0 shadow-none"
+                                onclick="const el = document.getElementById('pw-field'); el.type = el.type === 'password' ? 'text' : 'password'; this.querySelector('.material-icons').textContent = el.type === 'password' ? 'visibility' : 'visibility_off';"
+                                style="z-index: 10; width: 48px; background: transparent; outline: none !important; box-shadow: none !important;">
+                            <span class="material-icons" style="font-size: 1.25rem; color:grey">visibility</span>
+                        </button>
+
                         <ValidationMessage For="() => Input.Password" class="text-danger" />
                     </div>
 
