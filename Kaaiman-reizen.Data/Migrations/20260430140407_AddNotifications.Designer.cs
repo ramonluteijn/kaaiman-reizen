@@ -4,6 +4,7 @@ using Kaaiman_reizen.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Kaaiman_reizen.Data.Migrations
 {
     [DbContext(typeof(MainContext))]
-    partial class MainContextModelSnapshot : ModelSnapshot
+    [Migration("20260430140407_AddNotifications")]
+    partial class AddNotifications
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -44,6 +47,22 @@ namespace Kaaiman_reizen.Data.Migrations
                     b.HasIndex("TravelLeaderId");
 
                     b.ToTable("AvailabilityPeriods");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            End = new DateOnly(2026, 7, 31),
+                            Start = new DateOnly(2026, 4, 1),
+                            TravelLeaderId = 1
+                        },
+                        new
+                        {
+                            Id = 2,
+                            End = new DateOnly(2026, 5, 31),
+                            Start = new DateOnly(2026, 3, 1),
+                            TravelLeaderId = 2
+                        });
                 });
 
             modelBuilder.Entity("Kaaiman_reizen.Data.Entities.Journey", b =>
@@ -79,6 +98,63 @@ namespace Kaaiman_reizen.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Journey");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            BookingStatus = 0,
+                            Busses = 1,
+                            End = new DateOnly(2026, 7, 14),
+                            Name = "Italië",
+                            RequiredLeaders = 1,
+                            Start = new DateOnly(2026, 7, 1),
+                            Travelers = 10
+                        },
+                        new
+                        {
+                            Id = 2,
+                            BookingStatus = 0,
+                            Busses = 2,
+                            End = new DateOnly(2026, 3, 20),
+                            Name = "Spanje",
+                            RequiredLeaders = 1,
+                            Start = new DateOnly(2026, 3, 10),
+                            Travelers = 15
+                        },
+                        new
+                        {
+                            Id = 3,
+                            BookingStatus = 1,
+                            Busses = 1,
+                            End = new DateOnly(2026, 4, 3),
+                            Name = "Oostenrijk",
+                            RequiredLeaders = 1,
+                            Start = new DateOnly(2026, 3, 25),
+                            Travelers = 8
+                        },
+                        new
+                        {
+                            Id = 4,
+                            BookingStatus = 2,
+                            Busses = 3,
+                            End = new DateOnly(2026, 4, 15),
+                            Name = "Griekenland",
+                            RequiredLeaders = 2,
+                            Start = new DateOnly(2026, 4, 5),
+                            Travelers = 25
+                        },
+                        new
+                        {
+                            Id = 5,
+                            BookingStatus = 2,
+                            Busses = 2,
+                            End = new DateOnly(2026, 5, 10),
+                            Name = "Kroatië",
+                            RequiredLeaders = 1,
+                            Start = new DateOnly(2026, 4, 28),
+                            Travelers = 12
+                        });
                 });
 
             modelBuilder.Entity("Kaaiman_reizen.Data.Entities.JourneyTravelLeader", b =>
@@ -96,6 +172,47 @@ namespace Kaaiman_reizen.Data.Migrations
                     b.HasIndex("TravelLeaderId");
 
                     b.ToTable("JourneyTravelLeaders");
+
+                    b.HasData(
+                        new
+                        {
+                            JourneyId = 2,
+                            TravelLeaderId = 1
+                        },
+                        new
+                        {
+                            JourneyId = 3,
+                            TravelLeaderId = 1
+                        });
+                });
+
+            modelBuilder.Entity("Kaaiman_reizen.Data.Entities.Notification", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ApplicationUserId")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationUserId");
+
+                    b.ToTable("Notifications");
                 });
 
             modelBuilder.Entity("Kaaiman_reizen.Data.Entities.PlanningAssignment", b =>
@@ -175,6 +292,50 @@ namespace Kaaiman_reizen.Data.Migrations
                     b.HasIndex("TravelLeaderId");
 
                     b.ToTable("PreferredDestinations");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Destination = "Italië",
+                            Rank = 1,
+                            TravelLeaderId = 1
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Destination = "Griekenland",
+                            Rank = 2,
+                            TravelLeaderId = 1
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Destination = "Kroatië",
+                            Rank = 3,
+                            TravelLeaderId = 1
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Destination = "Spanje",
+                            Rank = 1,
+                            TravelLeaderId = 2
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Destination = "Oostenrijk",
+                            Rank = 2,
+                            TravelLeaderId = 2
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Destination = "Griekenland",
+                            Rank = 3,
+                            TravelLeaderId = 2
+                        });
                 });
 
             modelBuilder.Entity("Kaaiman_reizen.Data.Entities.Rule", b =>
@@ -204,7 +365,7 @@ namespace Kaaiman_reizen.Data.Migrations
                     b.HasIndex("Key")
                         .IsUnique();
 
-                    b.ToTable("Rule", (string)null);
+                    b.ToTable("Rule");
 
                     b.HasData(
                         new
@@ -274,6 +435,30 @@ namespace Kaaiman_reizen.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("TravelLeader");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            AmountOfTrips = 8,
+                            IsActive = true,
+                            MaxTrips = 10,
+                            MinTrips = 2,
+                            Name = "Jan de Vries",
+                            Note = "",
+                            PhoneNumber = "06-12345678"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            AmountOfTrips = 12,
+                            IsActive = true,
+                            MaxTrips = 15,
+                            MinTrips = 3,
+                            Name = "Maria Jansen",
+                            Note = "",
+                            PhoneNumber = "06-87654321"
+                        });
                 });
 
             modelBuilder.Entity("Kaaiman_reizen.Data.Identity.ApplicationUser", b =>

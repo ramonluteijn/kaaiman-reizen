@@ -8,41 +8,56 @@ using Kaaiman_reizen.Helpers;
 using Kaaiman_reizen.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.HttpOverrides;
 using MudBlazor.Services;
 using QuestPDF.Infrastructure;
 
-// Licentie voor QuestPDF
 QuestPDF.Settings.License = LicenseType.Community;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// ======================
+// KEY VAULT
+// ======================
 var keyVaultUri = builder.Configuration["KeyVault:VaultUri"];
 
-if (string.IsNullOrWhiteSpace(keyVaultUri) is false)
-    builder.Configuration.AddAzureKeyVault(new Uri(keyVaultUri), new DefaultAzureCredential());
+if (!string.IsNullOrWhiteSpace(keyVaultUri))
+{
+    builder.Configuration.AddAzureKeyVault(
+        new Uri(keyVaultUri),
+        new DefaultAzureCredential()
+    );
+}
 
+// ======================
+// DATABASE
+// ======================
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 if (string.IsNullOrWhiteSpace(connectionString))
+{
     throw new InvalidOperationException(
-        "Connection string 'DefaultConnection' is missing or empty.\n\n" +
-        "Configure it using User Secrets (recommended for local development):\n" +
-        "  cd Kaaiman-reizen\n" +
-        "  dotnet user-secrets init\n" +
-        "  dotnet user-secrets set \"ConnectionStrings:DefaultConnection\" \"Server=localhost;Database=kaaiman_reizen;Uid=root;Pwd=;\"\n\n" +
-        "Alternatively set it in Kaaiman-reizen/appsettings.Development.json (not recommended to commit because of security reasons)."
+        "Connection string 'DefaultConnection' ontbreekt."
     );
+}
 
 builder.Services.AddMainContext(connectionString);
 builder.Services.AddDataServices();
 builder.Services.AddDevSeeder(builder.Environment);
+
 builder.Services.AddMudServices();
 builder.Services.AddRazorPages();
 
-// Registreer deze service slechts 1x en BUITEN de authenticatie-blokken
+builder.Services.AddRazorComponents().AddInteractiveServerComponents();
+
+// ======================
+// SERVICES
+// ======================
 builder.Services.AddScoped<IPlannerDraftService, PlannerDraftService>();
 
-// De authBuilder zorgt voor de koppeling met je cookies en externe logins (Google/Microsoft)
+// ======================
+// AUTHENTICATION
+// ======================
 var authBuilder = builder.Services.AddAuthentication(options =>
 {
     options.DefaultScheme = IdentityConstants.ApplicationScheme;
@@ -51,7 +66,19 @@ var authBuilder = builder.Services.AddAuthentication(options =>
 
 authBuilder.AddIdentityCookies();
 
-// Add services to the container.
+// ======================
+// LIVE / OATH 
+// ======================
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.Cookie.SameSite = SameSiteMode.None;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.LoginPath = "/login";
+});
+
+// ======================
+// IDENTITY
+// ======================
 builder.Services.AddIdentityCore<ApplicationUser>(options =>
 {
     options.SignIn.RequireConfirmedAccount = true;
@@ -66,12 +93,26 @@ builder.Services.AddScoped<IdentityUserAccessor>();
 builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
 
-// TODO change for a real e-mailing server
-builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+builder.Services.Configure<Kaaiman_reizen.Services.SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
+
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddTransient<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender, Kaaiman_reizen.Services.ConsoleEmailSender>();
+    builder.Services.AddTransient<IEmailSender<ApplicationUser>, Kaaiman_reizen.Services.ConsoleEmailSender>();
+}
+else
+{
+    builder.Services.AddTransient<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender, Kaaiman_reizen.Services.SmtpEmailSender>();
+    builder.Services.AddTransient<IEmailSender<ApplicationUser>, Kaaiman_reizen.Services.SmtpEmailSender>();
+}
+
+builder.Services.AddScoped<IEmailDispatcher, Kaaiman_reizen.Services.EmailDispatcher>();
 
 builder.Services.AddAuthorization();
 
-// Add OAUTH for providers Google and Microsoft
+// ======================
+// OAUTH
+// ======================
 var google = builder.Configuration.GetSection("Authentication:Google");
 var microsoft = builder.Configuration.GetSection("Authentication:Microsoft");
 
@@ -101,8 +142,18 @@ builder.Services.AddRazorComponents()
 var app = builder.Build();
 
 await app.MigrateAndSeedAsync();
+// ======================
+// LIVE / SERVER
+// ======================
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
 
-// Configure the HTTP request pipeline.
+
+// ======================
+// PIPELINE
+// ======================
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
@@ -113,11 +164,15 @@ app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages:
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
+app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseAntiforgery();
 
+// ======================
+// ENDPOINTS
+// ======================
 app.MapStaticAssets();
 
 app.MapAdditionalIdentityEndpoints();

@@ -20,6 +20,7 @@ public class MainContext : IdentityDbContext<ApplicationUser>
     public DbSet<Rule> Rule { get; set; }
     public DbSet<PlanningVersion> PlanningVersions { get; set; }
     public DbSet<PlanningAssignment> PlanningAssignments { get; set; }
+    public DbSet<Notification> Notifications { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
