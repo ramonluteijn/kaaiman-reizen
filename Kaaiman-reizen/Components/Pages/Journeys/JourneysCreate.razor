@@ -1,6 +1,8 @@
 @page "/journeys/create"
 @using Kaaiman_reizen.Data.Entities
+@using Kaaiman_reizen.Data.Enum
 @using Kaaiman_reizen.Data.Services
+@rendermode InteractiveServer
 @inject IJourneyService JourneyService
 @inject ITravelLeaderService LeaderService
 @inject NavigationManager Navigation
@@ -11,7 +13,22 @@
 
 <div class="card">
     <div class="card-body">
-        <EditForm Model="_model" OnValidSubmit="HandleValidSubmit" FormName="CreateJourneyForm">
+        <div class="mb-3">
+            <label class="form-label">Start met een eerdere reis</label>
+            <InputSelect TValue="int?" class="form-control"
+                         Value="_selectedTemplateJourneyId"
+                         ValueChanged="OnTemplateChanged"
+                         ValueExpression="() => _selectedTemplateJourneyId">
+                <option value="">Geen (lege reis)</option>
+                @foreach (var journey in _journeys)
+                {
+                    <option value="@journey.Id">@journey.Name</option>
+                }
+            </InputSelect>
+            <small class="text-muted">Kies een vorige reis om dit formulier automatisch te vullen.</small>
+        </div>
+
+        <EditForm Model="_model" @key="_model" OnValidSubmit="HandleValidSubmit" FormName="CreateJourneyForm">
             <DataAnnotationsValidator />
 
             <div class="mb-3">
@@ -47,9 +64,10 @@
             <div class="mb-3">
                 <label class="form-label">Boekingsstatus</label>
                 <InputSelect class="form-control" @bind-Value="_model.BookingStatus">
-                    <option value=1>Bezig</option>
-                    <option value=2>Geweest</option>
-                    <option value=3>Geannuleerd</option>
+                    @foreach (var status in Enum.GetValues<BookingStatus>())
+                    {
+                        <option value="@status">@GetBookingStatusLabel(status)</option>
+                    }
                 </InputSelect>
                 <ValidationMessage For="() => _model.BookingStatus" />
             </div>
@@ -78,6 +96,39 @@
     private string[] _preferred = new string[3];
     private List<TravelLeader> _leaders = new();
     private List<int> _selectedLeaderIds = new();
+    private List<Journey> _journeys = new();
+    private int? _selectedTemplateJourneyId;
+
+    private void OnTemplateChanged(int? selectedJourneyId)
+    {
+        _selectedTemplateJourneyId = selectedJourneyId;
+        ApplySelectedTemplate();
+    }
+
+    private void ApplySelectedTemplate()
+    {
+        if (!_selectedTemplateJourneyId.HasValue)
+        {
+            _model = new Journey();
+            _selectedLeaderIds = new List<int>();
+            return;
+        }
+
+        var selectedJourney = _journeys.FirstOrDefault(j => j.Id == _selectedTemplateJourneyId.Value);
+        if (selectedJourney is null)
+            return;
+
+        _model = new Journey
+        {
+            Name = selectedJourney.Name,
+            Start = selectedJourney.Start,
+            End = selectedJourney.End,
+            Busses = selectedJourney.Busses,
+            Travelers = selectedJourney.Travelers,
+            BookingStatus = selectedJourney.BookingStatus,
+            RequiredLeaders = selectedJourney.RequiredLeaders
+        };
+    }
 
     private void OnLeadersChanged(ChangeEventArgs e)
     {
@@ -104,12 +155,24 @@
     {
         try
         {
-            var items = await LeaderService.GetTravelLeadersAsync();
-            _leaders = items.ToList();
+            var leaders = await LeaderService.GetTravelLeadersAsync();
+            _leaders = leaders.ToList();
+            
+            var journeys = await JourneyService.GetJourneysAsync();
+            _journeys = journeys.ToList();
         }
         catch
         {
             _leaders = new List<TravelLeader>();
+            _journeys = new List<Journey>();
         }
     }
+
+    private static string GetBookingStatusLabel(BookingStatus status) => status switch
+    {
+        BookingStatus.Bezig => "Bezig",
+        BookingStatus.Geweest => "Geweest",
+        BookingStatus.Geanuleerd => "Geannuleerd",
+        _ => status.ToString()
+    };
 }
