@@ -55,6 +55,7 @@ public class TravelLeaderService : ITravelLeaderService
     public async Task<Entities.TravelLeader?> GetTravelLeaderByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         return await _db.TravelLeader
+            .AsNoTracking()
             .Include(t => t.PreferredDestinations)
             .Include(t => t.AvailabilityPeriods)
             .Include(t => t.Journeys)
@@ -78,6 +79,11 @@ public class TravelLeaderService : ITravelLeaderService
         var tracked = _db.ChangeTracker.Entries<Entities.TravelLeader>().FirstOrDefault(e => e.Entity.Id == leader.Id);
         if (tracked != null)
             tracked.State = EntityState.Detached;
+
+        if (leader.Journeys != null)
+        {
+            leader.Journeys.Clear();
+        }
 
         _db.TravelLeader.Update(leader);
         await _db.SaveChangesAsync(cancellationToken);
