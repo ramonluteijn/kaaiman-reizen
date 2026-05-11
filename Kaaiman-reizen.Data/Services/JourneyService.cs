@@ -29,12 +29,12 @@ public class JourneyService : IJourneyService
             .OrderBy(j => j.Name)
             .ToListAsync(cancellationToken);
     }
-    
+
     public async Task<IReadOnlyList<Journey>> GetJourneysWithPublishedPlanningAsync(int year, CancellationToken cancellationToken = default)
     {
         // 1. Haal de reizen op filter on year.
         var allJourneys = await GetJourneysAsync(cancellationToken);
-    
+
         var journeysForThisYear = allJourneys
             .Where(j => j.Start.Year == year)
             .ToList();
@@ -83,11 +83,11 @@ public class JourneyService : IJourneyService
         {
             return null;
         }
-        
+
         int journeyYear = journey.Start.Year;
-        
+
         var publishedPlanning = await _planningService.GetLatestPublishedAsync(journeyYear, cancellationToken);
-    
+
         return ApplyPlanningVersion([journey], publishedPlanning).SingleOrDefault();
     }
 
