@@ -6,15 +6,7 @@
 @inject SignInManager<ApplicationUser> SignInManager
 @inject IdentityRedirectManager RedirectManager
 
-@if (externalLogins.Length == 0)
-{
-    <AlertModal IsOpen="true"
-                Title="Externe inlog"
-                Severity="Severity.Info"
-                Message="Geen externe inlogmethoden geconfigureerd."
-                CloseButtonText="Sluiten" />
-}
-else
+@if (externalLogins.Length > 0)
 {
     <form class="form-horizontal" action="Account/PerformExternalLogin" method="post">
         <AntiforgeryToken />

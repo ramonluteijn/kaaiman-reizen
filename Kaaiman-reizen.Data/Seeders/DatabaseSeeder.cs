@@ -72,12 +72,6 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
                 Name = "Jan de Vries", PhoneNumber = "06-12345678",
                 AmountOfTrips = 8, MinTrips = 2, MaxTrips = 10, IsActive = true,
                 Note = Mark("Kernlid — breed beschikbaar"),
-                PreferredDestinations =
-                [
-                    new() { Rank = 1, Destination = "Italië" },
-                    new() { Rank = 2, Destination = "Griekenland" },
-                    new() { Rank = 3, Destination = "Kroatië" }
-                ],
                 AvailabilityPeriods = [new() { Start = new(2026, 1, 1), End = new(2026, 12, 31) }]
             },
             ["maria"] = new()
@@ -85,12 +79,6 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
                 Name = "Maria Jansen", PhoneNumber = "06-87654321",
                 AmountOfTrips = 12, MinTrips = 3, MaxTrips = 15, IsActive = true,
                 Note = Mark("Kernlid — ervaren, breed beschikbaar"),
-                PreferredDestinations =
-                [
-                    new() { Rank = 1, Destination = "Spanje" },
-                    new() { Rank = 2, Destination = "Oostenrijk" },
-                    new() { Rank = 3, Destination = "Griekenland" }
-                ],
                 AvailabilityPeriods = [new() { Start = new(2026, 1, 1), End = new(2026, 12, 31) }]
             },
             ["thomas"] = new()
@@ -98,12 +86,6 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
                 Name = "Thomas de Groot", PhoneNumber = Phone(),
                 AmountOfTrips = 18, MinTrips = 4, MaxTrips = 18, IsActive = true,
                 Note = Mark("Kernlid — meest ervaren, op maximum"),
-                PreferredDestinations =
-                [
-                    new() { Rank = 1, Destination = "Turkije" },
-                    new() { Rank = 2, Destination = "Griekenland" },
-                    new() { Rank = 3, Destination = "Italië" }
-                ],
                 // AmountOfTrips == MaxTrips → algoritme moet hem overslaan
                 AvailabilityPeriods = [new() { Start = new(2026, 2, 1), End = new(2026, 12, 31) }]
             },
@@ -112,12 +94,6 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
                 Name = "Daan Peters", PhoneNumber = Phone(),
                 AmountOfTrips = 16, MinTrips = 4, MaxTrips = 18, IsActive = true,
                 Note = Mark("Kernlid — gespecialiseerd in Scandinavië"),
-                PreferredDestinations =
-                [
-                    new() { Rank = 1, Destination = "Noorwegen" },
-                    new() { Rank = 2, Destination = "IJsland" },
-                    new() { Rank = 3, Destination = "Schotland" }
-                ],
                 AvailabilityPeriods = [new() { Start = new(2026, 1, 1), End = new(2026, 12, 31) }]
             },
             ["fleur"] = new()
@@ -125,12 +101,6 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
                 Name = "Fleur Visser", PhoneNumber = Phone(),
                 AmountOfTrips = 7, MinTrips = 2, MaxTrips = 8, IsActive = true,
                 Note = Mark("Kernlid — niet in winter beschikbaar"),
-                PreferredDestinations =
-                [
-                    new() { Rank = 1, Destination = "Griekenland" },
-                    new() { Rank = 2, Destination = "Kroatië" },
-                    new() { Rank = 3, Destination = "Montenegro" }
-                ],
                 // Winter (dec-feb) buiten bereik → test seizoensgrens kerngroep
                 AvailabilityPeriods = [new() { Start = new(2026, 3, 1), End = new(2026, 11, 30) }]
             },
@@ -146,12 +116,6 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
                 Name = "Anna Smits", PhoneNumber = Phone(),
                 AmountOfTrips = 4, MinTrips = 1, MaxTrips = 5, IsActive = true,
                 Note = Mark("Lentegast — beschikbaar mrt-jun"),
-                PreferredDestinations =
-                [
-                    new() { Rank = 1, Destination = "Portugal" },
-                    new() { Rank = 2, Destination = "Spanje" },
-                    new() { Rank = 3, Destination = "Marokko" }
-                ],
                 AvailabilityPeriods = [new() { Start = new(2026, 3, 1), End = new(2026, 6, 30) }]
             },
             ["clara"] = new()
@@ -159,12 +123,6 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
                 Name = "Clara Kuijpers", PhoneNumber = Phone(),
                 AmountOfTrips = 3, MinTrips = 1, MaxTrips = 4, IsActive = true,
                 Note = Mark("Lentegast — beschikbaar mrt-mei"),
-                PreferredDestinations =
-                [
-                    new() { Rank = 1, Destination = "Oostenrijk" },
-                    new() { Rank = 2, Destination = "Zwitserland" },
-                    new() { Rank = 3, Destination = "Duitsland" }
-                ],
                 // Smalst van de lentegasten: loopt af eind mei → juni-reizen buiten bereik
                 AvailabilityPeriods = [new() { Start = new(2026, 3, 1), End = new(2026, 5, 31) }]
             },
@@ -173,12 +131,6 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
                 Name = "David Mulder", PhoneNumber = Phone(),
                 AmountOfTrips = 8, MinTrips = 2, MaxTrips = 8, IsActive = true,
                 Note = Mark("Lentegast — op maximum (AmountOfTrips == MaxTrips)"),
-                PreferredDestinations =
-                [
-                    new() { Rank = 1, Destination = "Kroatië" },
-                    new() { Rank = 2, Destination = "Montenegro" },
-                    new() { Rank = 3, Destination = "Albanië" }
-                ],
                 // Edge case MinMaxJourneys: zit al op zijn maximum → algoritme moet hem overslaan
                 AvailabilityPeriods = [new() { Start = new(2026, 3, 1), End = new(2026, 6, 30) }]
             },
@@ -194,12 +146,6 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
                 Name = "Frank Willems", PhoneNumber = Phone(),
                 AmountOfTrips = 9, MinTrips = 2, MaxTrips = 10, IsActive = true,
                 Note = Mark("Zomers — beschikbaar jun-sep"),
-                PreferredDestinations =
-                [
-                    new() { Rank = 1, Destination = "Italië" },
-                    new() { Rank = 2, Destination = "Griekenland" },
-                    new() { Rank = 3, Destination = "Kroatië" }
-                ],
                 AvailabilityPeriods = [new() { Start = new(2026, 6, 1), End = new(2026, 9, 30) }]
             },
             ["gerda"] = new()
@@ -207,12 +153,6 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
                 Name = "Gerda van Dijk", PhoneNumber = Phone(),
                 AmountOfTrips = 7, MinTrips = 2, MaxTrips = 8, IsActive = true,
                 Note = Mark("Zomers — beschikbaar jul-sep"),
-                PreferredDestinations =
-                [
-                    new() { Rank = 1, Destination = "Spanje" },
-                    new() { Rank = 2, Destination = "Portugal" },
-                    new() { Rank = 3, Destination = "Marokko" }
-                ],
                 // Start pas in juli → kan niet voor Turkije-reis in juni
                 AvailabilityPeriods = [new() { Start = new(2026, 7, 1), End = new(2026, 9, 30) }]
             },
@@ -221,12 +161,6 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
                 Name = "Hans Bosman", PhoneNumber = Phone(),
                 AmountOfTrips = 12, MinTrips = 3, MaxTrips = 12, IsActive = true,
                 Note = Mark("Zomers — op maximum (AmountOfTrips == MaxTrips)"),
-                PreferredDestinations =
-                [
-                    new() { Rank = 1, Destination = "Turkije" },
-                    new() { Rank = 2, Destination = "Griekenland" },
-                    new() { Rank = 3, Destination = "Italië" }
-                ],
                 // Edge case: zit op zijn maximum, algoritme slaat hem over
                 AvailabilityPeriods = [new() { Start = new(2026, 6, 1), End = new(2026, 9, 30) }]
             },
@@ -242,11 +176,6 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
                 Name = "Karel Linden", PhoneNumber = Phone(),
                 AmountOfTrips = 3, MinTrips = 1, MaxTrips = 4, IsActive = true,
                 Note = Mark("Smal venster — alleen beschikbaar 5-25 apr"),
-                PreferredDestinations =
-                [
-                    new() { Rank = 1, Destination = "Marokko" },
-                    new() { Rank = 2, Destination = "Portugal" }
-                ],
                 // Past exact op de Marokko-reis (apr 5-15) en nergens anders
                 AvailabilityPeriods = [new() { Start = new(2026, 4, 5), End = new(2026, 4, 25) }]
             },
@@ -255,11 +184,6 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
                 Name = "Laura Straten", PhoneNumber = Phone(),
                 AmountOfTrips = 5, MinTrips = 1, MaxTrips = 6, IsActive = true,
                 Note = Mark("Smal venster — alleen beschikbaar 1-21 jul"),
-                PreferredDestinations =
-                [
-                    new() { Rank = 1, Destination = "Italië" },
-                    new() { Rank = 2, Destination = "Griekenland" }
-                ],
                 // Past exact op Italië Zomer (jul 5-18) — net buiten bereik van Griekenland Zomer
                 AvailabilityPeriods = [new() { Start = new(2026, 7, 1), End = new(2026, 7, 21) }]
             },
@@ -275,12 +199,6 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
                 Name = "Omar Hassan", PhoneNumber = Phone(),
                 AmountOfTrips = 9, MinTrips = 3, MaxTrips = 12, IsActive = false,
                 Note = Mark("INACTIEF — heeft beschikbaarheid maar mag niet worden ingepland"),
-                PreferredDestinations =
-                [
-                    new() { Rank = 1, Destination = "Turkije" },
-                    new() { Rank = 2, Destination = "Griekenland" },
-                    new() { Rank = 3, Destination = "Italië" }
-                ],
                 // Heeft geldige beschikbaarheid maar IsActive=false → algoritme-edge case
                 AvailabilityPeriods = [new() { Start = new(2026, 1, 1), End = new(2026, 12, 31) }]
             },
@@ -289,11 +207,6 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
                 Name = "Priya Singh", PhoneNumber = Phone(),
                 AmountOfTrips = 5, MinTrips = 1, MaxTrips = 8, IsActive = false,
                 Note = Mark("INACTIEF — ook geen beschikbaarheidsperiodes opgegeven"),
-                PreferredDestinations =
-                [
-                    new() { Rank = 1, Destination = "Portugal" },
-                    new() { Rank = 2, Destination = "Spanje" }
-                ]
                 // Dubbele edge case: inactief + geen beschikbaarheid
             },
 
@@ -308,12 +221,6 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
                 Name = "Quinten Vos", PhoneNumber = Phone(),
                 AmountOfTrips = 4, MinTrips = 1, MaxTrips = 6, IsActive = true,
                 Note = Mark("Geen beschikbaarheid — actief maar nooit inplanbaar"),
-                PreferredDestinations =
-                [
-                    new() { Rank = 1, Destination = "Italië" },
-                    new() { Rank = 2, Destination = "Griekenland" },
-                    new() { Rank = 3, Destination = "Spanje" }
-                ]
                 // Geen AvailabilityPeriods → algoritme markeert elke reis als onbereikbaar
             },
 
@@ -327,10 +234,6 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
                 Name = "Sebastiaan van Ooijen", PhoneNumber = Phone(),
                 AmountOfTrips = 0, MinTrips = 1, MaxTrips = 1, IsActive = true,
                 Note = Mark("Beginner — MaxTrips=1, kan maar 1 reis doen"),
-                PreferredDestinations =
-                [
-                    new() { Rank = 1, Destination = "Italië" }
-                ],
                 // Nieuwe reisleider die slechts 1 reis per jaar wil doen
                 AvailabilityPeriods = [new() { Start = new(2026, 1, 1), End = new(2026, 12, 31) }]
             },
@@ -339,12 +242,6 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
                 Name = "Vera Molenkamp", PhoneNumber = Phone(),
                 AmountOfTrips = 0, MinTrips = 2, MaxTrips = 4, IsActive = true,
                 Note = Mark("AmountOfTrips=0 maar MinTrips=2 — ruim onder minimum"),
-                PreferredDestinations =
-                [
-                    new() { Rank = 1, Destination = "Griekenland" },
-                    new() { Rank = 2, Destination = "Italië" },
-                    new() { Rank = 3, Destination = "Kroatië" }
-                ],
                 // UI-edge case: onder minimum → zichtbaar als aandachtspunt voor de planner
                 AvailabilityPeriods = [new() { Start = new(2026, 1, 1), End = new(2026, 12, 31) }]
             },
