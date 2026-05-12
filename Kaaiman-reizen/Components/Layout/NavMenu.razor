@@ -24,43 +24,6 @@
                 </NavLink>
             </div>
 
-            <AuthorizeView Roles="Planner">
-                <div class="nav-item">
-                    <NavLink class="nav-link d-flex align-items-center rounded-0" href="planner/draft">
-                        <i class="bi bi-calendar-check nav-icon me-3"></i> Planner
-                    </NavLink>
-                </div>         
-                <div class="nav-item">
-                    <NavLink class="nav-link d-flex align-items-center rounded-0" href="journeys">
-                        <i class="bi bi-compass-fill nav-icon me-3"></i> Reizen
-                    </NavLink>
-                </div>
-                <div class="nav-item">
-                    <NavLink class="nav-link d-flex align-items-center rounded-0" href="travelleaders">
-                        <i class="bi bi-people-fill nav-icon me-3"></i> Reisleiders
-                    </NavLink>
-                </div>
-                <div class="nav-item">
-                    <NavLink class="nav-link d-flex align-items-center rounded-0" href="rules">
-                        <i class="bi bi-gear-fill nav-icon me-3"></i> Regels
-                    </NavLink>
-                </div>
-            </AuthorizeView>
-
-            <AuthorizeView Roles="Reisleider">
-                <div class="nav-item">
-                    <NavLink class="nav-link d-flex align-items-center rounded-0" href="travelleaders/preferences">
-                        <i class="bi bi-journal-check nav-icon me-3"></i> Mijn Voorkeuren
-                    </NavLink>
-                </div>
-
-                <div class="nav-item">
-                    <NavLink class="nav-link d-flex align-items-center rounded-0" href="travelleaders/history">
-                        <i class="bi bi-clock-history nav-icon me-3"></i> Mijn Reisgeschiedenis
-                    </NavLink>
-                </div>
-            </AuthorizeView>
-            
             @foreach(var route in routes)
             {
                 <AuthorizeView Roles="@route.role">
