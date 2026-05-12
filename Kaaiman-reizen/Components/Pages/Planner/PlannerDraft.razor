@@ -70,7 +70,7 @@
                                                    class="position-absolute top-0 end-0"
                                                    Style="z-index: 2;"
                                                    title="Reisleider details"
-                                                   OnClick="@((_) => OpenLeaderDetails(row))"
+                                                   OnClick="@(() => OpenLeaderDetails(row))"
                                     />
 
                                     <div class="pd-sidebar-info">
@@ -149,7 +149,7 @@
                         <MudButton Variant="Variant.Outlined"
                                    Color="Color.Default"
                                    Disabled="@_isSaving"
-                                   OnClick="RegeneratePlanningAsync">
+                                   OnClick="@(() => RegeneratePlanningAsync())">
                             Opnieuw genereren
                         </MudButton>
 

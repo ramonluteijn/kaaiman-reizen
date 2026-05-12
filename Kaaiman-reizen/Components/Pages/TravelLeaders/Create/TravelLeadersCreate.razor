@@ -68,40 +68,6 @@
                 <label class="form-check-label">Actief</label>
             </div>
 
-            <h5>Beschikbaarheid (periode)</h5>
-            @for (int i = 0; i < _periods.Count; i++)
-            {
-                var period = _periods[i];
-                var idx = i;
-                <div class="app-period-row mb-2">
-                    <div>
-                        <label class="form-label">Start</label>
-                        <InputDate @bind-Value="period.Start" class="form-control" />
-                    </div>
-                    <div>
-                        <label class="form-label">Eind</label>
-                        <InputDate @bind-Value="period.End" class="form-control" />
-                    </div>
-                    <div class="app-period-action">
-                        <MudButton Variant="Variant.Outlined"
-                                   Color="Color.Error"
-                                   StartIcon="@Icons.Material.Filled.Delete"
-                                   OnClick="@(EventCallback.Factory.Create(this, () => RemovePeriod(idx)))">
-                            Verwijder
-                        </MudButton>
-                    </div>
-                </div>
-            }
-
-            <div class="mb-3">
-                <MudButton Variant="Variant.Outlined"
-                           Color="Color.Secondary"
-                           StartIcon="@Icons.Material.Filled.Add"
-                           OnClick="AddPeriod">
-                    Periode toevoegen
-                </MudButton>
-            </div>
-
             <div class="app-form-actions">
                 <MudButton ButtonType="ButtonType.Submit"
                            Variant="Variant.Filled"

@@ -27,24 +27,6 @@ public partial class TravelLeadersCreate : ComponentBase
     private string? _errorMessage;
 
     private TravelLeader _model = new();
-    private List<PeriodModel> _periods = new();
-
-    private class PeriodModel
-    {
-        public DateTime? Start { get; set; }
-        public DateTime? End { get; set; }
-    }
-
-    private void AddPeriod()
-    {
-        _periods.Add(new PeriodModel());
-    }
-
-    private void RemovePeriod(int index)
-    {
-        if (index >= 0 && index < _periods.Count)
-            _periods.RemoveAt(index);
-    }
 
     private void Cancel()
     {
@@ -68,15 +50,6 @@ public partial class TravelLeadersCreate : ComponentBase
                 if (existingLeader.PhoneNumber == _model.PhoneNumber)
                     throw new Exception($"Het telefoonnummer {_model.PhoneNumber} is al in gebruik.");
             }
-
-            _model.AvailabilityPeriods = _periods
-                .Where(p => p.Start.HasValue && p.End.HasValue)
-                .Select(p => new AvailabilityPeriod
-                {
-                    Start = DateOnly.FromDateTime(p.Start!.Value),
-                    End = DateOnly.FromDateTime(p.End!.Value)
-                })
-                .ToList();
 
             await LeaderService.AddTravelLeaderAsync(_model);
             await _accountService.CreateIdentityUserForTravelLeaderAsync(_model.Email, _model.PhoneNumber, _model.Name, _model.Id);
