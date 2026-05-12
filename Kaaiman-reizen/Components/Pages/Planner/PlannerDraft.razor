@@ -23,7 +23,8 @@
 
         @if (!_showEntryModal)
         {
-            @if (ShouldShowSaveMessageAlert())
+            @if (!string.IsNullOrWhiteSpace(_saveMessage)
+                             && !_saveMessage.StartsWith("Concept geladen", System.StringComparison.OrdinalIgnoreCase))
             {
                 <AlertModal IsOpen="true" Title="Concept opslaan" Severity="@_saveMessageSeverity" Message="@_saveMessage" />
             }
@@ -75,7 +76,7 @@
                                             @if (hasJourneys)
                                             {
                                                 <span class="pd-sidebar-count">@row.AssignedJourneys.Count rei@(row.AssignedJourneys.Count == 1 ?
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                "s" : "zen")</span>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    "s" : "zen")</span>
                                                     <div class="pd-sidebar-journeys">
                                                         @foreach (var item in row.AssignedJourneys)
                                                         {
@@ -127,61 +128,61 @@
                                                     var warnedJourney = _request!.Journeys.FirstOrDefault(j => j.Id == kvp.Key);
                                                     if (warnedJourney is null) continue;
 
-                                                    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true">
-                                                        <b>@warnedJourney.Name</b>
-                                                        <span class="text-secondary ms-1">(@DateDisplay.FormatDate(warnedJourney.Start) -
-                                                            @DateDisplay.FormatDate(warnedJourney.End))</span>
-                                                            - @kvp.Value
-                                                        </MudAlert>
-                                                    }
-                                                </MudStack>
-                                            </AlertModal>
+                                                    <MudPaper Class="pa-3" Outlined="true">
+                                                        <MudText Typo="Typo.subtitle2">@warnedJourney.Name</MudText>
+                                                        <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                                            @DateDisplay.FormatDate(warnedJourney.Start) - @DateDisplay.FormatDate(warnedJourney.End)
+                                                        </MudText>
+                                                        <MudText Typo="Typo.body2" Class="mt-1">@kvp.Value</MudText>
+                                                    </MudPaper>
+                                                }
+                                            </MudStack>
+                                        </AlertModal>
+                                    }
+                                    <CalendarView Journeys="BuildCalendarJourneys()" OnJourneyClick="HandleJourneyClick" />
+                                </div>
+                            </div>
+
+                            <div class="pd-bottom-actions">
+                                <div class="d-flex flex-wrap gap-2">
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Disabled="@_isSaving" OnClick="SaveDraftAsync">
+                                        @if (_isSaving)
+                                        {
+                                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                            <MudText Class="ms-2">Bezig met opslaan...</MudText>
                                         }
-                                        <CalendarView Journeys="BuildCalendarJourneys()" OnJourneyClick="HandleJourneyClick" />
-                                    </div>
-                                </div>
+                                        else
+                                        {
+                                            <MudText>Opslaan als concept</MudText>
+                                        }
+                                    </MudButton>
 
-                                <div class="pd-bottom-actions">
-                                    <div class="d-flex flex-wrap gap-2">
-                                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Disabled="@_isSaving" OnClick="SaveDraftAsync">
-                                            @if (_isSaving)
-                                            {
-                                                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-                                                <MudText Class="ms-2">Bezig met opslaan...</MudText>
-                                            }
-                                            else
-                                            {
-                                                <MudText>Opslaan als concept</MudText>
-                                            }
-                                        </MudButton>
-
-                                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@_isSaving"
-                                                   OnClick="PublishPlanningAsync">
-                                            @if (_isSaving)
-                                            {
-                                                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-                                                <MudText Class="ms-2">Bezig met opslaan...</MudText>
-                                            }
-                                            else
-                                            {
-                                                <MudText>Publiceer planning</MudText>
-                                            }
-                                        </MudButton>
-                                    </div>
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@_isSaving"
+                                               OnClick="PublishPlanningAsync">
+                                        @if (_isSaving)
+                                        {
+                                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                            <MudText Class="ms-2">Bezig met opslaan...</MudText>
+                                        }
+                                        else
+                                        {
+                                            <MudText>Publiceer planning</MudText>
+                                        }
+                                    </MudButton>
                                 </div>
-                            }
-                else if (!string.IsNullOrEmpty(_result.ErrorMessage))
-                            {
-                                <AlertModal IsOpen="true" Title="Genereren mislukt" Severity="Severity.Error" Message="@_result.ErrorMessage" />
-                            }
+                            </div>
+                        }
+                        else if (!string.IsNullOrEmpty(_result.ErrorMessage))
+                        {
+                            <AlertModal IsOpen="true" Title="Genereren mislukt" Severity="Severity.Error" Message="@_result.ErrorMessage" />
                         }
                     }
                 }
-                }
-            </MudStack>
-            <NoteModal IsOpen="_noteModalOpen" Leader="_selectedLeaderRow?.Leader" AssignedJourneys="GetSelectedLeaderJourneys()"
-                       OnClose="CloseLeaderDetails" />
-            <JourneyDrawer IsOpen="_drawerOpen" SelectedJourney="_selectedJourney" Candidates="_selectedCandidates"
-                           OnClose="CloseDrawer" OnAssignLeader="AssignLeader" OnRemoveLeader="RemoveLeader" />
+            }
+        </MudStack>
+        <NoteModal IsOpen="_noteModalOpen" Leader="_selectedLeaderRow?.Leader" AssignedJourneys="GetSelectedLeaderJourneys()"
+                   OnClose="CloseLeaderDetails" />
+        <JourneyDrawer IsOpen="_drawerOpen" SelectedJourney="_selectedJourney" Candidates="_selectedCandidates"
+                       OnClose="CloseDrawer" OnAssignLeader="AssignLeader" OnRemoveLeader="RemoveLeader" />
 
 

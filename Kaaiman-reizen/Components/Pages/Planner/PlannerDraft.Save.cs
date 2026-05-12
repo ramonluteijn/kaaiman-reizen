@@ -5,10 +5,6 @@ namespace Kaaiman_reizen.Components.Pages.Planner;
 
 public partial class PlannerDraft
 {
-    private bool ShouldShowSaveMessageAlert() =>
-        !string.IsNullOrWhiteSpace(_saveMessage)
-        && !_saveMessage.StartsWith("Concept geladen", StringComparison.OrdinalIgnoreCase);
-
     private async Task SaveDraftAsync()
     {
         await SavePlanningAsync(isPublished: false);
