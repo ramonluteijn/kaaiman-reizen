@@ -4,7 +4,6 @@
 @using Kaaiman_reizen.Data.Enum
 @rendermode InteractiveServer
 @inject IJourneyService JourneyService
-@inject IJSRuntime JS
 
 <PageTitle>Reizen</PageTitle>
 
@@ -79,12 +78,35 @@
     </div>
 </div>
 
+<AlertModal IsOpen="@_isDeleteModalOpen"
+            IsOpenChanged="HandleDeleteModalChanged"
+            Title="Reis verwijderen"
+            Severity="Severity.Warning"
+            Dismissible="true"
+            CloseOnBackdropClick="true"
+            Message="@DeleteModalMessage">
+    <Actions>
+        <MudButton Variant="Variant.Text" OnClick="CloseDeleteModalAsync">
+            Annuleren
+        </MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="ConfirmDeleteAsync">
+            Verwijderen
+        </MudButton>
+    </Actions>
+</AlertModal>
+
 @code {
     private List<Journey> _journeys = new();
     private string _searchTerm = string.Empty;
     private string _sortColumn = "Country";
     private bool _sortAscending = true;
     private int _selectedYear = DateTime.UtcNow.Year;
+    private bool _isDeleteModalOpen;
+    private Journey? _journeyPendingDelete;
+
+    private string DeleteModalMessage => _journeyPendingDelete is null
+        ? "Weet je zeker dat je deze reis wilt verwijderen?"
+        : $"Weet je zeker dat je '{_journeyPendingDelete.Name}' wilt verwijderen?";
 
     private static string GetEditHref(Journey journey)
     {
@@ -143,13 +165,40 @@
         if (journey == null)
             return;
 
-        //TODO: Make a cool custom confirmation dialog
-        var confirm = await JS.InvokeAsync<bool>("confirm", $"Weet je zeker dat je '{journey.Name}' wilt verwijderen?");
-        if (!confirm)
-            return;
+        _journeyPendingDelete = journey;
+        _isDeleteModalOpen = true;
+    }
 
-        await JourneyService.DeleteJourneyAsync(journey.Id);
-        _journeys.RemoveAll(l => l.Id == journey.Id);
+    private Task HandleDeleteModalChanged(bool isOpen)
+    {
+        _isDeleteModalOpen = isOpen;
+        if (!isOpen)
+        {
+            _journeyPendingDelete = null;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private Task CloseDeleteModalAsync()
+    {
+        _isDeleteModalOpen = false;
+        _journeyPendingDelete = null;
+        return Task.CompletedTask;
+    }
+
+    private async Task ConfirmDeleteAsync()
+    {
+        if (_journeyPendingDelete is null)
+        {
+            return;
+        }
+
+        var journeyId = _journeyPendingDelete.Id;
+        await JourneyService.DeleteJourneyAsync(journeyId);
+        _journeys.RemoveAll(l => l.Id == journeyId);
+        _isDeleteModalOpen = false;
+        _journeyPendingDelete = null;
         StateHasChanged();
     }
 

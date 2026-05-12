@@ -94,6 +94,11 @@
     min-width: 170px;
 }
 
+.pd-empty-state {
+    border-radius: 8px;
+    background: #f7f9f9;
+}
+
 @media (max-width: 900px) {
     .pd-entry-choices {
         grid-template-columns: 1fr;

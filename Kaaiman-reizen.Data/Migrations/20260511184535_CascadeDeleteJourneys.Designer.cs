@@ -4,6 +4,7 @@ using Kaaiman_reizen.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Kaaiman_reizen.Data.Migrations
 {
     [DbContext(typeof(MainContext))]
-    partial class MainContextModelSnapshot : ModelSnapshot
+    [Migration("20260511184535_CascadeDeleteJourneys")]
+    partial class CascadeDeleteJourneys
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -408,10 +411,6 @@ namespace Kaaiman_reizen.Data.Migrations
                     b.Property<int>("AmountOfTrips")
                         .HasColumnType("int");
 
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("tinyint(1)");
 
@@ -442,7 +441,6 @@ namespace Kaaiman_reizen.Data.Migrations
                         {
                             Id = 1,
                             AmountOfTrips = 8,
-                            Email = "j.devries@kaaiman.nl",
                             IsActive = true,
                             MaxTrips = 10,
                             MinTrips = 2,
@@ -454,7 +452,6 @@ namespace Kaaiman_reizen.Data.Migrations
                         {
                             Id = 2,
                             AmountOfTrips = 12,
-                            Email = "m.jansen@kaaiman.nl",
                             IsActive = true,
                             MaxTrips = 15,
                             MinTrips = 3,

@@ -20,24 +20,36 @@
     {
         if (recoveryCodesLeft == 0)
         {
-            <div class="alert alert-danger">
-                <strong>You have no recovery codes left.</strong>
-                <p>You must <a href="Account/Manage/GenerateRecoveryCodes">generate a new set of recovery codes</a> before you can log in with a recovery code.</p>
-            </div>
+            <AlertModal IsOpen="true"
+                        Title="Recovery codes"
+                        Severity="Severity.Error"
+                        Message="You have no recovery codes left. You must generate a new set of recovery codes before you can log in with a recovery code.">
+                <MudText Typo="Typo.body2">
+                    You must <a href="Account/Manage/GenerateRecoveryCodes">generate a new set of recovery codes</a> before you can log in with a recovery code.
+                </MudText>
+            </AlertModal>
         }
         else if (recoveryCodesLeft == 1)
         {
-            <div class="alert alert-danger">
-                <strong>You have 1 recovery code left.</strong>
-                <p>You can <a href="Account/Manage/GenerateRecoveryCodes">generate a new set of recovery codes</a>.</p>
-            </div>
+            <AlertModal IsOpen="true"
+                        Title="Recovery codes"
+                        Severity="Severity.Error"
+                        Message="You have 1 recovery code left.">
+                <MudText Typo="Typo.body2">
+                    You can <a href="Account/Manage/GenerateRecoveryCodes">generate a new set of recovery codes</a>.
+                </MudText>
+            </AlertModal>
         }
         else if (recoveryCodesLeft <= 3)
         {
-            <div class="alert alert-warning">
-                <strong>You have @recoveryCodesLeft recovery codes left.</strong>
-                <p>You should <a href="Account/Manage/GenerateRecoveryCodes">generate a new set of recovery codes</a>.</p>
-            </div>
+            <AlertModal IsOpen="true"
+                        Title="Recovery codes"
+                        Severity="Severity.Warning"
+                        Message="@($"You have {recoveryCodesLeft} recovery codes left.")">
+                <MudText Typo="Typo.body2">
+                    You should <a href="Account/Manage/GenerateRecoveryCodes">generate a new set of recovery codes</a>.
+                </MudText>
+            </AlertModal>
         }
 
         if (isMachineRemembered)
@@ -65,10 +77,14 @@
 }
 else
 {
-    <div class="alert alert-danger">
-        <strong>Privacy and cookie policy have not been accepted.</strong>
-        <p>You must accept the policy before you can enable two factor authentication.</p>
-    </div>
+    <AlertModal IsOpen="true"
+                Title="Two-factor authentication"
+                Severity="Severity.Error"
+                Message="You must accept the policy before you can enable two factor authentication.">
+        <MudText Typo="Typo.body2">
+            <strong>Privacy and cookie policy have not been accepted.</strong>
+        </MudText>
+    </AlertModal>
 }
 
 @code {
