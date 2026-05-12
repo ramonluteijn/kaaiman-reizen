@@ -8,9 +8,11 @@
 
 @if (externalLogins.Length == 0)
 {
-    <div class="alert alert-info small py-2">
-        Geen externe inlogmethoden geconfigureerd.
-    </div>
+    <AlertModal IsOpen="true"
+                Title="Externe inlog"
+                Severity="Severity.Info"
+                Message="Geen externe inlogmethoden geconfigureerd."
+                CloseButtonText="Sluiten" />
 }
 else
 {

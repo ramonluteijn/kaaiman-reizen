@@ -24,7 +24,7 @@ public class NotificationService : INotificationService
     {
         var notification = await _db.Notifications
             .FirstOrDefaultAsync(n => n.Id == notificationId && n.ApplicationUserId == userId, cancellationToken);
-        
+
         if (notification != null)
         {
             notification.IsRead = true;

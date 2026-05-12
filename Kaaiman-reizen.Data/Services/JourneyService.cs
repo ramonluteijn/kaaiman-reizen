@@ -29,12 +29,12 @@ public class JourneyService : IJourneyService
             .OrderBy(j => j.Name)
             .ToListAsync(cancellationToken);
     }
-    
+
     public async Task<IReadOnlyList<Journey>> GetJourneysWithPublishedPlanningAsync(int year, CancellationToken cancellationToken = default)
     {
         // 1. Haal de reizen op filter on year.
         var allJourneys = await GetJourneysAsync(cancellationToken);
-    
+
         var journeysForThisYear = allJourneys
             .Where(j => j.Start.Year == year)
             .ToList();
@@ -83,37 +83,42 @@ public class JourneyService : IJourneyService
         {
             return null;
         }
-        
+
         int journeyYear = journey.Start.Year;
-        
+
         var publishedPlanning = await _planningService.GetLatestPublishedAsync(journeyYear, cancellationToken);
-    
+
         return ApplyPlanningVersion([journey], publishedPlanning).SingleOrDefault();
     }
 
     public async Task UpdateJourneyAsync(Entities.Journey journey, List<int> selectedLeaders, CancellationToken cancellationToken = default)
     {
-        var tracked = _db.ChangeTracker.Entries<Entities.Journey>().FirstOrDefault(e => e.Entity.Id == journey.Id);
-        if (tracked != null)
-        {
-            tracked.State = EntityState.Detached;
-        }
+        var existing = await _db.Journey
+       .Include(j => j.TravelLeaders)
+       .FirstOrDefaultAsync(j => j.Id == journey.Id, cancellationToken);
 
-        _db.Attach(journey);
-        _db.Entry(journey).State = EntityState.Modified;
+        if (existing == null)
+            return;
+
+        existing.Name = journey.Name;
+        existing.Start = journey.Start;
+        existing.End = journey.End;
+        existing.Busses = journey.Busses;
+        existing.Travelers = journey.Travelers;
+        existing.BookingStatus = journey.BookingStatus;
+        existing.RequiredLeaders = journey.RequiredLeaders;
 
         var leaders = await _db.TravelLeader
-           .Where(t => selectedLeaders.Contains(t.Id))
-           .ToListAsync(cancellationToken);
+            .Where(t => selectedLeaders.Contains(t.Id))
+            .ToListAsync(cancellationToken);
 
-        journey.TravelLeaders.Clear();
+        existing.TravelLeaders.Clear();
 
         foreach (var leader in leaders)
         {
-            journey.TravelLeaders.Add(leader);
+            existing.TravelLeaders.Add(leader);
         }
 
-        _db.Journey.Update(journey);
         await _db.SaveChangesAsync(cancellationToken);
     }
 

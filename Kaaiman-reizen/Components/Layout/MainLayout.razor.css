@@ -1,6 +1,7 @@
 .layout-shell {
-    min-height: 100vh;
+    height: 100vh;
     background: #f4f6f8;
+    overflow: hidden;
 }
 
 .layout-shell ::deep .nav-shell {
@@ -10,6 +11,8 @@
 .content-region {
     padding: 16px;
     min-width: 0;
+    overflow-y: auto;
+    height: 100vh;
 }
 
 .content-panel {
@@ -26,20 +29,26 @@
 @media (max-width: 575.98px) {
     .layout-shell {
         flex-direction: column;
+        height: 100dvh;
+        overflow: hidden;
     }
 
     .layout-shell ::deep .nav-shell {
         flex-basis: auto;
+        height: auto;
     }
 
     .content-region {
         padding: 8px;
+        height: auto;
+        flex: 1 1 0;
+        overflow-y: auto;
     }
 
     .content-panel {
         border-radius: 10px;
         padding: 12px;
-        min-height: calc(100vh - 16px);
+        min-height: unset;
     }
 }
 

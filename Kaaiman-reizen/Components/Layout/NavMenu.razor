@@ -4,7 +4,7 @@
 <div class="d-flex flex-column nav-shell">
     <div class="border-bottom p-3 nav-brand d-flex align-items-center">
         <div class="d-flex flex-grow-1">
-            <a href="/">
+            <a href="/" @onclick="CloseMenu">
                 <img src="images/kaaiman-logo-footer-1920x405.png.webp" class="navbar-brand img-fluid nav-brand-logo"
                      alt="Logo Kaaiman-reizen" />
             </a>
@@ -15,93 +15,76 @@
         </button>
     </div>
 
-    <div class="nav-scrollable flex-grow-1 d-flex flex-column overflow-auto @(navExpanded ? "" : "nav-collapsed")">
-        <nav class="nav flex-column h-100 flex-nowrap">
-
+    <div class="nav-scrollable flex-grow-1 @(navExpanded ? "" : "nav-collapsed")">
+        <nav class="nav flex-column h-100 flex-nowrap" @onclick="CloseMenu">
             <div class="nav-item">
                 <NavLink class="nav-link d-flex align-items-center rounded-0" href="" Match="NavLinkMatch.All">
                     <i class="bi bi-house-door-fill nav-icon me-3"></i> Home
                 </NavLink>
             </div>
-
-            <AuthorizeView Roles="Planner">
-                <div class="nav-item">
-                    <NavLink class="nav-link d-flex align-items-center rounded-0" href="travelleaders">
-                        <i class="bi bi-people-fill nav-icon me-3"></i> Reisleiders
-                    </NavLink>
-                </div>
-
-                <div class="nav-item">
-                    <NavLink class="nav-link d-flex align-items-center rounded-0" href="journeys">
-                        <i class="bi bi-compass-fill nav-icon me-3"></i> Reizen
-                    </NavLink>
-                </div>
-
-                <div class="nav-item">
-                    <NavLink class="nav-link d-flex align-items-center rounded-0" href="planner/draft">
-                        <i class="bi bi-calendar-check nav-icon me-3"></i> Planner
-                    </NavLink>
-                </div>
-                
-                <div class="nav-item">
-                    <NavLink class="nav-link d-flex align-items-center rounded-0" href="rules">
-                        <i class="bi bi-gear-fill nav-icon me-3"></i> Regels
-                    </NavLink>
-                </div>
-            </AuthorizeView>
-
-            <AuthorizeView Roles="Reisleider">
-                <div class="nav-item">
-                    <NavLink class="nav-link d-flex align-items-center rounded-0" href="travelleaders/preferences">
-                        <i class="bi bi-journal-check nav-icon me-3"></i> Mijn Voorkeuren
-                    </NavLink>
-                </div>
-
-                <div class="nav-item">
-                    <NavLink class="nav-link d-flex align-items-center rounded-0" href="travelleaders/history">
-                        <i class="bi bi-clock-history nav-icon me-3"></i> Mijn Reisgeschiedenis
-                    </NavLink>
-                </div>
-            </AuthorizeView>
-
-            <AuthorizeView>
-                <Authorized>
-                    <div class="w-100 m-0 mt-auto p-0 nav-footer-section">
-                        <a href="profile"
-                               class="border-bottom d-flex align-items-center justify-content-center px-3 py-2 nav-user-row text-decoration-none text-white">
-                            <i class="bi bi-person-circle me-2"></i>
-                            <small class="text-truncate">@context.User.Identity?.Name</small>
-                        </a>
-                        <form action="Account/Logout" method="post" class="m-0 p-0 d-flex justify-content-center">
-                            <AntiforgeryToken />
-                            <input type="hidden" name="ReturnUrl" value="" />
-                            <button type="submit"
-                                    class="nav-link btn btn-link d-flex align-items-center rounded-0 border-0 px-3 py-3 text-start shadow-none nav-auth-button">
-                                <i class="bi bi-box-arrow-left nav-icon me-3"></i> Uitloggen
-                            </button>
-                        </form>
-                    </div>
-                </Authorized>
-                <NotAuthorized>
-                    <div class="w-100 m-0 mt-auto p-0 nav-footer-section">
-                        <NavLink
-                            class="nav-link btn btn-link d-flex align-items-center rounded-0 border-0 px-3 py-3 text-start shadow-none nav-auth-button text-white fw-bold"
-                            href="Account/Login">
-                            <i class="bi bi-box-arrow-in-right nav-icon me-3"></i> Inloggen
+            
+            @foreach(var route in routes)
+            {
+                <AuthorizeView Roles="@route.role">
+                    <div class="nav-item">
+                        <NavLink class="nav-link d-flex align-items-center rounded-0" href="@route.Path">
+                            <i class="@route.Icon nav-icon me-3"></i> @route.Label
                         </NavLink>
                     </div>
-                </NotAuthorized>
-            </AuthorizeView>
-
+                </AuthorizeView>
+            }
         </nav>
     </div>
+
+    <AuthorizeView>
+        <Authorized>
+            <div class="w-100 m-0 p-0 nav-footer-section">
+                <a href="profile"
+                    class="border-bottom d-flex align-items-center justify-content-center px-3 py-2 nav-user-row text-decoration-none text-white">
+                    <i class="bi bi-person-circle me-2"></i>
+                    <small class="text-truncate">@context.User.Identity?.Name</small>
+                </a>
+                <form action="Account/Logout" method="post" class="m-0 p-0 d-flex justify-content-center">
+                    <AntiforgeryToken />
+                    <input type="hidden" name="ReturnUrl" value="" />
+                    <button type="submit"
+                            class="nav-link btn btn-link d-flex align-items-center rounded-0 border-0 px-3 py-3 text-start shadow-none nav-auth-button">
+                        <i class="bi bi-box-arrow-left nav-icon me-3"></i> Uitloggen
+                    </button>
+                </form>
+            </div>
+        </Authorized>
+        <NotAuthorized>
+            <div class="w-100 m-0 p-0 nav-footer-section">
+                <NavLink
+                    class="nav-link btn btn-link d-flex align-items-center rounded-0 border-0 px-3 py-3 text-start shadow-none nav-auth-button text-white fw-bold"
+                    href="Account/Login">
+                    <i class="bi bi-box-arrow-in-right nav-icon me-3"></i> Inloggen
+                </NavLink>
+            </div>
+        </NotAuthorized>
+    </AuthorizeView>
 </div>
 
 @code {
     private bool navExpanded = false;
-
+    private List<(string Path, string Label, string Icon, string role)> routes =
+    [
+        ("/travelleaders", "Reisleiders", "bi bi-people-fill", "Planner"),
+        ("/journeys", "Reizen", "bi bi-compass-fill", "Planner"),
+        ("/planner/draft", "Planner", "bi bi-calendar-check", "Planner"),
+        ("/rules", "Regels", "bi bi-gear-fill", "Planner"),
+        ("/travelleaders/preferences", "Mijn Voorkeuren", "bi bi-journal-check", "Reisleider"),
+        ("/travelleaders/history", "Mijn Reisgeschiedenis", "bi bi-clock-history", "Reisleider")
+    ];
+    
     private void ToggleNav()
     {
         navExpanded = !navExpanded;
+    }
+
+    private void CloseMenu()
+    {
+        navExpanded = false;
     }
 }
