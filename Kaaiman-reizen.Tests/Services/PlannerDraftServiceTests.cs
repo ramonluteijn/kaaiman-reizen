@@ -39,7 +39,7 @@ public class PlannerDraftServiceTests
                 {
                     Id = 99, Name = "Jan", MaxTrips = 5,
                     AvailabilityPeriods = [ (new DateOnly(2026, 5, 1), new DateOnly(2026, 7, 1)) ], // Ruim beschikbaar
-                    PreferredDestinations = new Dictionary<string, int>()
+                    PreferredDestinations = new Dictionary<int, int>()
                 }
             ]
         };

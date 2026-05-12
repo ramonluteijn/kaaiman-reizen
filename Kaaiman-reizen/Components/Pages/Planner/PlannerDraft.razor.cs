@@ -147,8 +147,8 @@ public partial class PlannerDraft : ComponentBase
                     continue;
                 }
 
-                int? rank = leader.PreferredDestinations.TryGetValue(journey.Name, out var matchedRank)
-                    ? matchedRank : null;
+                int? rank = leader.PreferredDestinations.TryGetValue(journey.Id, out var matchedRank)
+                    ? (matchedRank == 0 ? null : matchedRank) : null;
 
                 assignmentsForJourney.Add(new JourneyAssignmentResult
                 {
@@ -169,7 +169,7 @@ public partial class PlannerDraft : ComponentBase
         List<(PlannerJourneyInput Journey, int? RankMatched)> AssignedJourneys)
     {
         public string LeaderName => Leader.Name;
-        public Dictionary<string, int> Preferences => Leader.PreferredDestinations;
+        public Dictionary<int, int> Preferences => Leader.PreferredDestinations;
     }
 
 

@@ -20,7 +20,7 @@ public class PlannerLeaderInput
     public int MinTrips { get; set; }
     public int MaxTrips { get; set; }
     public List<(DateOnly Start, DateOnly End)> AvailabilityPeriods { get; set; } = [];
-    public Dictionary<string, int> PreferredDestinations { get; set; } = [];
+    public Dictionary<int, int> PreferredDestinations { get; set; } = [];
 }
 
 public class PlannerJourneyInput

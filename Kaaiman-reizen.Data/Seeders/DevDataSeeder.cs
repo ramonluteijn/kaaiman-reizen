@@ -35,12 +35,6 @@ public static class DevDataSeeder
             MaxTrips = 6,
             IsActive = true,
             Note = $"{DevSeedMarker} weinig reizen, laag maximum",
-            PreferredDestinations =
-            [
-                new PreferredDestination { Rank = 1, Destination = "Portugal" },
-                new PreferredDestination { Rank = 2, Destination = "Spanje" },
-                new PreferredDestination { Rank = 3, Destination = "Marokko" }
-            ],
             AvailabilityPeriods =
             [
                 new AvailabilityPeriod { Start = new DateOnly(2026, 1, 1), End = new DateOnly(2026, 6, 30) }
@@ -55,11 +49,6 @@ public static class DevDataSeeder
             MaxTrips = 20,
             IsActive = true,
             Note = $"{DevSeedMarker} ervaren reisleider, hoog maximum",
-            PreferredDestinations =
-            [
-                new PreferredDestination { Rank = 1, Destination = "Turkije" },
-                new PreferredDestination { Rank = 2, Destination = "Egypte" }
-            ],
             AvailabilityPeriods =
             [
                 new AvailabilityPeriod { Start = new DateOnly(2026, 3, 1), End = new DateOnly(2026, 12, 31) }
@@ -74,12 +63,6 @@ public static class DevDataSeeder
             MaxTrips = 4,
             IsActive = true,
             Note = $"{DevSeedMarker} bijna op minimum, nauwe marge",
-            PreferredDestinations =
-            [
-                new PreferredDestination { Rank = 1, Destination = "Duitsland" },
-                new PreferredDestination { Rank = 2, Destination = "Zwitserland" },
-                new PreferredDestination { Rank = 3, Destination = "Oostenrijk" }
-            ],
             // Beschikbaarheid loopt af vóór zomerreizen — test voor validatieconflicten
             AvailabilityPeriods =
             [
@@ -95,11 +78,6 @@ public static class DevDataSeeder
             MaxTrips = 12,
             IsActive = false,
             Note = $"{DevSeedMarker} inactief, mag niet ingepland worden",
-            PreferredDestinations =
-            [
-                new PreferredDestination { Rank = 1, Destination = "Italië" },
-                new PreferredDestination { Rank = 2, Destination = "Griekenland" }
-            ],
             // Heeft periode maar is inactief — test IsActive-validatie
             AvailabilityPeriods =
             [
@@ -114,13 +92,7 @@ public static class DevDataSeeder
             MinTrips = 1,
             MaxTrips = 3,
             IsActive = true,
-            Note = $"{DevSeedMarker} geen beschikbaarheid opgegeven",
-            PreferredDestinations =
-            [
-                new PreferredDestination { Rank = 1, Destination = "Noorwegen" },
-                new PreferredDestination { Rank = 2, Destination = "IJsland" },
-                new PreferredDestination { Rank = 3, Destination = "Schotland" }
-            ]
+            Note = $"{DevSeedMarker} geen beschikbaarheid opgegeven"
             // Geen AvailabilityPeriods — test gedrag zonder beschikbaarheid
         }
     ];

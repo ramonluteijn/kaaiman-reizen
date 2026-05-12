@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Kaaiman_reizen.Data.Entities;
+using Kaaiman_reizen.Data.Enum;
 using Kaaiman_reizen.Data.Services;
 using Microsoft.AspNetCore.Components;
 
@@ -14,6 +15,9 @@ public partial class Preferences : ComponentBase
     private ITravelLeaderService LeaderService { get; set; } = default!;
 
     [Inject]
+    private IJourneyService JourneyService { get; set; } = default!;
+
+    [Inject]
     private NavigationManager Navigation { get; set; } = default!;
 
     [Parameter]
@@ -23,7 +27,9 @@ public partial class Preferences : ComponentBase
     private bool _loading = true;
     private bool _notFound = false;
     private List<PeriodModel> _preferredPeriods = new();
-    private string[] _preferred = new string[3];
+    private int?[] _preferredJourneyIds = new int?[3];
+    private HashSet<int> _availableJourneyIds = new();
+    private List<Journey> _journeys = new();
 
     private class PeriodModel
     {
@@ -58,6 +64,12 @@ public partial class Preferences : ComponentBase
 
         _model = item;
 
+        var allJourneys = await JourneyService.GetJourneysAsync();
+        _journeys = allJourneys
+            .Where(j => j.BookingStatus == BookingStatus.Bezig)
+            .OrderBy(j => j.Start)
+            .ToList();
+
         _preferredPeriods.Clear();
         if (_model.AvailabilityPeriods != null)
         {
@@ -65,12 +77,19 @@ public partial class Preferences : ComponentBase
                 _preferredPeriods.Add(new PeriodModel { Start = p.Start.ToDateTime(TimeOnly.MinValue), End = p.End.ToDateTime(TimeOnly.MinValue) });
         }
 
-        _preferred = new string[3];
+        _preferredJourneyIds = new int?[3];
+        _availableJourneyIds = new HashSet<int>();
         foreach (var dest in _model.PreferredDestinations)
         {
-            var idx = dest.Rank - 1;
-            if (idx >= 0 && idx < 3)
-                _preferred[idx] = dest.Destination;
+            if (dest.Rank >= 1 && dest.Rank <= 3 && dest.JourneyId.HasValue)
+            {
+                var idx = dest.Rank - 1;
+                _preferredJourneyIds[idx] = dest.JourneyId;
+            }
+            else if (dest.Rank == 0 && dest.JourneyId.HasValue)
+            {
+                _availableJourneyIds.Add(dest.JourneyId.Value);
+            }
         }
 
         _loading = false;
@@ -84,10 +103,20 @@ public partial class Preferences : ComponentBase
     private async Task HandleValidSubmit()
     {
         _model.PreferredDestinations = new List<PreferredDestination>();
+
         for (int i = 0; i < 3; i++)
         {
-            if (!string.IsNullOrWhiteSpace(_preferred[i]))
-                _model.PreferredDestinations.Add(new PreferredDestination { Rank = i + 1, Destination = _preferred[i] });
+            if (_preferredJourneyIds[i].HasValue)
+                _model.PreferredDestinations.Add(new PreferredDestination
+                    { Rank = i + 1, JourneyId = _preferredJourneyIds[i] });
+        }
+
+        var top3Ids = _preferredJourneyIds.Where(id => id.HasValue).Select(id => id!.Value).ToHashSet();
+        foreach (var jid in _availableJourneyIds)
+        {
+            if (!top3Ids.Contains(jid))
+                _model.PreferredDestinations.Add(new PreferredDestination
+                    { Rank = 0, JourneyId = jid });
         }
 
         _model.AvailabilityPeriods = _preferredPeriods
@@ -95,6 +124,7 @@ public partial class Preferences : ComponentBase
             .Select(p => new AvailabilityPeriod { Start = DateOnly.FromDateTime(p.Start!.Value), End = DateOnly.FromDateTime(p.End!.Value) })
             .ToList();
 
+        _model.Journeys = [];
         await LeaderService.UpdateTravelLeaderAsync(_model);
 
         Navigation.NavigateTo("/");
@@ -109,5 +139,11 @@ public partial class Preferences : ComponentBase
     {
         if (index >= 0 && index < _preferredPeriods.Count)
             _preferredPeriods.RemoveAt(index);
+    }
+
+    private void ToggleAvailable(int journeyId, bool isChecked)
+    {
+        if (isChecked) _availableJourneyIds.Add(journeyId);
+        else _availableJourneyIds.Remove(journeyId);
     }
 }

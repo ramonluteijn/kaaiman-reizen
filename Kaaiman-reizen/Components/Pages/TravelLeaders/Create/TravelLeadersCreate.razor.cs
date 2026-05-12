@@ -13,7 +13,6 @@ public partial class TravelLeadersCreate : ComponentBase
     private NavigationManager Navigation { get; set; } = default!;
 
     private TravelLeader _model = new();
-    private string[] _preferred = new string[3];
     private List<PeriodModel> _periods = new();
 
     private class PeriodModel
@@ -40,16 +39,6 @@ public partial class TravelLeadersCreate : ComponentBase
 
     private async Task HandleValidSubmit()
     {
-        // map preferred destinations
-        _model.PreferredDestinations = new List<PreferredDestination>();
-        for (int i = 0; i < 3; i++)
-        {
-            if (!string.IsNullOrWhiteSpace(_preferred[i]))
-            {
-                _model.PreferredDestinations.Add(new PreferredDestination { Rank = i + 1, Destination = _preferred[i] });
-            }
-        }
-
         // map availability periods
         _model.AvailabilityPeriods = _periods
             .Where(p => p.Start.HasValue && p.End.HasValue)

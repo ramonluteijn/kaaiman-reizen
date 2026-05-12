@@ -58,12 +58,12 @@ public class MainContext : IdentityDbContext<ApplicationUser>
         );
 
         builder.Entity<PreferredDestination>().HasData(
-            new PreferredDestination { Id = 1, TravelLeaderId = 1, Rank = 1, Destination = "Italië" },
-            new PreferredDestination { Id = 2, TravelLeaderId = 1, Rank = 2, Destination = "Griekenland" },
-            new PreferredDestination { Id = 3, TravelLeaderId = 1, Rank = 3, Destination = "Kroatië" },
-            new PreferredDestination { Id = 4, TravelLeaderId = 2, Rank = 1, Destination = "Spanje" },
-            new PreferredDestination { Id = 5, TravelLeaderId = 2, Rank = 2, Destination = "Oostenrijk" },
-            new PreferredDestination { Id = 6, TravelLeaderId = 2, Rank = 3, Destination = "Griekenland" }
+            new PreferredDestination { Id = 1, TravelLeaderId = 1, Rank = 1, JourneyId = 1 }, // Italië
+            new PreferredDestination { Id = 2, TravelLeaderId = 1, Rank = 2, JourneyId = 4 }, // Griekenland
+            new PreferredDestination { Id = 3, TravelLeaderId = 1, Rank = 3, JourneyId = 5 }, // Kroatië
+            new PreferredDestination { Id = 4, TravelLeaderId = 2, Rank = 1, JourneyId = 2 }, // Spanje
+            new PreferredDestination { Id = 5, TravelLeaderId = 2, Rank = 2, JourneyId = 3 }, // Oostenrijk
+            new PreferredDestination { Id = 6, TravelLeaderId = 2, Rank = 3, JourneyId = 4 }  // Griekenland
         );
 
         // Jan is available for spring (Griekenland, Kroatië) and summer (Italië)
@@ -100,6 +100,12 @@ public class MainContext : IdentityDbContext<ApplicationUser>
             .HasOne(p => p.TravelLeader)
             .WithMany(r => r.PreferredDestinations)
             .HasForeignKey(p => p.TravelLeaderId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<PreferredDestination>()
+            .HasOne(p => p.Journey)
+            .WithMany()
+            .HasForeignKey(p => p.JourneyId)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.Entity<AvailabilityPeriod>()

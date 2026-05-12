@@ -68,7 +68,7 @@ public partial class PlannerDraft
         if (currentCount >= journeyInput.RequiredLeaders) return;
 
         var leader = _request.Leaders.First(l => l.Id == candidate.LeaderId);
-        int? rank = leader.PreferredDestinations.TryGetValue(_selectedJourney.Name, out int r) ? r : null;
+        int? rank = leader.PreferredDestinations.TryGetValue(_selectedJourney.Id, out int r) ? (r == 0 ? null : r) : null;
 
         var entry = new JourneyAssignmentResult
         {
@@ -108,7 +108,7 @@ public partial class PlannerDraft
 
         int currentCount = CountAssignments(leader.Id);
         var conflictJourney = FindConflictingJourney(leader.Id, journeyInput.Id, journeyInput);
-        int? rank = leader.PreferredDestinations.TryGetValue(journeyInput.Name, out int r) ? r : null;
+        int? rank = leader.PreferredDestinations.TryGetValue(journeyInput.Id, out int r) ? (r == 0 ? null : r) : null;
 
         var assignedToThis = _result!.JourneyAssignments.TryGetValue(journeyInput.Id, out var cur)
             ? cur.Select(a => a.LeaderId).ToHashSet()

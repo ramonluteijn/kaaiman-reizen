@@ -37,7 +37,9 @@ public class PlannerDraftService : IPlannerDraftService
                     AvailabilityPeriods = l.AvailabilityPeriods
                         .Select(a => (a.Start, a.End))
                         .ToList(),
-                    PreferredDestinations = l.PreferredDestinations.ToDictionary(p => p.Destination, p => p.Rank)
+                    PreferredDestinations = l.PreferredDestinations
+                        .Where(p => p.JourneyId.HasValue)
+                        .ToDictionary(p => p.JourneyId!.Value, p => p.Rank)
                 }).ToList(),
             Journeys = journeys
                 // 2. Filter hier direct op het meegegeven jaar!
@@ -151,7 +153,9 @@ public class PlannerDraftService : IPlannerDraftService
         for (int l = 0; l < L; l++)
             for (int j = 0; j < Js; j++)
             {
-                int cost = leaders[l].PreferredDestinations.TryGetValue(solvable[j].Name, out int rank) ? rank : 10;
+                int cost = leaders[l].PreferredDestinations.TryGetValue(solvable[j].Id, out int rank)
+                    ? (rank == 0 ? 5 : rank)
+                    : 10;
                 obj.AddTerm(x[l, j], cost);
             }
 
@@ -196,7 +200,7 @@ public class PlannerDraftService : IPlannerDraftService
                     if (solver.Value(x[l, j]) == 1L)
                     {
                         int? rankMatched = leaders[l].PreferredDestinations
-                            .TryGetValue(solvable[j].Name, out int r) ? r : null;
+                            .TryGetValue(solvable[j].Id, out int r) ? (r == 0 ? null : r) : null;
 
                         assignments.Add(new JourneyAssignmentResult
                         {
