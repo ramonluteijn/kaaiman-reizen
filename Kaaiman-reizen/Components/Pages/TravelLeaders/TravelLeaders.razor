@@ -2,8 +2,6 @@
 @attribute [Authorize(Roles = "Planner")]
 @rendermode InteractiveServer
 @using Kaaiman_reizen.Models.ViewModels
-@using Kaaiman_reizen.Data.Services
-@using Kaaiman_reizen.Data.Entities
 @inject IJSRuntime JS
 
 <PageTitle>Reisleiders</PageTitle>
@@ -12,18 +10,23 @@
 
 <div class="card">
     <div class="card-body">
-        <div class="mb-3">
-            <input class="form-control"
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <input class="form-control w-25"
                    placeholder="Zoek op naam..."
                    @bind="_searchTerm"
                    @bind:event="oninput" />
-        </div>
 
-            <Table TItem="TravelLeaderViewModel" Items="FilteredLeaders" OnDelete="@OnDelete" Path="travelleaders" CreateText="Nieuwe reisleider" EditHrefSelector="@GetEditHref">
+            <a href="travelleaders/create" class="btn btn-primary text-uppercase" style="background-color: #00796b; border: none;">
+                <i class="bi bi-plus"></i> Nieuwe reisleider
+            </a>
+        </div>
+            
+            <Table TItem="TravelLeaderViewModel" Items="FilteredLeaders" OnDelete="@OnDelete" Path="travelleaders" EditHrefSelector="@GetEditHref">
             <HeaderContent>
                 <th @onclick='() => SortBy("Name")'>
                     Naam @(GetSortIcon("Name"))
                 </th>
+                <th>E-mailadres</th>
                 <th>Telefoon</th>
                 <th @onclick='() => SortBy("Experience")'>
                     Reizen Ervaring @(GetSortIcon("Experience"))
@@ -42,6 +45,7 @@
             </HeaderContent>
             <RowTemplate>
                 <td>@context.Name</td>
+                <td>@context.Email</td>
                 <td>@context.PhoneNumber</td>
                 <td>@context.AmountOfTrips</td>
                 <td>@context.MinTrips</td>

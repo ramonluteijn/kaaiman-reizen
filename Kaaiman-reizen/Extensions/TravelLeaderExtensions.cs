@@ -18,6 +18,7 @@ public static class TravelLeaderExtensions
         {
             Id = leader.Id,
             Name = leader.Name,
+            Email = leader.Email,
             PhoneNumber = leader.PhoneNumber,
             AmountOfTrips = leader.AmountOfTrips,
             MinTrips = leader.MinTrips,

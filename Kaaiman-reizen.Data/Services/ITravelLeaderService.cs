@@ -6,11 +6,12 @@ namespace Kaaiman_reizen.Data.Services;
 public interface ITravelLeaderService
 {
     Task<IReadOnlyList<string>> GetLeaderNamesAsync(CancellationToken cancellationToken = default);
-    Task<IReadOnlyList<Entities.TravelLeader>> GetTravelLeadersAsync(CancellationToken cancellationToken = default);
-    Task AddTravelLeaderAsync(Entities.TravelLeader leader, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<TravelLeader>> GetTravelLeadersAsync(CancellationToken cancellationToken = default);
+    Task AddTravelLeaderAsync(TravelLeader leader, CancellationToken cancellationToken = default);
     Task DeleteTravelLeaderAsync(int id, CancellationToken cancellationToken = default);
-    Task<Entities.TravelLeader?> GetTravelLeaderByIdAsync(int id, CancellationToken cancellationToken = default);
-    Task UpdateTravelLeaderAsync(Entities.TravelLeader leader, CancellationToken cancellationToken = default);
+    Task<TravelLeader?> GetTravelLeaderByIdAsync(int id, CancellationToken cancellationToken = default);
+    Task<TravelLeader?> GetTravelLeaderByEmailAsync(string email, CancellationToken cancellationToken = default);
+    Task UpdateTravelLeaderAsync(TravelLeader leader, CancellationToken cancellationToken = default);
 
     Task<List<TravelLeader>> GetTravelLeadersWithoutPreferencesAsync();
     Task<List<TravelLeader>> GetTravelLeadersWithoutJourneysAsync(int year);

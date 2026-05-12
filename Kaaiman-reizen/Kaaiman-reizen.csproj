@@ -18,6 +18,12 @@
         </Content>
     </ItemGroup>
     <ItemGroup>
+      <Compile Remove="Components\Pages\AccountManagemen\**" />
+      <Content Remove="Components\Pages\AccountManagemen\**" />
+      <EmbeddedResource Remove="Components\Pages\AccountManagemen\**" />
+      <None Remove="Components\Pages\AccountManagemen\**" />
+    </ItemGroup>
+    <ItemGroup>
       <ProjectReference Include="..\Kaaiman-reizen.Data\Kaaiman-reizen.Data.csproj" />
     </ItemGroup>
     <ItemGroup>

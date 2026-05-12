@@ -31,7 +31,7 @@ public class TravelLeaderService : ITravelLeaderService
             .ToListAsync(cancellationToken);
     }
 
-    public async Task AddTravelLeaderAsync(Entities.TravelLeader leader, CancellationToken cancellationToken = default)
+    public async Task AddTravelLeaderAsync(TravelLeader leader, CancellationToken cancellationToken = default)
     {
         _db.TravelLeader.Add(leader);
         await _db.SaveChangesAsync(cancellationToken);
@@ -52,7 +52,7 @@ public class TravelLeaderService : ITravelLeaderService
         await _db.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<Entities.TravelLeader?> GetTravelLeaderByIdAsync(int id, CancellationToken cancellationToken = default)
+    public async Task<TravelLeader?> GetTravelLeaderByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         return await _db.TravelLeader
             .AsNoTracking()
@@ -60,6 +60,15 @@ public class TravelLeaderService : ITravelLeaderService
             .Include(t => t.AvailabilityPeriods)
             .Include(t => t.Journeys)
             .FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
+    }
+
+    public async Task<TravelLeader?> GetTravelLeaderByEmailAsync(string email, CancellationToken cancellationToken = default)
+    {
+        return await _db.TravelLeader
+            .Include(t => t.PreferredDestinations)
+            .Include(t => t.AvailabilityPeriods)
+            .Include(t => t.Journeys)
+            .FirstOrDefaultAsync(t => t.Email == email, cancellationToken);
     }
 
     public async Task UpdateTravelLeaderAsync(Entities.TravelLeader leader, CancellationToken cancellationToken = default)

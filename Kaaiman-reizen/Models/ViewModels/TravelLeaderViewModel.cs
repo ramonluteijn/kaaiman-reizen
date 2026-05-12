@@ -5,6 +5,9 @@ public sealed class TravelLeaderViewModel
 {
     public int Id { get; init; }
     public string Name { get; init; } = string.Empty;
+
+    public string Email { get; init; } = string.Empty;
+
     public string PhoneNumber { get; init; } = string.Empty;
     public int? AmountOfTrips { get; init; }
     public int? MinTrips { get; init; }
@@ -24,6 +27,7 @@ public sealed class TravelLeaderViewModel
         {
             Id = this.Id,
             Name = this.Name,
+            Email = this.Email,
             PhoneNumber = this.PhoneNumber,
             AmountOfTrips = this.AmountOfTrips,
             MinTrips = this.MinTrips,

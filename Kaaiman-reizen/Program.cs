@@ -95,21 +95,22 @@ builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityUserAccessor>();
 builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
+builder.Services.AddScoped<AccountService, AccountService>();
 
-builder.Services.Configure<Kaaiman_reizen.Services.SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
+builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
 
 if (builder.Environment.IsDevelopment())
 {
-    builder.Services.AddTransient<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender, Kaaiman_reizen.Services.ConsoleEmailSender>();
-    builder.Services.AddTransient<IEmailSender<ApplicationUser>, Kaaiman_reizen.Services.ConsoleEmailSender>();
+    builder.Services.AddTransient<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender, ConsoleEmailSender>();
+    builder.Services.AddTransient<IEmailSender<ApplicationUser>, ConsoleEmailSender>();
 }
 else
 {
-    builder.Services.AddTransient<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender, Kaaiman_reizen.Services.SmtpEmailSender>();
-    builder.Services.AddTransient<IEmailSender<ApplicationUser>, Kaaiman_reizen.Services.SmtpEmailSender>();
+    builder.Services.AddTransient<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender, SmtpEmailSender>();
+    builder.Services.AddTransient<IEmailSender<ApplicationUser>, SmtpEmailSender>();
 }
 
-builder.Services.AddScoped<IEmailDispatcher, Kaaiman_reizen.Services.EmailDispatcher>();
+builder.Services.AddScoped<IEmailDispatcher, EmailDispatcher>();
 
 builder.Services.AddAuthorization();
 
@@ -126,6 +127,11 @@ if (!string.IsNullOrWhiteSpace(google["ClientId"]))
         options.ClientSecret = google["ClientSecret"]!;
         options.CallbackPath = "/login-google";
         options.Events.OnTicketReceived = ExternalLoginHandler.HandleExternalLogin;
+        options.Events.OnRedirectToAuthorizationEndpoint = context =>
+        {
+            context.Response.Redirect(context.RedirectUri + "&prompt=select_account");
+            return Task.CompletedTask;
+        };
     });
 
 if (!string.IsNullOrWhiteSpace(microsoft["ClientId"]))

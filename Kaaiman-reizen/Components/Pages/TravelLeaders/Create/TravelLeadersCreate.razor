@@ -1,4 +1,4 @@
-@page "/travelleaders/create"
+﻿@page "/travelleaders/create"
 @attribute [Authorize(Roles = "Planner")]
 @rendermode InteractiveServer
 @using Kaaiman_reizen.Data.Entities
@@ -8,6 +8,14 @@
 <PageTitle>Nieuwe reisleider</PageTitle>
 
 <h1 class="h4">Nieuwe reisleider</h1>
+
+@if (!string.IsNullOrEmpty(_errorMessage))
+{
+    <div class="alert alert-danger alert-dismissible fade show my-4" role="alert" id="error-alert">
+        <strong>Oeps!</strong> @_errorMessage
+        <button type="button" class="btn-close" @onclick="() => _errorMessage = null" aria-label="Close"></button>
+    </div>
+}
 
 <div class="card">
     <div class="card-body">
@@ -21,8 +29,14 @@
             </div>
 
             <div class="mb-3">
+                <label class="form-label">E-mailadres</label>
+                <InputText class="form-control" @bind-Value="_model.Email" />
+                <ValidationMessage For="() => _model.Email" />
+            </div>
+
+            <div class="mb-3">
                 <label class="form-label">Telefoon</label>
-                <InputText class="form-control" @bind-Value="_model.PhoneNumber" />
+                <InputText type="tel" class="form-control" @bind-Value="_model.PhoneNumber" />
                 <ValidationMessage For="() => _model.PhoneNumber" />
             </div>
 
@@ -49,7 +63,7 @@
                 <InputTextArea class="form-control" @bind-Value="_model.Note" />
             </div>
 
-            <div class="mb-3 form-check">
+            <div class="form-check mb-3">
                 <InputCheckbox class="form-check-input" @bind-Value="_model.IsActive" />
                 <label class="form-check-label">Actief</label>
             </div>
@@ -105,5 +119,3 @@
         </EditForm>
     </div>
 </div>
-
-
