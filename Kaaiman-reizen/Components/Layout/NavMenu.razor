@@ -23,7 +23,7 @@
                 </NavLink>
             </div>
             
-            @foreach (var route in routes)
+            @foreach(var route in routes)
             {
                 <AuthorizeView Roles="@route.role">
                     <div class="nav-item">
@@ -40,7 +40,7 @@
         <Authorized>
             <div class="w-100 m-0 p-0 nav-footer-section">
                 <a href="profile"
-                       class="border-bottom d-flex align-items-center justify-content-center px-3 py-2 nav-user-row text-decoration-none text-white">
+                    class="border-bottom d-flex align-items-center justify-content-center px-3 py-2 nav-user-row text-decoration-none text-white">
                     <i class="bi bi-person-circle me-2"></i>
                     <small class="text-truncate">@context.User.Identity?.Name</small>
                 </a>
