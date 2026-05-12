@@ -103,8 +103,7 @@ public partial class PlannerDraft
 
     private LeaderCandidate BuildLeaderCandidate(PlannerLeaderInput leader, PlannerJourneyInput journeyInput)
     {
-        bool isAvailableForJourney = leader.AvailabilityPeriods.Any(
-            p => p.Start <= journeyInput.Start && p.End >= journeyInput.End);
+        bool isAvailableForJourney = leader.PreferredDestinations.ContainsKey(journeyInput.Id);
 
         int currentCount = CountAssignments(leader.Id);
         var conflictJourney = FindConflictingJourney(leader.Id, journeyInput.Id, journeyInput);
@@ -133,7 +132,7 @@ public partial class PlannerDraft
         );
 
         if (!isAvailableForJourney)
-            validationReason = "Deze reisleider is niet beschikbaar voor deze reisdatums.";
+            validationReason = "Deze reisleider heeft geen voorkeur of beschikbaarheid opgegeven voor deze reis.";
 
         return new LeaderCandidate(
             LeaderId: leader.Id,

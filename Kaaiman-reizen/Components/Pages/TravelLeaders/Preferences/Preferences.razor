@@ -7,8 +7,8 @@
 
 <PageTitle>Mijn Voorkeuren</PageTitle>
 
-<h1 class="h4">Mijn Reisvoorkeuren en Beschikbaarheid</h1>
-<p class="text-muted">Geef hier je voorkeuren en beschikbaarheid door voor de komende reizen.</p>
+<h1 class="h4">Mijn Reisvoorkeuren</h1>
+<p class="text-muted">Geef hier je voorkeuren door voor de komende reizen.</p>
 
 <div class="card">
     <div class="card-body">
@@ -106,40 +106,6 @@
                         }
                     </div>
                 }
-
-                <h5>Beschikbaarheid (periode)</h5>
-                @for (int i = 0; i < _preferredPeriods.Count; i++)
-                {
-                    var period = _preferredPeriods[i];
-                    var idx = i;
-                    <div class="app-period-row mb-2">
-                        <div>
-                            <label class="form-label">Start</label>
-                            <InputDate @bind-Value="period.Start" class="form-control" />
-                        </div>
-                        <div>
-                            <label class="form-label">Eind</label>
-                            <InputDate @bind-Value="period.End" class="form-control" />
-                        </div>
-                        <div class="app-period-action">
-                            <MudButton Variant="Variant.Outlined"
-                                       Color="Color.Error"
-                                       StartIcon="@Icons.Material.Filled.Delete"
-                                       OnClick="@(EventCallback.Factory.Create(this, () => RemovePeriod(idx)))">
-                                Verwijderen
-                            </MudButton>
-                        </div>
-                    </div>
-                }
-
-                <div class="mb-3">
-                    <MudButton Variant="Variant.Outlined"
-                               Color="Color.Secondary"
-                               StartIcon="@Icons.Material.Filled.Add"
-                               OnClick="AddPeriod">
-                        Periode toevoegen
-                    </MudButton>
-                </div>
 
                     <div class="app-form-actions">
                     <MudButton ButtonType="ButtonType.Submit"

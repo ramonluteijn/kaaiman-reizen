@@ -30,16 +30,9 @@ public partial class Preferences : ComponentBase
     private TravelLeader _model = new();
     private bool _loading = true;
     private bool _notFound = false;
-    private List<PeriodModel> _preferredPeriods = new();
     private int?[] _preferredJourneyIds = new int?[3];
     private HashSet<int> _availableJourneyIds = new();
     private List<Journey> _journeys = new();
-
-    private class PeriodModel
-    {
-        public DateTime? Start { get; set; }
-        public DateTime? End { get; set; }
-    }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -80,13 +73,6 @@ public partial class Preferences : ComponentBase
             .Where(j => j.BookingStatus == BookingStatus.Bezig)
             .OrderBy(j => j.Start)
             .ToList();
-
-        _preferredPeriods.Clear();
-        if (_model.AvailabilityPeriods != null)
-        {
-            foreach (var p in _model.AvailabilityPeriods.OrderBy(p => p.Start))
-                _preferredPeriods.Add(new PeriodModel { Start = p.Start.ToDateTime(TimeOnly.MinValue), End = p.End.ToDateTime(TimeOnly.MinValue) });
-        }
 
         _preferredJourneyIds = new int?[3];
         _availableJourneyIds = new HashSet<int>();
@@ -130,26 +116,11 @@ public partial class Preferences : ComponentBase
                     { Rank = 0, JourneyId = jid });
         }
 
-        _model.AvailabilityPeriods = _preferredPeriods
-            .Where(p => p.Start.HasValue && p.End.HasValue)
-            .Select(p => new AvailabilityPeriod { Start = DateOnly.FromDateTime(p.Start!.Value), End = DateOnly.FromDateTime(p.End!.Value) })
-            .ToList();
-
+        _model.AvailabilityPeriods = [];
         _model.Journeys = [];
         await LeaderService.UpdateTravelLeaderAsync(_model);
 
         Navigation.NavigateTo("/");
-    }
-
-    private void AddPeriod()
-    {
-        _preferredPeriods.Add(new PeriodModel());
-    }
-
-    private void RemovePeriod(int index)
-    {
-        if (index >= 0 && index < _preferredPeriods.Count)
-            _preferredPeriods.RemoveAt(index);
     }
 
     private void ToggleAvailable(int journeyId, bool isChecked)

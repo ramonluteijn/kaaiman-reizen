@@ -50,7 +50,21 @@
                 <td>@context.AmountOfTrips</td>
                 <td>@context.MinTrips</td>
                 <td>@context.MaxTrips</td>
-                <td>@context.Availability</td>
+                <td>
+                    @if (!context.AvailableForJourneys.Any())
+                    {
+                        <span class="text-muted">—</span>
+                    }
+                    else
+                    {
+                        <div class="d-flex flex-column gap-1">
+                            @foreach (var name in context.AvailableForJourneys)
+                            {
+                                <span>@name</span>
+                            }
+                        </div>
+                    }
+                </td>
                 <td>
                     <span class="badge @(context.IsActive ? "bg-success" : "bg-danger")">
                         @(context.IsActive ? "Ja" : "Nee")

@@ -25,7 +25,7 @@ public class PlannerDraftService : IPlannerDraftService
         return new PlannerDraftRequest
         {
             Leaders = leaders
-                .Where(l => l.IsActive && l.AvailabilityPeriods.Any())
+                .Where(l => l.IsActive && l.PreferredDestinations.Any())
                 .Select(l => new PlannerLeaderInput
                 {
                     Id = l.Id,
@@ -34,9 +34,6 @@ public class PlannerDraftService : IPlannerDraftService
                     AmountOfTrips = l.AmountOfTrips ?? 0,
                     MinTrips = l.MinTrips ?? 0,
                     MaxTrips = l.MaxTrips ?? 0,
-                    AvailabilityPeriods = l.AvailabilityPeriods
-                        .Select(a => (a.Start, a.End))
-                        .ToList(),
                     PreferredDestinations = l.PreferredDestinations
                         .Where(p => p.JourneyId.HasValue)
                         .ToDictionary(p => p.JourneyId!.Value, p => p.Rank)
@@ -82,13 +79,12 @@ public class PlannerDraftService : IPlannerDraftService
         var solvable = new List<PlannerJourneyInput>();
         foreach (var journey in journeys)
         {
-            int eligible = leaders.Count(l => l.AvailabilityPeriods.Any(
-                p => p.Start <= journey.Start && p.End >= journey.End));
+            int eligible = leaders.Count(l => l.PreferredDestinations.ContainsKey(journey.Id));
 
             if (eligible < journey.RequiredLeaders)
                 result.JourneyWarnings[journey.Id] =
                     $"Niet genoeg reisleiders beschikbaar ({eligible} van {journey.RequiredLeaders} vereist). " +
-                    "Controleer beschikbaarheidsperiodes of voeg actieve reisleiders toe.";
+                    "Controleer of reisleiders deze reis hebben geselecteerd in hun voorkeuren.";
             else
                 solvable.Add(journey);
         }
@@ -114,13 +110,12 @@ public class PlannerDraftService : IPlannerDraftService
             model.Add(LinearExpr.Sum(vars) <= solvable[j].RequiredLeaders);
         }
 
-        // Constraint B: block leader if not available for the full journey dates
+        // Constraint B: block leader if they have no preference for this journey
         for (int l = 0; l < L; l++)
         {
             for (int j = 0; j < Js; j++)
             {
-                bool available = leaders[l].AvailabilityPeriods.Any(
-                    p => p.Start <= solvable[j].Start && p.End >= solvable[j].End);
+                bool available = leaders[l].PreferredDestinations.ContainsKey(solvable[j].Id);
                 if (!available)
                     model.Add(x[l, j] == 0);
             }
@@ -174,8 +169,7 @@ public class PlannerDraftService : IPlannerDraftService
         for (int l = 0; l < L; l++)
         {
             bool eligible = Enumerable.Range(0, Js).Any(j =>
-                leaders[l].AvailabilityPeriods.Any(
-                    p => p.Start <= solvable[j].Start && p.End >= solvable[j].End));
+                leaders[l].PreferredDestinations.ContainsKey(solvable[j].Id));
             if (!eligible) continue;
 
             var assignedVar = model.NewBoolVar($"assigned_{l}");

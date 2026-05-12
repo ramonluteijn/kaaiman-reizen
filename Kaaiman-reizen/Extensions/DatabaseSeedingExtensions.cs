@@ -65,7 +65,8 @@ public static class DatabaseSeedingExtensions
         var defaultUsers = new[]
         {
             new { Email = "planner@kaaiman.nl",    Role = "Planner",    TravelLeaderName = (string?)null },
-            new { Email = "reisleider@kaaiman.nl", Role = "Reisleider", TravelLeaderName = (string?)"Jan de Vries" }
+            new { Email = "reisleider@kaaiman.nl", Role = "Reisleider", TravelLeaderName = (string?)"Jan de Vries" },
+            new { Email = "maria@kaaiman.nl",      Role = "Reisleider", TravelLeaderName = (string?)"Maria Jansen" }
         };
 
         foreach (var config in defaultUsers)

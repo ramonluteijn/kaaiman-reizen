@@ -1,6 +1,5 @@
 using Kaaiman_reizen.Models.Planner;
 using Kaaiman_reizen.Models.ViewModels;
-using Kaaiman_reizen.Components.Pages.Planner.Components;
 using Kaaiman_reizen.Services;
 using Kaaiman_reizen.Data.Services;
 using Kaaiman_reizen.Data.Entities;
@@ -27,12 +26,8 @@ public partial class PlannerDraft : ComponentBase
     private bool _loading = true;
     private bool _isGenerating = false;
     private bool _isSaving = false;
-    private bool _showEntryModal = true;
-    private bool _entryActionInProgress;
     private string? _saveMessage;
     private Severity _saveMessageSeverity = Severity.Info;
-    private List<PlanningVersion> _availableDrafts = [];
-    private int? _selectedDraftId;
     private CancellationTokenSource? _saveMessageCts;
     private Kaaiman_reizen.Data.Rules.CheckRules.RuleSettings _ruleSettings =
         Kaaiman_reizen.Data.Rules.CheckRules.GetDefaultSettings();
@@ -51,75 +46,67 @@ public partial class PlannerDraft : ComponentBase
     private async Task LoadDataForYearAsync(int year)
     {
         _loading = true;
+        _result = null;
         _request = await DraftService.BuildRequestAsync(year);
         var rules = await RuleService.GetRulesAsync();
         _ruleSettings = Kaaiman_reizen.Data.Rules.CheckRules.FromRules(rules);
         var drafts = await PlanningService.GetDraftsAsync(year);
-        _availableDrafts = drafts.ToList();
-        _selectedDraftId = VersionId is not null && _availableDrafts.Any(d => d.Id == VersionId.Value)
-            ? VersionId
-            : _availableDrafts.FirstOrDefault()?.Id;
+        var draftToLoad = VersionId is not null
+            ? drafts.FirstOrDefault(d => d.Id == VersionId.Value)
+            : drafts.FirstOrDefault();
         _loading = false;
+        StateHasChanged();
+
+        if (draftToLoad is not null)
+        {
+            bool isStale = await LoadDraftByIdAsync(draftToLoad.Id);
+            if (isStale)
+                await RegeneratePlanningAsync(autoUpdated: true);
+        }
+        else
+        {
+            await RegeneratePlanningAsync(autoUpdated: false);
+        }
     }
 
-    private async Task LoadDraftByIdAsync(int planningVersionId)
+    private async Task<bool> LoadDraftByIdAsync(int planningVersionId)
     {
-        if (_request is null) return;
+        if (_request is null) return false;
 
         var selectedDraft = await PlanningService.GetPlanningVersionByIdAsync(planningVersionId);
         if (selectedDraft is null || selectedDraft.IsPublished)
         {
             SetSaveMessage($"Concept met id {planningVersionId} is niet gevonden.", Severity.Warning);
             Snackbar.Add(_saveMessage, _saveMessageSeverity);
-            return;
+            return false;
         }
 
-        _result = MapToDraftResult(selectedDraft);
+        var (mapped, isStale) = MapToDraftResult(selectedDraft);
+        _result = mapped;
+        return isStale;
     }
 
-    private async Task ResumeSelectedDraftAsync()
-    {
-        if (_selectedDraftId is null) return;
-
-        _entryActionInProgress = true;
-        try
-        {
-            await LoadDraftByIdAsync(_selectedDraftId.Value);
-            if (_result is not null)
-                _showEntryModal = false;
-        }
-        finally
-        {
-            _entryActionInProgress = false;
-        }
-    }
-
-    private async Task GenerateNewPlanningFromModalAsync()
+    private async Task RegeneratePlanningAsync(bool autoUpdated = false)
     {
         if (_request is null) return;
 
-        _entryActionInProgress = true;
         _isGenerating = true;
         _result = null;
         ClearSaveMessage();
         StateHasChanged();
 
-        try
-        {
-            await Task.Delay(50);
-            _result = await Task.Run(() => DraftService.GenerateDraft(_request));
-            _showEntryModal = false;
-        }
-        finally
-        {
-            _isGenerating = false;
-            _entryActionInProgress = false;
-        }
+        await Task.Delay(50);
+        _result = await Task.Run(() => DraftService.GenerateDraft(_request));
+        _isGenerating = false;
+
+        if (autoUpdated)
+            SetSaveMessage("Planning automatisch bijgewerkt omdat reisleider- of reisgegevens zijn gewijzigd.", Severity.Info);
     }
 
-    private PlannerDraftResult MapToDraftResult(PlanningVersion planningVersion)
+    private (PlannerDraftResult Result, bool IsStale) MapToDraftResult(PlanningVersion planningVersion)
     {
         var result = new PlannerDraftResult { IsSuccess = true };
+        bool isStale = false;
 
         foreach (var journeyGroup in planningVersion.Assignments.GroupBy(a => a.JourneyId))
         {
@@ -127,6 +114,7 @@ public partial class PlannerDraft : ComponentBase
             if (journey is null)
             {
                 result.JourneyWarnings[journeyGroup.Key] = "Deze reis is geannuleerd of verplaatst naar een ander jaar.";
+                isStale = true;
                 continue;
             }
 
@@ -137,13 +125,15 @@ public partial class PlannerDraft : ComponentBase
                 var leader = _request.Leaders.FirstOrDefault(l => l.Id == assignment.TravelLeaderId);
                 if (leader is null)
                 {
-                    result.JourneyWarnings[journey.Id] = $"Let op: {assignment.TravelLeader.Name} is automatisch verwijderd omdat deze inactief is of geen beschikbaarheid heeft.";
+                    result.JourneyWarnings[journey.Id] = $"Let op: {assignment.TravelLeader.Name} is automatisch verwijderd omdat deze inactief is of geen voorkeuren heeft.";
+                    isStale = true;
                     continue;
                 }
 
-                if (!leader.AvailabilityPeriods.Any(p => p.Start <= journey.Start && p.End >= journey.End))
+                if (!leader.PreferredDestinations.ContainsKey(journey.Id))
                 {
-                    result.JourneyWarnings[journey.Id] = $"Let op: {leader.Name} is automatisch verwijderd omdat de beschikbaarheid is gewijzigd.";
+                    result.JourneyWarnings[journey.Id] = $"Let op: {leader.Name} is automatisch verwijderd omdat de voorkeuren zijn gewijzigd.";
+                    isStale = true;
                     continue;
                 }
 
@@ -161,7 +151,7 @@ public partial class PlannerDraft : ComponentBase
             result.JourneyAssignments[journeyGroup.Key] = assignmentsForJourney.OrderBy(a => a.LeaderName).ToList();
         }
 
-        return result;
+        return (result, isStale);
     }
 
     private record LeaderPlanningRow(
