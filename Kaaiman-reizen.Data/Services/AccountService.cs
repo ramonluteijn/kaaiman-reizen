@@ -18,11 +18,6 @@ namespace Kaaiman_reizen.Data.Services
 
         public async Task CreateIdentityUserForTravelLeaderAsync(string email, string phone, string name, int id)
         {
-            if (_db.TravelLeader.Any(travelLeader => travelLeader.Email == email))
-            {
-                throw new Exception($"Het e-mailadres {email} is al in gebruik. Gebruik a.u.b. een uniek e-mailadres dat nog niet in ons systeem voorkomt.");
-            }
-
             var user = new ApplicationUser
             {
                 UserName = email,
@@ -31,8 +26,8 @@ namespace Kaaiman_reizen.Data.Services
                 EmailConfirmed = true
             };
 
-            // Generate wachtwoord en stuur 
-            await _userManager.CreateAsync(user, "WelkomKaaiman2026!");
+            // TODO Generate wachtwoord en stuur Smtpemailsender
+            await _userManager.CreateAsync(user, "Kaaiman26!");
             await _userManager.AddToRoleAsync(user, "Reisleider");
         }
 
