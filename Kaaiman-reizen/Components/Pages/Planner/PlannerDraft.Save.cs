@@ -21,13 +21,6 @@ public partial class PlannerDraft
             return;
         }
 
-        if (isPublished && !CanPublish)
-        {
-            SetSaveMessage("Publiceren niet mogelijk: niet alle reizen zijn volledig bezet.", Severity.Warning);
-            Snackbar.Add("Niet alle reizen hebben het vereiste aantal reisleiders.", Severity.Warning);
-            return;
-        }
-
         _isSaving = true;
         ClearSaveMessage();
 
