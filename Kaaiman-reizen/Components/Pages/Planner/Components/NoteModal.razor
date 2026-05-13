@@ -18,16 +18,16 @@
 
                 <MudPaper Class="pa-3" Outlined="true">
                     <MudText Typo="Typo.subtitle2">Voorkeuren</MudText>
-                    @if (Leader.PreferredDestinations.Count == 0)
+                    @if (!Leader.PreferredDestinationDetails.Any())
                     {
                         <MudText Typo="Typo.body2" Color="Color.Secondary">Geen voorkeuren</MudText>
                     }
                     else
                     {
                         <MudStack Spacing="1">
-                            @foreach (var pref in Leader.PreferredDestinations.OrderBy(p => p.Value))
+                            @foreach (var pref in Leader.PreferredDestinationDetails)
                             {
-                                <MudText Typo="Typo.body2">@pref.Key (#@pref.Value)</MudText>
+                                <MudText Typo="Typo.body2">@pref.JourneyTitle (#@pref.Rank)</MudText>
                             }
                         </MudStack>
                     }

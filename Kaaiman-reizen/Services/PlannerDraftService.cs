@@ -36,7 +36,17 @@ public class PlannerDraftService : IPlannerDraftService
                     MaxTrips = l.MaxTrips ?? 0,
                     PreferredDestinations = l.PreferredDestinations
                         .Where(p => p.JourneyId.HasValue)
-                        .ToDictionary(p => p.JourneyId!.Value, p => p.Rank)
+                        .ToDictionary(p => p.JourneyId!.Value, p => p.Rank),
+                    PreferredDestinationDetails = l.PreferredDestinations
+                        .Where(p => p.JourneyId.HasValue && p.Rank >= 1 && p.Rank <= 3)
+                        .OrderBy(p => p.Rank)
+                        .Select(p => new PreferredDestinationDisplayInput
+                        {
+                            JourneyId = p.JourneyId!.Value,
+                            JourneyTitle = p.Journey?.Name ?? $"Reis {p.JourneyId!.Value}",
+                            Rank = p.Rank
+                        })
+                        .ToList()
                 }).ToList(),
             Journeys = journeys
                 // 2. Filter hier direct op het meegegeven jaar!

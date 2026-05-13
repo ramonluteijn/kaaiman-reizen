@@ -92,13 +92,14 @@ public static class CheckRules
         RuleSettings? settings = null)
     {
         var effectiveSettings = settings ?? GetDefaultSettings();
-        var result = EvaluateForPlanner(existingJourneys, journey, leader, effectiveSettings);
+        var journeyWindows = existingJourneys as JourneyWindow[] ?? existingJourneys.ToArray();
+        var result = EvaluateForPlanner(journeyWindows, journey, leader, effectiveSettings);
 
         var rules = new List<(bool Condition, string Reason)>
         {
             (result.NoOverlap, "Deze reisleider is al ingepland op een overlappende reis."),
             (result.HasMinimumGap, $"Deze reisleider moet minimaal {effectiveSettings.MinimumGapDays} dagen tussen reizen hebben."),
-            (!result.MinMaxResult.ExceedsMaxAfterAssignment, "Deze reisleider zit aan het maximum aantal reizen."),
+            (!result.MinMaxResult.ExceedsMaxAfterAssignment, $"Deze reisleider heeft een aangegeven minimum en maximum van {leader.MinTrips} en {leader.MaxTrips} reizen, momenteel gepland op {journeyWindows.Count()} reizen."),
             (result.HasExperience, $"Deze reisleider heeft onvoldoende ervaring voor deze bestemming (min {effectiveSettings.RequiredExperience} reizen).")
         };
 
