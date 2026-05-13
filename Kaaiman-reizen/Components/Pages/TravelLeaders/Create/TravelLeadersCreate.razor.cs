@@ -1,9 +1,11 @@
 using Kaaiman_reizen.Data;
 using Kaaiman_reizen.Data.Entities;
+using Kaaiman_reizen.Data.Identity;
 using Kaaiman_reizen.Data.Services;
 using Microsoft.AspNetCore.Components;
-using Microsoft.JSInterop;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.JSInterop;
 
 namespace Kaaiman_reizen.Components.Pages.TravelLeaders.Create;
 
@@ -24,9 +26,13 @@ public partial class TravelLeadersCreate : ComponentBase
     [Inject]
     private MainContext _db { get; set; } = default!;
 
+    [Inject]
+    private UserManager<ApplicationUser> _userManager { get; set; } = default!;
+
     private string? _errorMessage;
 
     private TravelLeader _model = new();
+    private string _email = string.Empty;
 
     private void Cancel()
     {
@@ -42,12 +48,16 @@ public partial class TravelLeadersCreate : ComponentBase
                 .Select(tl => new { tl.Email, tl.PhoneNumber })
                 .FirstOrDefaultAsync();
 
-            if (existingLeader is not null)
+            var existingIdentityEmail = await _userManager.FindByEmailAsync(_model.Email);
+            var existingIdentityPhone = await _userManager.Users
+                .AnyAsync(u => u.PhoneNumber == _model.PhoneNumber);
+
+            if (existingLeader is not null || existingIdentityEmail is not null || existingIdentityPhone)
             {
-                if (existingLeader.Email == _model.Email)
+                if (existingLeader?.Email == _model.Email || existingIdentityEmail is not null)
                     throw new Exception($"Het e-mailadres {_model.Email} is al in gebruik.");
 
-                if (existingLeader.PhoneNumber == _model.PhoneNumber)
+                if (existingLeader?.PhoneNumber == _model.PhoneNumber || existingIdentityPhone)
                     throw new Exception($"Het telefoonnummer {_model.PhoneNumber} is al in gebruik.");
             }
 
