@@ -40,6 +40,25 @@
             {
                 var leaderRows = BuildLeaderRows();
 
+                @if (_preferenceChangesDetected)
+                {
+                    <MudAlert Severity="Severity.Warning"
+                              ShowCloseIcon="true"
+                              CloseIconClicked="@(() => _preferenceChangesDetected = false)"
+                              Class="mb-2">
+                        <div class="d-flex align-center justify-space-between flex-wrap gap-2">
+                            <MudText Typo="Typo.body2">Reisleiders hebben hun voorkeuren bijgewerkt. Genereer opnieuw om de planning bij te werken.</MudText>
+                            <MudButton Variant="Variant.Outlined"
+                                       Size="Size.Small"
+                                       Color="Color.Warning"
+                                       Disabled="@_isSaving"
+                                       OnClick="@(() => RegeneratePlanningAsync())">
+                                Opnieuw genereren
+                            </MudButton>
+                        </div>
+                    </MudAlert>
+                }
+
                 <!-- Sidebar toggle -->
                 <div class="d-flex align-center gap-2 mb-2">
                     <MudIconButton Icon="@Icons.Material.Filled.People"
@@ -108,7 +127,7 @@
                                             }
                                             else
                                             {
-                                                <span class="pd-sidebar-no-prefs">Geen voorkeuren</span>
+                                                <span class="pd-sidebar-no-prefs">Nog geen voorkeuren ingevuld</span>
                                             }
                                         }
                                     </div>
@@ -170,7 +189,7 @@
 
                         <MudButton Variant="Variant.Filled"
                                    Color="Color.Primary"
-                                   Disabled="@_isSaving"
+                                   Disabled="@(_isSaving || !CanPublish)"
                                    OnClick="PublishPlanningAsync">
                             @if (_isSaving)
                             {
