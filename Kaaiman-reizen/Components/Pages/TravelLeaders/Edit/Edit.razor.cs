@@ -1,7 +1,11 @@
-using System.Linq;
+using Kaaiman_reizen.Data;
 using Kaaiman_reizen.Data.Entities;
+using Kaaiman_reizen.Data.Identity;
 using Kaaiman_reizen.Data.Services;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.JSInterop;
 
 namespace Kaaiman_reizen.Components.Pages.TravelLeaders.Edit;
 
@@ -13,6 +17,18 @@ public partial class Edit : ComponentBase
     [Inject]
     private NavigationManager Navigation { get; set; } = default!;
 
+    [Inject]
+    private IJSRuntime JS { get; set; } = default!;
+
+    [Inject]
+    private AccountService _accountService { get; set; } = default!;
+
+    [Inject]
+    private MainContext _db { get; set; } = default!;
+
+    [Inject]
+    private UserManager<ApplicationUser> _userManager { get; set; } = default!;
+
     [Parameter]
     public int Id { get; set; }
 
@@ -21,6 +37,8 @@ public partial class Edit : ComponentBase
     private bool _notFound = false;
     private List<PeriodModel> _preferredPeriods = new();
     private string[] _preferred = new string[3];
+
+    private string? _errorMessage;
 
     private class PeriodModel
     {
@@ -70,22 +88,54 @@ public partial class Edit : ComponentBase
 
     private async Task HandleValidSubmit()
     {
-        // map preferred destinations
-        _model.PreferredDestinations = new List<PreferredDestination>();
-        for (int i = 0; i < 3; i++)
+        try
         {
-            if (!string.IsNullOrWhiteSpace(_preferred[i]))
-                _model.PreferredDestinations.Add(new PreferredDestination { Rank = i + 1, Destination = _preferred[i] });
+            var userClaim = await _db.UserClaims.FirstOrDefaultAsync(claim =>
+                claim.ClaimType == "TravelLeaderId" && claim.ClaimValue == _model.Id.ToString());
+
+            var currentAccount = await _userManager.FindByIdAsync(userClaim.UserId);
+
+            var emailExists = await _db.TravelLeader
+                .AnyAsync(tl => tl.Id != _model.Id && tl.Email == _model.Email);
+
+            var emailExistsInIdentity = await _userManager.FindByEmailAsync(_model.Email);
+
+            if (emailExists || (emailExistsInIdentity is not null && emailExistsInIdentity.Email != currentAccount.Email))
+                throw new Exception($"Het e-mailadres {_model.Email} is al in gebruik.");
+
+            var phoneExists = await _db.TravelLeader
+                .AnyAsync(tl => tl.Id != _model.Id && tl.PhoneNumber == _model.PhoneNumber);
+
+            var phoneExistsInIdentity = await _userManager.Users
+                .AnyAsync(u => u.PhoneNumber == _model.PhoneNumber && u.Id != currentAccount.Id);
+
+            if (phoneExists || phoneExistsInIdentity)
+                throw new Exception($"Het telefoonnummer {_model.PhoneNumber} is al in gebruik.");
+
+            _model.PreferredDestinations = new List<PreferredDestination>();
+            for (int i = 0; i < 3; i++)
+            {
+                if (!string.IsNullOrWhiteSpace(_preferred[i]))
+                    _model.PreferredDestinations.Add(new PreferredDestination { Rank = i + 1, Destination = _preferred[i] });
+            }
+
+            _model.AvailabilityPeriods = _preferredPeriods
+                .Where(p => p.Start.HasValue && p.End.HasValue)
+                .Select(p => new AvailabilityPeriod { Start = DateOnly.FromDateTime(p.Start!.Value), End = DateOnly.FromDateTime(p.End!.Value) })
+                .ToList();
+
+            await LeaderService.UpdateTravelLeaderAsync(_model);
+            await _accountService.UpdateAccountAsync(_model);
+
+            Navigation.NavigateTo("/travelleaders");
         }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
 
-        // map availability periods
-        _model.AvailabilityPeriods = _preferredPeriods
-            .Where(p => p.Start.HasValue && p.End.HasValue)
-            .Select(p => new AvailabilityPeriod { Start = DateOnly.FromDateTime(p.Start!.Value), End = DateOnly.FromDateTime(p.End!.Value) })
-            .ToList();
-
-        await LeaderService.UpdateTravelLeaderAsync(_model);
-        Navigation.NavigateTo("/travelleaders");
+            await JS.InvokeVoidAsync("window.scrollTo", 0, 0);
+            StateHasChanged();
+        }
     }
 
     private void AddPeriod()
