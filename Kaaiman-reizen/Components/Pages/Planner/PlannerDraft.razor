@@ -1,6 +1,11 @@
-@page "/planner/draft"
-@using Kaaiman_reizen.Components.Pages.Planner.Components
+﻿@page "/planner/draft"
+
 @rendermode InteractiveServer
+
+@using Kaaiman_reizen.Components.Pages.Planner.Components
+@using Microsoft.AspNetCore.Authorization
+
+@attribute [Authorize(Roles = "Planner")]
 
 <PageTitle>Draft Planning</PageTitle>
 
@@ -56,7 +61,7 @@
                 var leaderRows = BuildLeaderRows();
 
                 <!-- Sidebar toggle -->
-                <div class="d-flex align-center gap-2 mb-2">
+                <div class="d-flex align-center mb-2 gap-2">
                     <MudIconButton Icon="@Icons.Material.Filled.People"
                                    Size="Size.Small"
                                    Variant="Variant.Outlined"
@@ -82,7 +87,7 @@
                                     <MudIconButton Icon="@Icons.Material.Filled.OpenInNew"
                                                    Size="Size.Small"
                                                    Variant="Variant.Outlined"
-                                                   class="position-absolute top-0 end-0"
+                                                   class="position-absolute end-0 top-0"
                                                    Style="z-index: 2;"
                                                    title="Reisleider details"
                                                    OnClick="@((_) => OpenLeaderDetails(row))"

@@ -1,9 +1,12 @@
 @page "/travelleaders"
-@attribute [Authorize(Roles = "Planner")]
+
 @rendermode InteractiveServer
+
 @using Kaaiman_reizen.Models.ViewModels
-@using Kaaiman_reizen.Data.Services
-@using Kaaiman_reizen.Data.Entities
+@using Microsoft.AspNetCore.Authorization
+
+@attribute [Authorize(Roles = "Planner")]
+
 @inject IJSRuntime JS
 
 <PageTitle>Reisleiders</PageTitle>
