@@ -63,8 +63,8 @@ else
                             </MudItem>
                         }
 
-                        <MudItem xs="12" sm="12" md="6">
-                            <MudCard Elevation="2" Class="h-100">
+                        <MudItem xs="12">
+                            <MudCard Elevation="2">
                                 <MudCardContent>
                                     <MudText Typo="Typo.h6" Class="mb-3">Concept planning @(_drafts.Count > 0 ? $"({_drafts.Count})" : "")</MudText>
                                     @if (_drafts.Count == 0)
@@ -111,7 +111,7 @@ else
                             </MudCard>
                         </MudItem>
 
-                        <MudItem xs="12" sm="12" md="6">
+                        <MudItem xs="12" sm="12">
                             <MudCard Elevation="2" Class="h-100">
                                 <MudCardContent>
                                     <MudText Typo="Typo.h6" Color="Color.Warning" Class="mb-3">
