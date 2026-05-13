@@ -70,7 +70,7 @@ public partial class Preferences : ComponentBase
 
         var allJourneys = await JourneyService.GetJourneysAsync();
         _journeys = allJourneys
-            .Where(j => j.BookingStatus == BookingStatus.Bezig)
+            .Where(j => j.BookingStatus == BookingStatus.Bezig && j.Start.Year == DateTime.UtcNow.Year)
             .OrderBy(j => j.Start)
             .ToList();
 

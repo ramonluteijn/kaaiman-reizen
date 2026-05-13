@@ -18,7 +18,10 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
 
     public async Task SeedAsync()
     {
-        if (await context.TravelLeader.AnyAsync(t => t.Note.Contains(SeedMarker)))
+        bool leadersSeeded  = await context.TravelLeader.AnyAsync(t => t.Note.Contains(SeedMarker));
+        bool journeysSeeded = await context.Journey.AnyAsync(j => j.Start.Year == 2024);
+
+        if (leadersSeeded || journeysSeeded)
         {
             logger.LogInformation("Dev seed data al aanwezig — overgeslagen.");
             return;

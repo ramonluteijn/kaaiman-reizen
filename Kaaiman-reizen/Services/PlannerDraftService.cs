@@ -22,22 +22,25 @@ public class PlannerDraftService : IPlannerDraftService
         var leaders = await _leaderService.GetTravelLeadersAsync(ct);
         var journeys = await _journeyService.GetJourneysAsync(ct);
 
+        var activeLeaderInputs = leaders
+            .Where(l => l.IsActive)
+            .Select(l => new PlannerLeaderInput
+            {
+                Id = l.Id,
+                Name = l.Name,
+                Note = l.Note,
+                AmountOfTrips = l.AmountOfTrips ?? 0,
+                MinTrips = l.MinTrips ?? 0,
+                MaxTrips = l.MaxTrips ?? 0,
+                PreferredDestinations = l.PreferredDestinations
+                    .Where(p => p.JourneyId.HasValue)
+                    .ToDictionary(p => p.JourneyId!.Value, p => p.Rank)
+            }).ToList();
+
         return new PlannerDraftRequest
         {
-            Leaders = leaders
-                .Where(l => l.IsActive && l.PreferredDestinations.Any())
-                .Select(l => new PlannerLeaderInput
-                {
-                    Id = l.Id,
-                    Name = l.Name,
-                    Note = l.Note,
-                    AmountOfTrips = l.AmountOfTrips ?? 0,
-                    MinTrips = l.MinTrips ?? 0,
-                    MaxTrips = l.MaxTrips ?? 0,
-                    PreferredDestinations = l.PreferredDestinations
-                        .Where(p => p.JourneyId.HasValue)
-                        .ToDictionary(p => p.JourneyId!.Value, p => p.Rank)
-                }).ToList(),
+            Leaders = activeLeaderInputs.Where(l => l.PreferredDestinations.Count > 0).ToList(),
+            AllActiveLeaders = activeLeaderInputs,
             Journeys = journeys
                 // 2. Filter hier direct op het meegegeven jaar!
                 .Where(j => j.BookingStatus == BookingStatus.Bezig && j.Start.Year == year)

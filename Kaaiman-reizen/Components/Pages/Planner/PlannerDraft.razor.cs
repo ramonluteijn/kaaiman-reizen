@@ -38,6 +38,13 @@ public partial class PlannerDraft : ComponentBase
     private bool _sidebarOpen = true;
     private bool _noteModalOpen;
     private LeaderPlanningRow? _selectedLeaderRow;
+    private bool _preferenceChangesDetected = false;
+
+    private bool CanPublish =>
+        _request is not null && _result is not null && _result.IsSuccess &&
+        _request.Journeys.All(j =>
+            _result.JourneyAssignments.TryGetValue(j.Id, out var asgns) &&
+            asgns.Count >= j.RequiredLeaders);
 
     protected override async Task OnInitializedAsync()
     {
@@ -84,6 +91,7 @@ public partial class PlannerDraft : ComponentBase
 
         var (mapped, isStale) = MapToDraftResult(selectedDraft);
         _result = mapped;
+        _preferenceChangesDetected = !isStale && DetectPreferenceChanges();
         return isStale;
     }
 
@@ -93,6 +101,7 @@ public partial class PlannerDraft : ComponentBase
 
         _isGenerating = true;
         _result = null;
+        _preferenceChangesDetected = false;
         ClearSaveMessage();
         StateHasChanged();
 
@@ -131,13 +140,6 @@ public partial class PlannerDraft : ComponentBase
                     continue;
                 }
 
-                if (!leader.PreferredDestinations.ContainsKey(journey.Id))
-                {
-                    result.JourneyWarnings[journey.Id] = $"Let op: {leader.Name} is automatisch verwijderd omdat de voorkeuren zijn gewijzigd.";
-                    isStale = true;
-                    continue;
-                }
-
                 int? rank = leader.PreferredDestinations.TryGetValue(journey.Id, out var matchedRank)
                     ? (matchedRank == 0 ? null : matchedRank) : null;
 
@@ -169,7 +171,7 @@ public partial class PlannerDraft : ComponentBase
     {
         if (_request is null || _result is null) return [];
 
-        return _request.Leaders.Select(leader => new LeaderPlanningRow(
+        return _request.AllActiveLeaders.Select(leader => new LeaderPlanningRow(
             leader,
             _result.JourneyAssignments
                 .Where(kvp => kvp.Value.Any(a => a.LeaderId == leader.Id))
@@ -179,6 +181,34 @@ public partial class PlannerDraft : ComponentBase
                 ))
                 .ToList()
         )).ToList();
+    }
+
+    private bool DetectPreferenceChanges()
+    {
+        if (_request is null || _result is null) return false;
+
+        var draftLeaderIds = _result.JourneyAssignments.Values
+            .SelectMany(l => l)
+            .Select(a => a.LeaderId)
+            .ToHashSet();
+
+        // Leaders who now have preferences but weren't in the draft at all
+        if (_request.Leaders.Any(l => !draftLeaderIds.Contains(l.Id)))
+            return true;
+
+        // Assigned leaders whose preference for their journey was removed
+        foreach (var (journeyId, assignments) in _result.JourneyAssignments)
+        {
+            foreach (var assignment in assignments)
+            {
+                var leader = _request.Leaders.FirstOrDefault(l => l.Id == assignment.LeaderId);
+                if (leader is null) continue;
+                if (!leader.PreferredDestinations.ContainsKey(journeyId))
+                    return true;
+            }
+        }
+
+        return false;
     }
 
     private void OpenLeaderDetails(LeaderPlanningRow row)
