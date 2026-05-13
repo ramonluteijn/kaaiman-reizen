@@ -53,7 +53,7 @@ public static class DatabaseSeedingExtensions
     {
         var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
         var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
-        var dbContext   = services.GetRequiredService<MainContext>();
+        var dbContext = services.GetRequiredService<MainContext>();
 
         string[] roles = ["Planner", "Reisleider"];
         foreach (var role in roles)

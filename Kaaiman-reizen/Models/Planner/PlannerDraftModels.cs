@@ -21,6 +21,14 @@ public class PlannerLeaderInput
     public int MinTrips { get; set; }
     public int MaxTrips { get; set; }
     public Dictionary<int, int> PreferredDestinations { get; set; } = [];
+    public List<PreferredDestinationDisplayInput> PreferredDestinationDetails { get; set; } = [];
+}
+
+public class PreferredDestinationDisplayInput
+{
+    public int JourneyId { get; set; }
+    public string JourneyTitle { get; set; } = string.Empty;
+    public int Rank { get; set; }
 }
 
 public class PlannerJourneyInput

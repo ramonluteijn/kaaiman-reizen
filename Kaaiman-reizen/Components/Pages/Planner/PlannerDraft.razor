@@ -119,9 +119,9 @@
                                             @if (row.Preferences.Count > 0)
                                             {
                                                 <div class="pd-sidebar-prefs">
-                                                    @foreach (var pref in row.Preferences.OrderBy(p => p.Value))
+                                                    @foreach (var pref in row.Preferences.OrderBy(p => p.Rank))
                                                     {
-                                                        <span class="pd-sidebar-pref">@pref.Key (#@pref.Value)</span>
+                                                        <span class="pd-sidebar-pref">@pref.JourneyTitle (#@pref.Rank)</span>
                                                     }
                                                 </div>
                                             }
