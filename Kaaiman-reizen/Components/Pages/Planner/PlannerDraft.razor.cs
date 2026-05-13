@@ -160,7 +160,7 @@ public partial class PlannerDraft : ComponentBase
         List<(PlannerJourneyInput Journey, int? RankMatched)> AssignedJourneys)
     {
         public string LeaderName => Leader.Name;
-        public Dictionary<int, int> Preferences => Leader.PreferredDestinations;
+        public List<PreferredDestinationDisplayInput> Preferences => Leader.PreferredDestinationDetails;
     }
 
 
@@ -174,8 +174,8 @@ public partial class PlannerDraft : ComponentBase
             _result.JourneyAssignments
                 .Where(kvp => kvp.Value.Any(a => a.LeaderId == leader.Id))
                 .Select(kvp => (
-                    Journey: _request.Journeys.First(j => j.Id == kvp.Key),
-                    RankMatched: kvp.Value.First(a => a.LeaderId == leader.Id).RankMatched
+                    _request.Journeys.First(j => j.Id == kvp.Key),
+                    kvp.Value.First(a => a.LeaderId == leader.Id).RankMatched
                 ))
                 .ToList()
         )).ToList();
