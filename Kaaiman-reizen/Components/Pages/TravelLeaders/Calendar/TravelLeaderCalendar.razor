@@ -1,0 +1,25 @@
+@page "/travelleaders/calendar"
+@page "/travelleaders/calendar/{Id:int}"
+@attribute [Authorize(Roles = "Reisleider")]
+@rendermode InteractiveServer
+
+<PageTitle>Mijn Reizen</PageTitle>
+
+<h1 class="h4">Mijn Reizen</h1>
+
+<div class="card">
+    <div class="card-body">
+        @if (_loading)
+        {
+            <div>Bezig met laden…</div>
+        }
+        else if (_notFound)
+        {
+            <div class="text-muted">Reisleider niet gevonden.</div>
+        }
+        else
+        {
+            <CalendarView Journeys="GetCalendarJourneys()"/>
+        }
+    </div>
+</div>
