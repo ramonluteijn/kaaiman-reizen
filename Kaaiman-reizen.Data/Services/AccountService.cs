@@ -1,5 +1,4 @@
 ﻿using Kaaiman_reizen.Data.Identity;
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -31,13 +30,13 @@ namespace Kaaiman_reizen.Data.Services
             await _userManager.AddToRoleAsync(user, "Reisleider");
         }
 
-        public async Task<List<ApplicationUser>> GetAllUsersAsync() => await _db.Users.ToListAsync() ?? new ();
+        public async Task<List<ApplicationUser>> GetAllUsersAsync() => await _db.Users.ToListAsync();
 
         public List<ApplicationUser> GetMatchingUsers(List<ApplicationUser> users, string? searchTerm)
         {
             if (string.IsNullOrWhiteSpace(searchTerm))
                 return [];
-            
+
             return users
                 .Where(user =>
                     (user.UserName != null && user.UserName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) ||
