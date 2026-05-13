@@ -44,6 +44,7 @@ public class PlannerDraftService : IPlannerDraftService
                         JourneyTitle = p.Journey?.Name ?? $"Reis {p.JourneyId!.Value}",
                         Rank = p.Rank
                     })
+                    .ToList()
             }).ToList();
 
         return new PlannerDraftRequest
