@@ -24,7 +24,7 @@
         @if (!_showEntryModal)
         {
             @if (!string.IsNullOrWhiteSpace(_saveMessage)
-                             && !_saveMessage.StartsWith("Concept geladen", System.StringComparison.OrdinalIgnoreCase))
+                                         && !_saveMessage.StartsWith("Concept geladen", System.StringComparison.OrdinalIgnoreCase))
             {
                 <AlertModal IsOpen="true" Title="Concept opslaan" Severity="@_saveMessageSeverity" Message="@_saveMessage" />
             }
@@ -45,7 +45,7 @@
                 {
                     var leaderRows = BuildLeaderRows();
 
-                    @* Sidebar toggle *@
+                    <!-- Sidebar toggle -->
                     <div class="d-flex align-center gap-2 mb-2">
                         <MudIconButton Icon="@Icons.Material.Filled.People" Size="Size.Small" Variant="Variant.Outlined"
                                        Color="@(_sidebarOpen ? Color.Primary : Color.Default)" OnClick="@(() => _sidebarOpen = !_sidebarOpen)"
@@ -53,7 +53,7 @@
                         <MudText Typo="Typo.body2" Color="Color.Secondary">Reisleiders</MudText>
                     </div>
 
-                    @* Calendar + sidebar layout *@
+                    <!-- Calendar + sidebar layout -->
                     <div class="pd-layout">
 
                         @if (_sidebarOpen)
@@ -66,24 +66,24 @@
                                     <div
                                         class="pd-sidebar-row @(hasJourneys ? "pd-sidebar-row--assigned" : "pd-sidebar-row--unassigned") position-relative">
                                         <div class="pd-sidebar-avatar">@row.LeaderName[0]</div>
-
+                                        
                                         <MudIconButton Icon="@Icons.Material.Filled.OpenInNew" Size="Size.Small" Variant="Variant.Outlined"
                                                        class="position-absolute top-0 end-0" Style="z-index: 2;" title="Reisleider details"
                                                        OnClick="@((_) => OpenLeaderDetails(row))" />
-
+                                        
                                         <div class="pd-sidebar-info">
                                             <span class="pd-sidebar-name">@row.LeaderName</span>
                                             @if (hasJourneys)
                                             {
                                                 <span class="pd-sidebar-count">@row.AssignedJourneys.Count rei@(row.AssignedJourneys.Count == 1 ?
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    "s" : "zen")</span>
+                                                                            "s" : "zen")</span>
                                                     <div class="pd-sidebar-journeys">
                                                         @foreach (var item in row.AssignedJourneys)
                                                         {
                                                             <div class="pd-sidebar-journey">
                                                                 <span class="pd-sidebar-journey-name">@item.Journey.Name</span>
-                                                                <span class="pd-sidebar-journey-dates">@DateDisplay.FormatDate(item.Journey.Start) -
-                                                                    @DateDisplay.FormatDate(item.Journey.End)</span>
+                                                                <span class="pd-sidebar-journey-dates">@item.Journey.Start.ToString("dd MMM") ÔÇô
+                                                                    @item.Journey.End.ToString("dd MMM")</span>
                                                                     @if (item.RankMatched.HasValue)
                                                                     {
                                                                         <span

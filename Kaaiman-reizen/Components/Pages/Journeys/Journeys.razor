@@ -73,13 +73,8 @@
     </div>
 </div>
 
-<AlertModal IsOpen="@_isDeleteModalOpen"
-            IsOpenChanged="HandleDeleteModalChanged"
-            Title="Reis verwijderen"
-            Severity="Severity.Warning"
-            Dismissible="true"
-            CloseOnBackdropClick="true"
-            Message="@DeleteModalMessage">
+<AlertModal IsOpen="@_isDeleteModalOpen" IsOpenChanged="HandleDeleteModalChanged" Title="Reis verwijderen"
+            Severity="Severity.Warning" Dismissible="true" CloseOnBackdropClick="true" Message="@DeleteModalMessage">
     <Actions>
         <MudButton Variant="Variant.Text" OnClick="CloseDeleteModalAsync">
             Annuleren
