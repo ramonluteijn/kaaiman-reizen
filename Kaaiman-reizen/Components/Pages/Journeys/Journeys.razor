@@ -11,14 +11,18 @@
 
 <div class="card">
     <div class="card-body">
-        <div class="mb-3">
-            <input class="form-control"
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <input class="form-control w-25"
                    placeholder="Zoek op land..."
                    @bind="_searchTerm"
                    @bind:event="oninput" />
+
+            <a href="journeys/create" class="btn btn-primary text-uppercase" style="background-color: #00796b; border: none;">
+                <i class="bi bi-plus"></i> Nieuwe reis
+            </a>
         </div>
 
-        <Table TItem="Journey" Items="FilteredJourneys" OnDelete="@OnDelete" Path="journeys" CreateText="Nieuwe reis" EditHrefSelector="@GetEditHref">
+        <Table TItem="Journey" Items="FilteredJourneys" OnDelete="@OnDelete" Path="journeys" EditHrefSelector="@GetEditHref">
             <HeaderContent>
                 <th @onclick='() => SortBy("Name")'>
                     Reis @(GetSortIcon("Name"))
@@ -52,10 +56,10 @@
                 <td>
                     <span class="badge @(context.BookingStatus switch
                                        {
-                                           BookingStatus.Bezig   => "bg-secondary",
-                                           BookingStatus.Geweest     => "bg-success",
-                                           BookingStatus.Geanuleerd     => "bg-primary",
-                                           _                         => "bg-danger"
+                                           BookingStatus.Bezig      => "bg-success",
+                                           BookingStatus.Geweest    => "bg-secondary",
+                                           BookingStatus.Geanuleerd => "bg-danger",
+                                           _                        => "bg-secondary"
                                        })">@context.BookingStatus</span>
                 </td>
                 <td>

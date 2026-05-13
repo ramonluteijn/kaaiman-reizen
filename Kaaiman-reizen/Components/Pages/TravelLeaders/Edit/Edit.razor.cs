@@ -1,7 +1,11 @@
-using System.Linq;
+using Kaaiman_reizen.Data;
 using Kaaiman_reizen.Data.Entities;
+using Kaaiman_reizen.Data.Identity;
 using Kaaiman_reizen.Data.Services;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.JSInterop;
 
 namespace Kaaiman_reizen.Components.Pages.TravelLeaders.Edit;
 
@@ -13,20 +17,25 @@ public partial class Edit : ComponentBase
     [Inject]
     private NavigationManager Navigation { get; set; } = default!;
 
+    [Inject]
+    private IJSRuntime JS { get; set; } = default!;
+
+    [Inject]
+    private AccountService _accountService { get; set; } = default!;
+
+    [Inject]
+    private MainContext _db { get; set; } = default!;
+
+    [Inject]
+    private UserManager<ApplicationUser> _userManager { get; set; } = default!;
+
     [Parameter]
     public int Id { get; set; }
 
     private TravelLeader _model = new();
     private bool _loading = true;
     private bool _notFound = false;
-    private List<PeriodModel> _preferredPeriods = new();
-    private string[] _preferred = new string[3];
-
-    private class PeriodModel
-    {
-        public DateTime? Start { get; set; }
-        public DateTime? End { get; set; }
-    }
+    private string? _errorMessage;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -42,24 +51,6 @@ public partial class Edit : ComponentBase
         }
 
         _model = item;
-
-        // populate availability periods
-        _preferredPeriods.Clear();
-        if (_model.AvailabilityPeriods != null)
-        {
-            foreach (var p in _model.AvailabilityPeriods.OrderBy(p => p.Start))
-                _preferredPeriods.Add(new PeriodModel { Start = p.Start.ToDateTime(TimeOnly.MinValue), End = p.End.ToDateTime(TimeOnly.MinValue) });
-        }
-
-        // populate preferred destinations (rank 1/2/3 → index 0/1/2)
-        _preferred = new string[3];
-        foreach (var dest in _model.PreferredDestinations)
-        {
-            var idx = dest.Rank - 1;
-            if (idx >= 0 && idx < 3)
-                _preferred[idx] = dest.Destination;
-        }
-
         _loading = false;
     }
 
@@ -70,32 +61,39 @@ public partial class Edit : ComponentBase
 
     private async Task HandleValidSubmit()
     {
-        // map preferred destinations
-        _model.PreferredDestinations = new List<PreferredDestination>();
-        for (int i = 0; i < 3; i++)
+        try
         {
-            if (!string.IsNullOrWhiteSpace(_preferred[i]))
-                _model.PreferredDestinations.Add(new PreferredDestination { Rank = i + 1, Destination = _preferred[i] });
+            var userClaim = await _db.UserClaims.FirstOrDefaultAsync(claim =>
+                claim.ClaimType == "TravelLeaderId" && claim.ClaimValue == _model.Id.ToString());
+
+            var currentAccount = await _userManager.FindByIdAsync(userClaim.UserId);
+
+            var emailExists = await _db.TravelLeader
+                .AnyAsync(tl => tl.Id != _model.Id && tl.Email == _model.Email);
+
+            var emailExistsInIdentity = await _userManager.FindByEmailAsync(_model.Email);
+
+            if (emailExists || (emailExistsInIdentity is not null && emailExistsInIdentity.Email != currentAccount.Email))
+                throw new Exception($"Het e-mailadres {_model.Email} is al in gebruik.");
+
+            var phoneExists = await _db.TravelLeader
+                .AnyAsync(tl => tl.Id != _model.Id && tl.PhoneNumber == _model.PhoneNumber);
+
+            var phoneExistsInIdentity = await _userManager.Users
+                .AnyAsync(u => u.PhoneNumber == _model.PhoneNumber && u.Id != currentAccount.Id);
+
+            if (phoneExists || phoneExistsInIdentity)
+                throw new Exception($"Het telefoonnummer {_model.PhoneNumber} is al in gebruik.");
+
+            await LeaderService.UpdateTravelLeaderAsync(_model);
+            await _accountService.UpdateAccountAsync(_model);
+            Navigation.NavigateTo("/travelleaders");
         }
-
-        // map availability periods
-        _model.AvailabilityPeriods = _preferredPeriods
-            .Where(p => p.Start.HasValue && p.End.HasValue)
-            .Select(p => new AvailabilityPeriod { Start = DateOnly.FromDateTime(p.Start!.Value), End = DateOnly.FromDateTime(p.End!.Value) })
-            .ToList();
-
-        await LeaderService.UpdateTravelLeaderAsync(_model);
-        Navigation.NavigateTo("/travelleaders");
-    }
-
-    private void AddPeriod()
-    {
-        _preferredPeriods.Add(new PeriodModel());
-    }
-
-    private void RemovePeriod(int index)
-    {
-        if (index >= 0 && index < _preferredPeriods.Count)
-            _preferredPeriods.RemoveAt(index);
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+            await JS.InvokeVoidAsync("window.scrollTo", 0, 0);
+            StateHasChanged();
+        }
     }
 }

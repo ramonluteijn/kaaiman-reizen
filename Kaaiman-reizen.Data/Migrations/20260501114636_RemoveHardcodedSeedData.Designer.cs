@@ -4,6 +4,7 @@ using Kaaiman_reizen.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Kaaiman_reizen.Data.Migrations
 {
     [DbContext(typeof(MainContext))]
-    partial class MainContextModelSnapshot : ModelSnapshot
+    [Migration("20260501114636_RemoveHardcodedSeedData")]
+    partial class RemoveHardcodedSeedData
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -98,35 +101,6 @@ namespace Kaaiman_reizen.Data.Migrations
                     b.ToTable("JourneyTravelLeaders");
                 });
 
-            modelBuilder.Entity("Kaaiman_reizen.Data.Entities.Notification", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("ApplicationUserId")
-                        .IsRequired()
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<bool>("IsRead")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<string>("Message")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ApplicationUserId");
-
-                    b.ToTable("Notifications");
-                });
-
             modelBuilder.Entity("Kaaiman_reizen.Data.Entities.PlanningAssignment", b =>
                 {
                     b.Property<int>("Id")
@@ -189,8 +163,9 @@ namespace Kaaiman_reizen.Data.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("JourneyId")
-                        .HasColumnType("int");
+                    b.Property<string>("Destination")
+                        .IsRequired()
+                        .HasColumnType("longtext");
 
                     b.Property<int>("Rank")
                         .HasColumnType("int");
@@ -199,8 +174,6 @@ namespace Kaaiman_reizen.Data.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("JourneyId");
 
                     b.HasIndex("TravelLeaderId");
 
@@ -279,10 +252,6 @@ namespace Kaaiman_reizen.Data.Migrations
 
                     b.Property<int>("AmountOfTrips")
                         .HasColumnType("int");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("longtext");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("tinyint(1)");
@@ -536,23 +505,12 @@ namespace Kaaiman_reizen.Data.Migrations
                     b.Navigation("TravelLeader");
                 });
 
-            modelBuilder.Entity("Kaaiman_reizen.Data.Entities.Notification", b =>
-                {
-                    b.HasOne("Kaaiman_reizen.Data.Identity.ApplicationUser", "ApplicationUser")
-                        .WithMany()
-                        .HasForeignKey("ApplicationUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ApplicationUser");
-                });
-
             modelBuilder.Entity("Kaaiman_reizen.Data.Entities.PlanningAssignment", b =>
                 {
                     b.HasOne("Kaaiman_reizen.Data.Entities.Journey", "Journey")
                         .WithMany()
                         .HasForeignKey("JourneyId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Kaaiman_reizen.Data.Entities.PlanningVersion", "PlanningVersion")
@@ -576,18 +534,11 @@ namespace Kaaiman_reizen.Data.Migrations
 
             modelBuilder.Entity("Kaaiman_reizen.Data.Entities.PreferredDestination", b =>
                 {
-                    b.HasOne("Kaaiman_reizen.Data.Entities.Journey", "Journey")
-                        .WithMany()
-                        .HasForeignKey("JourneyId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
                     b.HasOne("Kaaiman_reizen.Data.Entities.TravelLeader", "TravelLeader")
                         .WithMany("PreferredDestinations")
                         .HasForeignKey("TravelLeaderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Journey");
 
                     b.Navigation("TravelLeader");
                 });

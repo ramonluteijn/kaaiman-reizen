@@ -22,7 +22,7 @@
                 <option value="">Geen (lege reis)</option>
                 @foreach (var journey in _journeys)
                 {
-                    <option value="@journey.Id">@journey.Name</option>
+                    <option value="@journey.Id">@journey.Name (@journey.Start.ToString("dd-MM-yyyy"))</option>
                 }
             </InputSelect>
             <small class="text-muted">Kies een vorige reis om dit formulier automatisch te vullen.</small>
