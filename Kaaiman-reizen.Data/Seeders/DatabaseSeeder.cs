@@ -69,37 +69,57 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
 
             ["jan"] = new()
             {
-                Name = "Jan de Vries", PhoneNumber = "06-12345678",
-                AmountOfTrips = 8, MinTrips = 2, MaxTrips = 10, IsActive = true,
+                Name = "Jan de Vries",
+                PhoneNumber = "06-12345678",
+                AmountOfTrips = 8,
+                MinTrips = 2,
+                MaxTrips = 10,
+                IsActive = true,
                 Note = Mark("Kernlid — breed beschikbaar"),
                 AvailabilityPeriods = [new() { Start = new(2026, 1, 1), End = new(2026, 12, 31) }]
             },
             ["maria"] = new()
             {
-                Name = "Maria Jansen", PhoneNumber = "06-87654321",
-                AmountOfTrips = 12, MinTrips = 3, MaxTrips = 15, IsActive = true,
+                Name = "Maria Jansen",
+                PhoneNumber = "06-87654321",
+                AmountOfTrips = 12,
+                MinTrips = 3,
+                MaxTrips = 15,
+                IsActive = true,
                 Note = Mark("Kernlid — ervaren, breed beschikbaar"),
                 AvailabilityPeriods = [new() { Start = new(2026, 1, 1), End = new(2026, 12, 31) }]
             },
             ["thomas"] = new()
             {
-                Name = "Thomas de Groot", PhoneNumber = Phone(),
-                AmountOfTrips = 18, MinTrips = 4, MaxTrips = 18, IsActive = true,
+                Name = "Thomas de Groot",
+                PhoneNumber = Phone(),
+                AmountOfTrips = 18,
+                MinTrips = 4,
+                MaxTrips = 18,
+                IsActive = true,
                 Note = Mark("Kernlid — meest ervaren, op maximum"),
                 // AmountOfTrips == MaxTrips → algoritme moet hem overslaan
                 AvailabilityPeriods = [new() { Start = new(2026, 2, 1), End = new(2026, 12, 31) }]
             },
             ["daan"] = new()
             {
-                Name = "Daan Peters", PhoneNumber = Phone(),
-                AmountOfTrips = 16, MinTrips = 4, MaxTrips = 18, IsActive = true,
+                Name = "Daan Peters",
+                PhoneNumber = Phone(),
+                AmountOfTrips = 16,
+                MinTrips = 4,
+                MaxTrips = 18,
+                IsActive = true,
                 Note = Mark("Kernlid — gespecialiseerd in Scandinavië"),
                 AvailabilityPeriods = [new() { Start = new(2026, 1, 1), End = new(2026, 12, 31) }]
             },
             ["fleur"] = new()
             {
-                Name = "Fleur Visser", PhoneNumber = Phone(),
-                AmountOfTrips = 7, MinTrips = 2, MaxTrips = 8, IsActive = true,
+                Name = "Fleur Visser",
+                PhoneNumber = Phone(),
+                AmountOfTrips = 7,
+                MinTrips = 2,
+                MaxTrips = 8,
+                IsActive = true,
                 Note = Mark("Kernlid — niet in winter beschikbaar"),
                 // Winter (dec-feb) buiten bereik → test seizoensgrens kerngroep
                 AvailabilityPeriods = [new() { Start = new(2026, 3, 1), End = new(2026, 11, 30) }]
@@ -113,23 +133,35 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
 
             ["anna"] = new()
             {
-                Name = "Anna Smits", PhoneNumber = Phone(),
-                AmountOfTrips = 4, MinTrips = 1, MaxTrips = 5, IsActive = true,
+                Name = "Anna Smits",
+                PhoneNumber = Phone(),
+                AmountOfTrips = 4,
+                MinTrips = 1,
+                MaxTrips = 5,
+                IsActive = true,
                 Note = Mark("Lentegast — beschikbaar mrt-jun"),
                 AvailabilityPeriods = [new() { Start = new(2026, 3, 1), End = new(2026, 6, 30) }]
             },
             ["clara"] = new()
             {
-                Name = "Clara Kuijpers", PhoneNumber = Phone(),
-                AmountOfTrips = 3, MinTrips = 1, MaxTrips = 4, IsActive = true,
+                Name = "Clara Kuijpers",
+                PhoneNumber = Phone(),
+                AmountOfTrips = 3,
+                MinTrips = 1,
+                MaxTrips = 4,
+                IsActive = true,
                 Note = Mark("Lentegast — beschikbaar mrt-mei"),
                 // Smalst van de lentegasten: loopt af eind mei → juni-reizen buiten bereik
                 AvailabilityPeriods = [new() { Start = new(2026, 3, 1), End = new(2026, 5, 31) }]
             },
             ["david"] = new()
             {
-                Name = "David Mulder", PhoneNumber = Phone(),
-                AmountOfTrips = 8, MinTrips = 2, MaxTrips = 8, IsActive = true,
+                Name = "David Mulder",
+                PhoneNumber = Phone(),
+                AmountOfTrips = 8,
+                MinTrips = 2,
+                MaxTrips = 8,
+                IsActive = true,
                 Note = Mark("Lentegast — op maximum (AmountOfTrips == MaxTrips)"),
                 // Edge case MinMaxJourneys: zit al op zijn maximum → algoritme moet hem overslaan
                 AvailabilityPeriods = [new() { Start = new(2026, 3, 1), End = new(2026, 6, 30) }]
@@ -143,23 +175,35 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
 
             ["frank"] = new()
             {
-                Name = "Frank Willems", PhoneNumber = Phone(),
-                AmountOfTrips = 9, MinTrips = 2, MaxTrips = 10, IsActive = true,
+                Name = "Frank Willems",
+                PhoneNumber = Phone(),
+                AmountOfTrips = 9,
+                MinTrips = 2,
+                MaxTrips = 10,
+                IsActive = true,
                 Note = Mark("Zomers — beschikbaar jun-sep"),
                 AvailabilityPeriods = [new() { Start = new(2026, 6, 1), End = new(2026, 9, 30) }]
             },
             ["gerda"] = new()
             {
-                Name = "Gerda van Dijk", PhoneNumber = Phone(),
-                AmountOfTrips = 7, MinTrips = 2, MaxTrips = 8, IsActive = true,
+                Name = "Gerda van Dijk",
+                PhoneNumber = Phone(),
+                AmountOfTrips = 7,
+                MinTrips = 2,
+                MaxTrips = 8,
+                IsActive = true,
                 Note = Mark("Zomers — beschikbaar jul-sep"),
                 // Start pas in juli → kan niet voor Turkije-reis in juni
                 AvailabilityPeriods = [new() { Start = new(2026, 7, 1), End = new(2026, 9, 30) }]
             },
             ["hans"] = new()
             {
-                Name = "Hans Bosman", PhoneNumber = Phone(),
-                AmountOfTrips = 12, MinTrips = 3, MaxTrips = 12, IsActive = true,
+                Name = "Hans Bosman",
+                PhoneNumber = Phone(),
+                AmountOfTrips = 12,
+                MinTrips = 3,
+                MaxTrips = 12,
+                IsActive = true,
                 Note = Mark("Zomers — op maximum (AmountOfTrips == MaxTrips)"),
                 // Edge case: zit op zijn maximum, algoritme slaat hem over
                 AvailabilityPeriods = [new() { Start = new(2026, 6, 1), End = new(2026, 9, 30) }]
@@ -173,16 +217,24 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
 
             ["karel"] = new()
             {
-                Name = "Karel Linden", PhoneNumber = Phone(),
-                AmountOfTrips = 3, MinTrips = 1, MaxTrips = 4, IsActive = true,
+                Name = "Karel Linden",
+                PhoneNumber = Phone(),
+                AmountOfTrips = 3,
+                MinTrips = 1,
+                MaxTrips = 4,
+                IsActive = true,
                 Note = Mark("Smal venster — alleen beschikbaar 5-25 apr"),
                 // Past exact op de Marokko-reis (apr 5-15) en nergens anders
                 AvailabilityPeriods = [new() { Start = new(2026, 4, 5), End = new(2026, 4, 25) }]
             },
             ["laura"] = new()
             {
-                Name = "Laura Straten", PhoneNumber = Phone(),
-                AmountOfTrips = 5, MinTrips = 1, MaxTrips = 6, IsActive = true,
+                Name = "Laura Straten",
+                PhoneNumber = Phone(),
+                AmountOfTrips = 5,
+                MinTrips = 1,
+                MaxTrips = 6,
+                IsActive = true,
                 Note = Mark("Smal venster — alleen beschikbaar 1-21 jul"),
                 // Past exact op Italië Zomer (jul 5-18) — net buiten bereik van Griekenland Zomer
                 AvailabilityPeriods = [new() { Start = new(2026, 7, 1), End = new(2026, 7, 21) }]
@@ -196,16 +248,24 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
 
             ["omar"] = new()
             {
-                Name = "Omar Hassan", PhoneNumber = Phone(),
-                AmountOfTrips = 9, MinTrips = 3, MaxTrips = 12, IsActive = false,
+                Name = "Omar Hassan",
+                PhoneNumber = Phone(),
+                AmountOfTrips = 9,
+                MinTrips = 3,
+                MaxTrips = 12,
+                IsActive = false,
                 Note = Mark("INACTIEF — heeft beschikbaarheid maar mag niet worden ingepland"),
                 // Heeft geldige beschikbaarheid maar IsActive=false → algoritme-edge case
                 AvailabilityPeriods = [new() { Start = new(2026, 1, 1), End = new(2026, 12, 31) }]
             },
             ["priya"] = new()
             {
-                Name = "Priya Singh", PhoneNumber = Phone(),
-                AmountOfTrips = 5, MinTrips = 1, MaxTrips = 8, IsActive = false,
+                Name = "Priya Singh",
+                PhoneNumber = Phone(),
+                AmountOfTrips = 5,
+                MinTrips = 1,
+                MaxTrips = 8,
+                IsActive = false,
                 Note = Mark("INACTIEF — ook geen beschikbaarheidsperiodes opgegeven"),
                 // Dubbele edge case: inactief + geen beschikbaarheid
             },
@@ -218,8 +278,12 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
 
             ["quinten"] = new()
             {
-                Name = "Quinten Vos", PhoneNumber = Phone(),
-                AmountOfTrips = 4, MinTrips = 1, MaxTrips = 6, IsActive = true,
+                Name = "Quinten Vos",
+                PhoneNumber = Phone(),
+                AmountOfTrips = 4,
+                MinTrips = 1,
+                MaxTrips = 6,
+                IsActive = true,
                 Note = Mark("Geen beschikbaarheid — actief maar nooit inplanbaar"),
                 // Geen AvailabilityPeriods → algoritme markeert elke reis als onbereikbaar
             },
@@ -231,16 +295,24 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
 
             ["sebastiaan"] = new()
             {
-                Name = "Sebastiaan van Ooijen", PhoneNumber = Phone(),
-                AmountOfTrips = 0, MinTrips = 1, MaxTrips = 1, IsActive = true,
+                Name = "Sebastiaan van Ooijen",
+                PhoneNumber = Phone(),
+                AmountOfTrips = 0,
+                MinTrips = 1,
+                MaxTrips = 1,
+                IsActive = true,
                 Note = Mark("Beginner — MaxTrips=1, kan maar 1 reis doen"),
                 // Nieuwe reisleider die slechts 1 reis per jaar wil doen
                 AvailabilityPeriods = [new() { Start = new(2026, 1, 1), End = new(2026, 12, 31) }]
             },
             ["vera"] = new()
             {
-                Name = "Vera Molenkamp", PhoneNumber = Phone(),
-                AmountOfTrips = 0, MinTrips = 2, MaxTrips = 4, IsActive = true,
+                Name = "Vera Molenkamp",
+                PhoneNumber = Phone(),
+                AmountOfTrips = 0,
+                MinTrips = 2,
+                MaxTrips = 4,
+                IsActive = true,
                 Note = Mark("AmountOfTrips=0 maar MinTrips=2 — ruim onder minimum"),
                 // UI-edge case: onder minimum → zichtbaar als aandachtspunt voor de planner
                 AvailabilityPeriods = [new() { Start = new(2026, 1, 1), End = new(2026, 12, 31) }]
@@ -254,40 +326,40 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
     {
         Journey J(string name, int year, int mStart, int dStart, int mEnd, int dEnd,
             int busses, int travelers, int required) => new()
-        {
-            Name = name,
-            Start = new(year, mStart, dStart),
-            End = new(year, mEnd, dEnd),
-            Busses = busses,
-            Travelers = travelers,
-            RequiredLeaders = required,
-            BookingStatus = BookingStatus.Geweest
-        };
+            {
+                Name = name,
+                Start = new(year, mStart, dStart),
+                End = new(year, mEnd, dEnd),
+                Busses = busses,
+                Travelers = travelers,
+                RequiredLeaders = required,
+                BookingStatus = BookingStatus.Geweest
+            };
 
         var j2024 = new Dictionary<string, Journey>
         {
-            ["ital"]  = J("Italië",      2024, 7,  1,  7, 14, 2, 20, 2),
-            ["griek"] = J("Griekenland", 2024, 4, 10,  4, 22, 1, 10, 1),
-            ["span"]  = J("Spanje",      2024, 3, 15,  3, 25, 1, 12, 1),
-            ["kro"]   = J("Kroatië",     2024, 6,  2,  6, 14, 1,  9, 1),
-            ["port"]  = J("Portugal",    2024, 9,  8,  9, 18, 1, 11, 1),
-            ["norw"]  = J("Noorwegen",   2024, 10, 5, 10, 15, 2, 18, 2),
-            ["turk"]  = J("Turkije",     2024, 4, 28,  5,  8, 1,  8, 1),
-            ["oost"]  = J("Oostenrijk",  2024, 3, 20,  3, 30, 1,  9, 1),
+            ["ital"] = J("Italië", 2024, 7, 1, 7, 14, 2, 20, 2),
+            ["griek"] = J("Griekenland", 2024, 4, 10, 4, 22, 1, 10, 1),
+            ["span"] = J("Spanje", 2024, 3, 15, 3, 25, 1, 12, 1),
+            ["kro"] = J("Kroatië", 2024, 6, 2, 6, 14, 1, 9, 1),
+            ["port"] = J("Portugal", 2024, 9, 8, 9, 18, 1, 11, 1),
+            ["norw"] = J("Noorwegen", 2024, 10, 5, 10, 15, 2, 18, 2),
+            ["turk"] = J("Turkije", 2024, 4, 28, 5, 8, 1, 8, 1),
+            ["oost"] = J("Oostenrijk", 2024, 3, 20, 3, 30, 1, 9, 1),
         };
 
         var j2025 = new Dictionary<string, Journey>
         {
-            ["ital"]  = J("Italië",      2025, 7,  6,  7, 19, 2, 20, 2),
-            ["span"]  = J("Spanje",      2025, 3,  9,  3, 19, 1, 12, 1),
-            ["griek"] = J("Griekenland", 2025, 4,  6,  4, 16, 2, 22, 2),
-            ["port"]  = J("Portugal",    2025, 3, 23,  4,  2, 1, 10, 1),
-            ["kro"]   = J("Kroatië",     2025, 5,  5,  5, 17, 1, 11, 1),
-            ["turk"]  = J("Turkije",     2025, 4, 21,  5,  1, 1,  9, 1),
-            ["norw"]  = J("Noorwegen",   2025, 10, 6, 10, 16, 2, 16, 2),
-            ["ijsl"]  = J("IJsland",     2025, 11, 3, 11, 13, 1,  8, 1),
-            ["zwit"]  = J("Zwitserland", 2025, 9,  8,  9, 18, 1, 10, 1),
-            ["mar"]   = J("Marokko",     2025, 2, 10,  2, 22, 1, 13, 1),
+            ["ital"] = J("Italië", 2025, 7, 6, 7, 19, 2, 20, 2),
+            ["span"] = J("Spanje", 2025, 3, 9, 3, 19, 1, 12, 1),
+            ["griek"] = J("Griekenland", 2025, 4, 6, 4, 16, 2, 22, 2),
+            ["port"] = J("Portugal", 2025, 3, 23, 4, 2, 1, 10, 1),
+            ["kro"] = J("Kroatië", 2025, 5, 5, 5, 17, 1, 11, 1),
+            ["turk"] = J("Turkije", 2025, 4, 21, 5, 1, 1, 9, 1),
+            ["norw"] = J("Noorwegen", 2025, 10, 6, 10, 16, 2, 16, 2),
+            ["ijsl"] = J("IJsland", 2025, 11, 3, 11, 13, 1, 8, 1),
+            ["zwit"] = J("Zwitserland", 2025, 9, 8, 9, 18, 1, 10, 1),
+            ["mar"] = J("Marokko", 2025, 2, 10, 2, 22, 1, 13, 1),
         };
 
         return (j2024, j2025);
