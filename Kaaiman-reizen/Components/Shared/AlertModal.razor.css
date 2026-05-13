@@ -92,6 +92,8 @@
     padding: 0 22px 18px;
     display: grid;
     gap: 12px;
+    overflow-y: auto;
+    max-height: 300px;
 }
 
 .km-alert-modal__message {

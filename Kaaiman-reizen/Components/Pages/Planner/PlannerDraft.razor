@@ -13,25 +13,10 @@
     }
     else if (_request != null)
     {
-        @if (_showEntryModal)
-        {
-            <EntryModal
-                ActionInProgress="_entryActionInProgress"
-                AvailableDrafts="_availableDrafts"
-                SelectedDraftId="_selectedDraftId"
-                SelectedDraftIdChanged="id => _selectedDraftId = id"
-                OnGenerateNew="GenerateNewPlanningFromModalAsync"
-                OnResumeDraft="ResumeSelectedDraftAsync"
-                OnClose="() => _showEntryModal = false" />
-        }
-
-        @if (!_showEntryModal)
-        {
-        @if (!string.IsNullOrWhiteSpace(_saveMessage)
-             && !_saveMessage.StartsWith("Concept geladen", System.StringComparison.OrdinalIgnoreCase))
+        @if (!string.IsNullOrWhiteSpace(_saveMessage))
         {
             <AlertModal IsOpen="true"
-                        Title="Concept opslaan"
+                        Title="Melding"
                         Severity="@_saveMessageSeverity"
                         Message="@_saveMessage" />
         }
@@ -54,6 +39,25 @@
             if (_result.IsSuccess)
             {
                 var leaderRows = BuildLeaderRows();
+
+                @if (_preferenceChangesDetected)
+                {
+                    <MudAlert Severity="Severity.Warning"
+                              ShowCloseIcon="true"
+                              CloseIconClicked="@(() => _preferenceChangesDetected = false)"
+                              Class="mb-2">
+                        <div class="d-flex align-center justify-space-between flex-wrap gap-2">
+                            <MudText Typo="Typo.body2">Reisleiders hebben hun voorkeuren bijgewerkt. Genereer opnieuw om de planning bij te werken.</MudText>
+                            <MudButton Variant="Variant.Outlined"
+                                       Size="Size.Small"
+                                       Color="Color.Warning"
+                                       Disabled="@_isSaving"
+                                       OnClick="@(() => RegeneratePlanningAsync())">
+                                Opnieuw genereren
+                            </MudButton>
+                        </div>
+                    </MudAlert>
+                }
 
                 <!-- Sidebar toggle -->
                 <div class="d-flex align-center gap-2 mb-2">
@@ -78,16 +82,16 @@
                                 var hasJourneys = row.AssignedJourneys.Count > 0;
                                 <div class="pd-sidebar-row @(hasJourneys ? "pd-sidebar-row--assigned" : "pd-sidebar-row--unassigned") position-relative">
                                     <div class="pd-sidebar-avatar">@row.LeaderName[0]</div>
-                                    
+
                                     <MudIconButton Icon="@Icons.Material.Filled.OpenInNew"
                                                    Size="Size.Small"
                                                    Variant="Variant.Outlined"
                                                    class="position-absolute top-0 end-0"
                                                    Style="z-index: 2;"
                                                    title="Reisleider details"
-                                                   OnClick="@((_) => OpenLeaderDetails(row))"
+                                                   OnClick="@(() => OpenLeaderDetails(row))"
                                     />
-                                    
+
                                     <div class="pd-sidebar-info">
                                         <span class="pd-sidebar-name">@row.LeaderName</span>
                                         @if (hasJourneys)
@@ -115,15 +119,15 @@
                                             @if (row.Preferences.Count > 0)
                                             {
                                                 <div class="pd-sidebar-prefs">
-                                                    @foreach (var pref in row.Preferences.OrderBy(p => p.Value))
+                                                    @foreach (var pref in row.Preferences.OrderBy(p => p.Rank))
                                                     {
-                                                        <span class="pd-sidebar-pref">@pref.Key (#@pref.Value)</span>
+                                                        <span class="pd-sidebar-pref">@pref.JourneyTitle (#@pref.Rank)</span>
                                                     }
                                                 </div>
                                             }
                                             else
                                             {
-                                                <span class="pd-sidebar-no-prefs">Geen voorkeuren</span>
+                                                <span class="pd-sidebar-no-prefs">Nog geen voorkeuren ingevuld</span>
                                             }
                                         }
                                     </div>
@@ -162,6 +166,13 @@
                 <div class="pd-bottom-actions">
                     <div class="d-flex flex-wrap gap-2">
                         <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Default"
+                                   Disabled="@_isSaving"
+                                   OnClick="@(() => RegeneratePlanningAsync())">
+                            Opnieuw genereren
+                        </MudButton>
+
+                        <MudButton Variant="Variant.Outlined"
                                    Color="Color.Primary"
                                    Disabled="@_isSaving"
                                    OnClick="SaveDraftAsync">
@@ -178,7 +189,7 @@
 
                         <MudButton Variant="Variant.Filled"
                                    Color="Color.Primary"
-                                   Disabled="@_isSaving"
+                                   Disabled="@(_isSaving || !CanPublish)"
                                    OnClick="PublishPlanningAsync">
                             @if (_isSaving)
                             {
@@ -201,9 +212,9 @@
                             Message="@_result.ErrorMessage" />
             }
         }
-        }
     }
 </MudStack>
+
 <NoteModal
     IsOpen="_noteModalOpen"
     Leader="_selectedLeaderRow?.Leader"
@@ -216,5 +227,3 @@
     OnClose="CloseDrawer"
     OnAssignLeader="AssignLeader"
     OnRemoveLeader="RemoveLeader" />
-
-

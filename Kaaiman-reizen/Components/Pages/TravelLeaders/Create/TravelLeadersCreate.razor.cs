@@ -33,25 +33,6 @@ public partial class TravelLeadersCreate : ComponentBase
 
     private TravelLeader _model = new();
     private string _email = string.Empty;
-    private string[] _preferred = new string[3];
-    private List<PeriodModel> _periods = new();
-
-    private class PeriodModel
-    {
-        public DateTime? Start { get; set; }
-        public DateTime? End { get; set; }
-    }
-
-    private void AddPeriod()
-    {
-        _periods.Add(new PeriodModel());
-    }
-
-    private void RemovePeriod(int index)
-    {
-        if (index >= 0 && index < _periods.Count)
-            _periods.RemoveAt(index);
-    }
 
     private void Cancel()
     {
@@ -63,9 +44,9 @@ public partial class TravelLeadersCreate : ComponentBase
         try
         {
             var existingLeader = await _db.TravelLeader
-            .Where(tl => tl.Email == _model.Email || tl.PhoneNumber == _model.PhoneNumber)
-            .Select(tl => new { tl.Email, tl.PhoneNumber })
-            .FirstOrDefaultAsync();
+                .Where(tl => tl.Email == _model.Email || tl.PhoneNumber == _model.PhoneNumber)
+                .Select(tl => new { tl.Email, tl.PhoneNumber })
+                .FirstOrDefaultAsync();
 
             var existingIdentityEmail = await _userManager.FindByEmailAsync(_model.Email);
             var existingIdentityPhone = await _userManager.Users
@@ -79,22 +60,6 @@ public partial class TravelLeadersCreate : ComponentBase
                 if (existingLeader?.PhoneNumber == _model.PhoneNumber || existingIdentityPhone)
                     throw new Exception($"Het telefoonnummer {_model.PhoneNumber} is al in gebruik.");
             }
-
-            _model.PreferredDestinations = _preferred
-                .Select((dest, index) => new { dest, index })
-                .Where(x => !string.IsNullOrWhiteSpace(x.dest))
-                .Take(3)
-                .Select(x => new PreferredDestination { Rank = x.index + 1, Destination = x.dest })
-                .ToList();
-
-            _model.AvailabilityPeriods = _periods
-                .Where(p => p.Start.HasValue && p.End.HasValue)
-                .Select(p => new AvailabilityPeriod
-                {
-                    Start = DateOnly.FromDateTime(p.Start!.Value),
-                    End = DateOnly.FromDateTime(p.End!.Value)
-                })
-                .ToList();
 
             await LeaderService.AddTravelLeaderAsync(_model);
             await _accountService.CreateIdentityUserForTravelLeaderAsync(_model.Email, _model.PhoneNumber, _model.Name, _model.Id);

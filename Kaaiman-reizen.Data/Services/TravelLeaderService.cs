@@ -25,6 +25,7 @@ public class TravelLeaderService : ITravelLeaderService
     {
         return await _db.TravelLeader
             .Include(t => t.PreferredDestinations)
+                .ThenInclude(pd => pd.Journey)
             .Include(t => t.AvailabilityPeriods)
             .Include(t => t.Journeys)
             .OrderBy(t => t.Name)

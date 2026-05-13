@@ -41,7 +41,6 @@
                 <th @onclick='() => SortBy("Active")'>
                     Actief @(GetSortIcon("Active"))
                 </th>
-                <th>Reisgeschiedenis</th>
             </HeaderContent>
             <RowTemplate>
                 <td>@context.Name</td>
@@ -50,28 +49,25 @@
                 <td>@context.AmountOfTrips</td>
                 <td>@context.MinTrips</td>
                 <td>@context.MaxTrips</td>
-                <td>@context.Availability</td>
                 <td>
-                    <span class="badge @(context.IsActive ? "bg-success" : "bg-danger")">
-                        @(context.IsActive ? "Ja" : "Nee")
-                    </span>
-                </td>
-                <td>
-                    @if (context.JourneyHistory.Count == 0)
+                    @if (!context.AvailableForJourneys.Any())
                     {
-                        <span class="text-muted">Nog geen reizen</span>
+                        <span class="text-muted">—</span>
                     }
                     else
                     {
                         <div class="d-flex flex-column gap-1">
-                            @foreach (var journey in context.JourneyHistory)
+                            @foreach (var name in context.AvailableForJourneys)
                             {
-                                <a href="@GetJourneyHref(journey.JourneyId)">
-                                    @journey.JourneyName (@journey.Start.ToString("dd-MM-yyyy") - @journey.End.ToString("dd-MM-yyyy"))
-                                </a>
+                                <span>@name</span>
                             }
                         </div>
                     }
+                </td>
+                <td>
+                    <span class="badge @(context.IsActive ? "bg-success" : "bg-danger")">
+                        @(context.IsActive ? "Ja" : "Nee")
+                    </span>
                 </td>
             </RowTemplate>
         </Table>
