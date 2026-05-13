@@ -84,7 +84,7 @@ public partial class Edit : ComponentBase
 
             if (phoneExists || phoneExistsInIdentity)
                 throw new Exception($"Het telefoonnummer {_model.PhoneNumber} is al in gebruik.");
-            
+
             await LeaderService.UpdateTravelLeaderAsync(_model);
             await _accountService.UpdateAccountAsync(_model);
             Navigation.NavigateTo("/travelleaders");
