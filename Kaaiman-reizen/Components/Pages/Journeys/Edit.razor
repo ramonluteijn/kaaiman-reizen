@@ -34,13 +34,13 @@
 
                 <div class="mb-3">
                     <label class="form-label">Start datum</label>
-                    <InputDate class="form-control" @bind-Value="_model.Start" />
+                    <InputDate class="form-control" @bind-Value="_model.Start" @bind-Value:after="OnStartDateChanged" />
                     <ValidationMessage For="() => _model.Start" />
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">Eind Datum</label>
-                    <InputDate class="form-control" @bind-Value="_model.End" />
+                    <InputDate class="form-control" @bind-Value="_model.End" @bind-Value:after="OnEndDateChanged" />
                     <ValidationMessage For="() => _model.End" />
                 </div>
 
@@ -154,5 +154,23 @@
         {
             _leaders = new List<TravelLeader>();
         }
+    }
+    
+    private void OnStartDateChanged()
+    {
+        UpdateStatus();
+    }
+
+    private void OnEndDateChanged()
+    {
+        UpdateStatus();
+    }
+
+    private void UpdateStatus()
+    {
+        if (_model.Start < DateOnly.FromDateTime(DateTime.Today) && _model.End < DateOnly.FromDateTime(DateTime.Today))
+            _model.BookingStatus = BookingStatus.Geweest;
+        else
+            _model.BookingStatus = BookingStatus.Bezig;
     }
 }
