@@ -44,7 +44,7 @@ public partial class TravelLeaderCalendar : ComponentBase
             return;
         }
 
-        _journeys = (List<JourneyViewModel>)GetCalendarJourneys(leader);
+        _journeys = (List<JourneyViewModel>)await BuildCalendarJourneysAsync(leader);
 
         _loading = false;
     }
@@ -64,10 +64,11 @@ public partial class TravelLeaderCalendar : ComponentBase
         return null;
     }
 
-    private IReadOnlyList<JourneyViewModel> GetCalendarJourneys(TravelLeader leader)
+    private async Task<IReadOnlyList<JourneyViewModel>> BuildCalendarJourneysAsync(TravelLeader leader)
     {
-        Console.WriteLine("Travel leader: ", leader.Journeys);
-        return leader.Journeys.Select(j =>
+        var journeys = await LeaderService.GetJourneysOfTravelLeaderAsync(leader);
+        Console.WriteLine($"Travel leader journeys count: {journeys.Count}");
+        return journeys.Select(j =>
         {
             var leaders = new List<TravelLeaderViewModel>();
             foreach (var t in j.TravelLeaders)
