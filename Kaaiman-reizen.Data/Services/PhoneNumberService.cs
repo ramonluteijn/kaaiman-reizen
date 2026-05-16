@@ -6,11 +6,11 @@ public class PhoneNumberService : IPhoneNumberService
 {
     private readonly PhoneNumberUtil _phoneUtil = PhoneNumberUtil.GetInstance();
     private const string DefaultCountryCode = "NL";
-    
+
     public bool IsValidPhoneNumber(string phoneNumber, string countryCode = DefaultCountryCode)
     {
         if (CheckWhiteSpace(phoneNumber)) return false;
-        
+
         try
         {
             var parsedNumber = _phoneUtil.Parse(phoneNumber, countryCode);
