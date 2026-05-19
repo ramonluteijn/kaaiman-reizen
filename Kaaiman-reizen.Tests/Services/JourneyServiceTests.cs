@@ -2,10 +2,7 @@
 using Kaaiman_reizen.Data.Entities;
 using Kaaiman_reizen.Data.Services;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
-using System.Threading.Tasks;
 using Kaaiman_reizen.Data.Enum;
-using Xunit;
 
 namespace Kaaiman_reizen.Tests.Services
 {

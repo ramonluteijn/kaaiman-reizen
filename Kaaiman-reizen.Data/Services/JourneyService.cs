@@ -1,4 +1,6 @@
+using IronXL;
 using Kaaiman_reizen.Data.Entities;
+using Kaaiman_reizen.Data.Enum;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kaaiman_reizen.Data.Services;
@@ -122,6 +124,40 @@ public class JourneyService : IJourneyService
         await _db.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task<String?> ImportJourneysAsync(Stream stream)
+    {
+        WorkBook loadedWorkBook = WorkBook.FromStream(stream);
+        WorkSheet loadedWorkSheet = loadedWorkBook.DefaultWorkSheet;
+
+        for (int row = 0; row < loadedWorkSheet.RowCount; row++)
+        {
+            try
+            {
+                RangeRow currentRow = loadedWorkSheet.GetRow(row);
+
+                var journey = new Journey
+                {
+                    Name = currentRow.ElementAt(0).ToString(),
+                    Start = DateOnly.FromDateTime(currentRow.ElementAt(1).DateTimeValue!.Value),
+                    End = DateOnly.FromDateTime(currentRow.ElementAt(2).DateTimeValue!.Value),
+                    Busses = int.TryParse(currentRow.ElementAt(3).ToString(), out int busses) ? busses : 0,
+                    Travelers = int.TryParse(currentRow.ElementAt(4).ToString(), out int travelers) ? travelers : 0,
+                    BookingStatus = GetBookingStatus(int.TryParse(currentRow.ElementAt(5).ToString(), out int bookingStatus) ? bookingStatus : 0)
+                };
+
+                if (journey.Start >= journey.End) return $"Fout gevonden op rij: {row}, start datum mag niet later of gelijk zijn aan eind datum. Eerdere rijen zijn wel succesvol toegevoegd";
+
+                await AddJourneyAsync(journey, new List<int>());
+            }
+            catch
+            {
+                return $"Fout gevonden op rij: {row}, eerdere rijen zijn wel succesvol toegevoegd";
+            }
+        }
+
+        return null;
+    }
+
     private static IReadOnlyList<Journey> ApplyPlanningVersion(
         IReadOnlyList<Journey> journeys,
         PlanningVersion? planningVersion)
@@ -149,4 +185,12 @@ public class JourneyService : IJourneyService
 
         return journeys;
     }
+
+    private BookingStatus GetBookingStatus(int status) => status switch
+    {
+        0 => BookingStatus.Bezig,
+        1 => BookingStatus.Geweest,
+        2 => BookingStatus.Geanuleerd,
+        _ => 0
+    };
 }
