@@ -180,6 +180,69 @@ public class PhoneNumberServiceTests
         var service = new PhoneNumberService();
         Assert.True(service.IsValidPhoneNumber("0470123456", "BE"));
     }
+    
+    [Fact]
+    public void isValidLandlineNumber_ReturnsTrue_Plus()
+    {
+        var service = new PhoneNumberService();
+        Assert.True(service.IsValidPhoneNumber("+31412630453"));
+    }
+    
+    [Fact]
+    public void isValidLandlineNumber_ReturnsTrue()
+    {
+        var service = new PhoneNumberService();
+        Assert.True(service.IsValidPhoneNumber("0412630453"));
+    }
+    
+    [Fact]
+    public void isValidLandlineNumber_ReturnsTrue_Dash()
+    {
+        var service = new PhoneNumberService();
+        Assert.True(service.IsValidPhoneNumber("0412-630453"));
+    }
+    
+    [Fact]
+    public void isValidLandlineNumber_ReturnsFalse_Short()
+    {
+        var service = new PhoneNumberService();
+        Assert.False(service.IsValidPhoneNumber("041263045"));
+    }
+
+    [Fact]
+    public void isValidLandlineNumber_ReturnsFalse_Long()
+    {
+        var service = new PhoneNumberService();
+        Assert.False(service.IsValidPhoneNumber("04126304534"));
+    }
+    
+    [Fact]
+    public void isValidLandlineNumber_ReturnsFalse_Short_Dash()
+    {
+        var service = new PhoneNumberService();
+        Assert.False(service.IsValidPhoneNumber("0412-63045"));
+    }
+
+    [Fact]
+    public void isValidLandlineNumber_ReturnsFalse_Long_Dash()
+    {
+        var service = new PhoneNumberService();
+        Assert.False(service.IsValidPhoneNumber("0412-63045"));
+    }
+    
+    [Fact]
+    public void isValidLandlineNumber_ReturnsFalse_WrongCountryCode()
+    {
+        var service = new PhoneNumberService();
+        Assert.False(service.IsValidPhoneNumber("+4412630453"));
+    }
+    
+    [Fact]
+    public void isValidLandlineNumber_ReturnsFalse_WrongCountryCode_Dash()
+    {
+        var service = new PhoneNumberService();
+        Assert.False(service.IsValidPhoneNumber("+44-12630453"));
+    }
 
     // formatphonenumber function tests
     [Fact]
