@@ -28,7 +28,6 @@
     </ItemGroup>
     <ItemGroup>
       <PackageReference Include="Azure.Extensions.AspNetCore.Configuration.Secrets" Version="1.5.0" />
-      <PackageReference Include="IronXL.Excel" Version="2026.5.1" />
       <PackageReference Include="Microsoft.AspNetCore.Authentication" Version="2.3.9" />
       <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="10.0.5" />
       <PackageReference Include="Microsoft.AspNetCore.Authentication.MicrosoftAccount" Version="10.0.5" />

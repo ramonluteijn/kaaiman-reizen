@@ -1,4 +1,6 @@
-using IronXL;
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Spreadsheet;
+using DocumentFormat.OpenXml.Wordprocessing;
 using Kaaiman_reizen.Data.Entities;
 using Kaaiman_reizen.Data.Enum;
 using Microsoft.EntityFrameworkCore;
@@ -124,35 +126,43 @@ public class JourneyService : IJourneyService
         await _db.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<String?> ImportJourneysAsync(Stream stream)
+    public async Task<string?> ImportJourneysAsync(Stream stream)
     {
-        WorkBook loadedWorkBook = WorkBook.FromStream(stream);
-        WorkSheet loadedWorkSheet = loadedWorkBook.DefaultWorkSheet;
+        var workbookPart = SpreadsheetDocument.Open(stream, false).WorkbookPart;
+        var sheet = workbookPart!.Workbook.Sheets!.Elements<Sheet>().FirstOrDefault();
+        if (sheet == null) return "Geen worksheet gevonden";
 
-        for (int row = 0; row < loadedWorkSheet.RowCount; row++)
+        var worksheetPart = (WorksheetPart)workbookPart.GetPartById(sheet.Id!);
+        var sheetData = worksheetPart.Worksheet.GetFirstChild<SheetData>();
+        var sharedStringTable = workbookPart.SharedStringTablePart?.SharedStringTable;
+
+        int rowIndex = 0;
+
+        foreach (var row in sheetData!.Elements<Row>())
         {
             try
             {
-                RangeRow currentRow = loadedWorkSheet.GetRow(row);
-
+                var columns = row.Elements<Cell>().ToList();
                 var journey = new Journey
                 {
-                    Name = currentRow.ElementAt(0).ToString(),
-                    Start = DateOnly.FromDateTime(currentRow.ElementAt(1).DateTimeValue!.Value),
-                    End = DateOnly.FromDateTime(currentRow.ElementAt(2).DateTimeValue!.Value),
-                    Busses = int.TryParse(currentRow.ElementAt(3).ToString(), out int busses) ? busses : 0,
-                    Travelers = int.TryParse(currentRow.ElementAt(4).ToString(), out int travelers) ? travelers : 0,
-                    BookingStatus = GetBookingStatus(int.TryParse(currentRow.ElementAt(5).ToString(), out int bookingStatus) ? bookingStatus : 0)
+                    Name = sharedStringTable?.ElementAt(int.Parse(columns[0].CellValue?.InnerText ?? string.Empty))?.InnerText ?? string.Empty,
+                    Start = DateOnly.FromDateTime(DateTime.FromOADate(double.Parse(columns[1].CellValue?.InnerText ?? string.Empty))),
+                    End = DateOnly.FromDateTime(DateTime.FromOADate(double.Parse(columns[2].CellValue?.InnerText ?? string.Empty))),
+                    Busses = int.TryParse(columns[3].CellValue?.InnerText ?? string.Empty, out int busses) ? busses : 0,
+                    Travelers = int.TryParse(columns[4].CellValue?.InnerText ?? string.Empty, out int travelers) ? travelers : 0,
+                    BookingStatus = GetBookingStatus(int.TryParse(columns[5].CellValue?.InnerText ?? string.Empty, out int bookingStatus) ? bookingStatus : 0)
                 };
 
-                if (journey.Start >= journey.End) return $"Fout gevonden op rij: {row}, start datum mag niet later of gelijk zijn aan eind datum. Eerdere rijen zijn wel succesvol toegevoegd";
+                if (journey.Start >= journey.End) return $"Fout gevonden op rij: {rowIndex}, start datum mag niet later of gelijk zijn aan eind datum. Eerdere rijen zijn wel succesvol toegevoegd";
 
                 await AddJourneyAsync(journey, new List<int>());
             }
             catch
             {
-                return $"Fout gevonden op rij: {row}, eerdere rijen zijn wel succesvol toegevoegd";
+                return $"Fout gevonden op rij: {rowIndex}, eerdere rijen zijn wel succesvol toegevoegd";
             }
+
+            rowIndex++;
         }
 
         return null;
