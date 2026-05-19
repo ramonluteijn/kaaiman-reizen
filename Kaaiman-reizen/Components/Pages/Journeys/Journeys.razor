@@ -77,7 +77,7 @@
             <div class="text-muted mb-3">Geen reizen gevonden.</div>
         }
 
-        <div class="mt-3">
+        <div class="mb-3 mt-3">
             <label for="excelImport">
                 <MudButton Variant="Variant.Filled"
                            Color="Color.Primary"
@@ -90,7 +90,14 @@
             <InputFile id="excelImport"
                        OnChange="ImportExcelFile"
                        hidden />
-          </div>
+        </div>
+
+        <MudText Typo="Typo.body2" Class="mud-text-secondary italic">
+            Excel sheet dient er als volgt uit te zien:
+        </MudText>
+        <MudText Typo="Typo.body2" Class="mud-text-secondary italic">
+            Reis (tekst) | Start datum (datum) | Eind datum (datum) | Busjes (nummer) | Reizigers (nummer) | Boekingsstatus (0, 1, 2)
+        </MudText>
     </div>
 </div>
 
@@ -280,8 +287,7 @@
                     End = DateOnly.FromDateTime(currentRow.ElementAt(2).DateTimeValue!.Value),
                     Busses = int.TryParse(currentRow.ElementAt(3).ToString(), out int busses) ? busses : 0,
                     Travelers = int.TryParse(currentRow.ElementAt(4).ToString(), out int travelers) ? travelers : 0,
-                    BookingStatus = GetBookingStatus(int.TryParse(currentRow.ElementAt(5).ToString(), out int bookingStatus) ? bookingStatus : 0),
-                    RequiredLeaders = int.TryParse(currentRow.ElementAt(6).ToString(), out int requiredLeaders) ? requiredLeaders : 0,
+                    BookingStatus = GetBookingStatus(int.TryParse(currentRow.ElementAt(5).ToString(), out int bookingStatus) ? bookingStatus : 0)
                 };
 
                 await JourneyService.AddJourneyAsync(journey, new List<int>());
