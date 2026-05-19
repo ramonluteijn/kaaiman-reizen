@@ -167,6 +167,15 @@ public class TravelLeaderService : ITravelLeaderService
         return overlaps;
     }
 
+    public async Task<IReadOnlyList<Journey>?> GetJourneysOfTravelLeaderAsync(TravelLeader leader, CancellationToken cancellationToken = default)
+    {
+        return await _db.Journey
+            .AsNoTracking()
+            .Include(j => j.TravelLeaders)
+            .Where(j => j.TravelLeaders.Any(tl => tl.Id == leader.Id))
+            .ToListAsync(cancellationToken);
+    }
+
     public class OverlapData
     {
         public TravelLeader travelLeader { get; set; }
