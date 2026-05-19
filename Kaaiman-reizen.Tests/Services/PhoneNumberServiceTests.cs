@@ -180,28 +180,28 @@ public class PhoneNumberServiceTests
         var service = new PhoneNumberService();
         Assert.True(service.IsValidPhoneNumber("0470123456", "BE"));
     }
-    
+
     [Fact]
     public void isValidLandlineNumber_ReturnsTrue_Plus()
     {
         var service = new PhoneNumberService();
         Assert.True(service.IsValidPhoneNumber("+31412630453"));
     }
-    
+
     [Fact]
     public void isValidLandlineNumber_ReturnsTrue()
     {
         var service = new PhoneNumberService();
         Assert.True(service.IsValidPhoneNumber("0412630453"));
     }
-    
+
     [Fact]
     public void isValidLandlineNumber_ReturnsTrue_Dash()
     {
         var service = new PhoneNumberService();
         Assert.True(service.IsValidPhoneNumber("0412-630453"));
     }
-    
+
     [Fact]
     public void isValidLandlineNumber_ReturnsFalse_Short()
     {
@@ -215,7 +215,7 @@ public class PhoneNumberServiceTests
         var service = new PhoneNumberService();
         Assert.False(service.IsValidPhoneNumber("04126304534"));
     }
-    
+
     [Fact]
     public void isValidLandlineNumber_ReturnsFalse_Short_Dash()
     {
@@ -229,14 +229,14 @@ public class PhoneNumberServiceTests
         var service = new PhoneNumberService();
         Assert.False(service.IsValidPhoneNumber("0412-63045"));
     }
-    
+
     [Fact]
     public void isValidLandlineNumber_ReturnsFalse_WrongCountryCode()
     {
         var service = new PhoneNumberService();
         Assert.False(service.IsValidPhoneNumber("+4412630453"));
     }
-    
+
     [Fact]
     public void isValidLandlineNumber_ReturnsFalse_WrongCountryCode_Dash()
     {

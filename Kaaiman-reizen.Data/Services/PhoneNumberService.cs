@@ -62,18 +62,18 @@ public class PhoneNumberService : IPhoneNumberService
     {
         var isValid = _phoneUtil.IsValidNumber(parsedNumber);
         var numberType = _phoneUtil.GetNumberType(parsedNumber);
-        
+
         var isValidType = numberType == PhoneNumberType.MOBILE ||
                          numberType == PhoneNumberType.FIXED_LINE ||
                          numberType == PhoneNumberType.FIXED_LINE_OR_MOBILE;
 
         if (!isValid || !isValidType) return false;
-        
+
         if (originalPhoneNumber.TrimStart().StartsWith("+"))
         {
             return true;
         }
-        
+
         if (countryCode == "NL")
         {
             return originalPhoneNumber.StartsWith("0");
