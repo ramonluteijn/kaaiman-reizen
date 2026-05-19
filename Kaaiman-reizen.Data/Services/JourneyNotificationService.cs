@@ -1,0 +1,90 @@
+using Kaaiman_reizen.Data.Entities;
+using Kaaiman_reizen.Data.Identity;
+using Microsoft.EntityFrameworkCore;
+
+namespace Kaaiman_reizen.Data.Services;
+
+public class JourneyNotificationService
+{
+    private readonly MainContext _db;
+    private readonly IEmailDispatcher _emailDispatcher;
+    private readonly INotificationService _notificationService;
+
+    public JourneyNotificationService(
+        MainContext db,
+        IEmailDispatcher emailDispatcher,
+        INotificationService notificationService)
+    {
+        _db = db;
+        _emailDispatcher = emailDispatcher;
+        _notificationService = notificationService;
+    }
+
+    public async Task SendJourneyRemindersAsync(CancellationToken cancellationToken = default)
+    {
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var reminderDays = new[] { 7, 3 };
+
+        foreach (var days in reminderDays)
+        {
+            var targetDate = today.AddDays(days);
+
+            var journeys = await _db.Journey
+                .Where(j => j.Start == targetDate)
+                .Include(j => j.TravelLeaders)
+                .ToListAsync(cancellationToken);
+
+            foreach (var journey in journeys)
+            {
+                foreach (var travelLeader in journey.TravelLeaders)
+                {
+                    var alreadySent = await _db.JourneyNotificationHistory
+                        .AnyAsync(
+                            h => h.JourneyId == journey.Id &&
+                                 h.ApplicationUserId == travelLeader.Id.ToString() &&
+                                 h.DaysBeforeStart == days,
+                            cancellationToken);
+
+                    if (alreadySent)
+                        continue;
+
+                    var dashboardMessage = $"Uw reis naar {journey.Name} start op {journey.Start:dd-MM-yyyy}.";
+                    var emailSubject = $"Herinnering: Uw reis naar {journey.Name}";
+                    var emailBody = $@"
+                        <html>
+                            <body>
+                                <p>Beste,</p>
+                                <p>Dit is een herinnering dat uw reis naar <strong>{journey.Name}</strong> over {days} dag(en) start op <strong>{journey.Start:dd-MM-yyyy}</strong>.</p>
+                                <p>Tot ziens!</p>
+                            </body>
+                        </html>";
+
+                    await _emailDispatcher.SendEmailAsync(travelLeader.Email, emailSubject, emailBody);
+
+                    var applicationUser = await _db.Users
+                        .FirstOrDefaultAsync(u => u.Email == travelLeader.Email, cancellationToken);
+
+                    if (applicationUser != null)
+                    {
+                        await _notificationService.CreateNotificationAsync(
+                            applicationUser.Id,
+                            dashboardMessage,
+                            cancellationToken);
+                    }
+
+                    var history = new JourneyNotificationHistory
+                    {
+                        JourneyId = journey.Id,
+                        ApplicationUserId = travelLeader.Id.ToString(),
+                        DaysBeforeStart = days,
+                        SentAt = DateTime.UtcNow
+                    };
+
+                    _db.JourneyNotificationHistory.Add(history);
+                }
+            }
+        }
+
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+}

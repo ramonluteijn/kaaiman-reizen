@@ -6,4 +6,5 @@ public interface INotificationService
 {
     Task<List<Notification>> GetUnreadNotificationsAsync(string userId, CancellationToken cancellationToken = default);
     Task MarkAsReadAsync(int notificationId, string userId, CancellationToken cancellationToken = default);
+    Task CreateNotificationAsync(string userId, string message, CancellationToken cancellationToken = default);
 }
