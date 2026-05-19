@@ -26,11 +26,32 @@ public class ValidPhoneNumberAttribute : ValidationAttribute
             return true; // Null/empty is handled by [Required] attribute
         }
 
+        var phoneNumberString = value.ToString()!;
+
         try
         {
             var phoneUtil = PhoneNumberUtil.GetInstance();
-            var phoneNumber = phoneUtil.Parse(value.ToString(), _countryCode);
-            return phoneUtil.IsValidNumber(phoneNumber);
+            var phoneNumber = phoneUtil.Parse(phoneNumberString, _countryCode);
+            var isValid = phoneUtil.IsValidNumber(phoneNumber);
+            var numberType = phoneUtil.GetNumberType(phoneNumber);
+
+            var isValidType = numberType == PhoneNumberType.MOBILE ||
+                             numberType == PhoneNumberType.FIXED_LINE ||
+                             numberType == PhoneNumberType.FIXED_LINE_OR_MOBILE;
+
+            if (!isValid || !isValidType) return false;
+
+            if (phoneNumberString.TrimStart().StartsWith("+"))
+            {
+                return true;
+            }
+
+            if (_countryCode == "NL")
+            {
+                return phoneNumberString.StartsWith("0");
+            }
+
+            return true;
         }
         catch
         {

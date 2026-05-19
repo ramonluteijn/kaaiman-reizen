@@ -91,14 +91,14 @@ public class PhoneNumberServiceTests
 
     // test with wrong country number
     [Fact]
-    public void IsValidPhoneNumber_InvalidNumber_ReturnsFalse_WrongCountryCode()
+    public void IsValidPhoneNumber_InvalidNumber_ReturnsFalse_WrongCountryCode_Plus()
     {
         var service = new PhoneNumberService();
         Assert.False(service.IsValidPhoneNumber("+4412345678"));
     }
 
     [Fact]
-    public void IsValidPhoneNumber_InvalidNumber_ReturnsFalse_WrongCountryCode_Dash()
+    public void IsValidPhoneNumber_InvalidNumber_ReturnsFalse_WrongCountryCode_Dash_Plus()
     {
         var service = new PhoneNumberService();
         Assert.False(service.IsValidPhoneNumber("+44-12345678"));
@@ -108,14 +108,14 @@ public class PhoneNumberServiceTests
     public void IsValidPhoneNumber_InvalidNumber_ReturnsFalse_WrongPhoneNumber()
     {
         var service = new PhoneNumberService();
-        Assert.False(service.IsValidPhoneNumber("+44-12345678"));
+        Assert.False(service.IsValidPhoneNumber("239884262"));
     }
 
     [Fact]
-    public void IsValidPhoneNumber_InvalidNumber_ReturnsFalse_WrongPhoneNumber_Dash()
+    public void sValidPhoneNumber_InvalidNumber_ReturnsFalse_WrongPhoneNumber_Dash()
     {
         var service = new PhoneNumberService();
-        Assert.False(service.IsValidPhoneNumber("+44-12345678"));
+        Assert.False(service.IsValidPhoneNumber("23-9884262"));
     }
 
     [Fact]
@@ -151,6 +151,36 @@ public class PhoneNumberServiceTests
     {
         var service = new PhoneNumberService();
         Assert.False(service.IsValidPhoneNumber("+456789"));
+    }
+
+    [Fact]
+    public void IsValidPhoneNumber_USNumber_ReturnsTrue()
+    {
+        var service = new PhoneNumberService();
+        Assert.True(service.IsValidPhoneNumber("+12025550173", "US"));
+    }
+
+    [Fact]
+    public void IsValidPhoneNumber_USNumber_NoPlus_ReturnsTrue()
+    {
+        var service = new PhoneNumberService();
+        // US local format (without +1)
+        Assert.True(service.IsValidPhoneNumber("2025550173", "US"));
+    }
+
+    [Fact]
+    public void IsValidPhoneNumber_BELumber_ReturnsTrue()
+    {
+        var service = new PhoneNumberService();
+        Assert.True(service.IsValidPhoneNumber("+32470123456", "BE"));
+    }
+
+    [Fact]
+    public void IsValidPhoneNumber_BENumber_NoPlus_ReturnsTrue()
+    {
+        var service = new PhoneNumberService();
+        // Belgian numbers usually start with 0
+        Assert.True(service.IsValidPhoneNumber("0470123456", "BE"));
     }
 
     // formatphonenumber function tests

@@ -14,7 +14,7 @@ public class PhoneNumberService : IPhoneNumberService
         try
         {
             var parsedNumber = _phoneUtil.Parse(phoneNumber, countryCode);
-            return _phoneUtil.IsValidNumber(parsedNumber);
+            return IsValidParsedNumber(parsedNumber, phoneNumber, countryCode);
         }
         catch
         {
@@ -29,7 +29,7 @@ public class PhoneNumberService : IPhoneNumberService
         try
         {
             var parsedNumber = _phoneUtil.Parse(phoneNumber, countryCode);
-            if (!_phoneUtil.IsValidNumber(parsedNumber))
+            if (!IsValidParsedNumber(parsedNumber, phoneNumber, countryCode))
                 return null;
 
             return _phoneUtil.Format(parsedNumber, PhoneNumberFormat.E164);
@@ -47,7 +47,7 @@ public class PhoneNumberService : IPhoneNumberService
         try
         {
             var parsedNumber = _phoneUtil.Parse(phoneNumber, countryCode);
-            if (!_phoneUtil.IsValidNumber(parsedNumber))
+            if (!IsValidParsedNumber(parsedNumber, phoneNumber, countryCode))
                 return null;
 
             return parsedNumber.CountryCode;
@@ -56,6 +56,30 @@ public class PhoneNumberService : IPhoneNumberService
         {
             return null;
         }
+    }
+
+    private bool IsValidParsedNumber(PhoneNumber parsedNumber, string originalPhoneNumber, string countryCode)
+    {
+        var isValid = _phoneUtil.IsValidNumber(parsedNumber);
+        var numberType = _phoneUtil.GetNumberType(parsedNumber);
+        
+        var isValidType = numberType == PhoneNumberType.MOBILE ||
+                         numberType == PhoneNumberType.FIXED_LINE ||
+                         numberType == PhoneNumberType.FIXED_LINE_OR_MOBILE;
+
+        if (!isValid || !isValidType) return false;
+        
+        if (originalPhoneNumber.TrimStart().StartsWith("+"))
+        {
+            return true;
+        }
+        
+        if (countryCode == "NL")
+        {
+            return originalPhoneNumber.StartsWith("0");
+        }
+
+        return true;
     }
 
     private static bool CheckWhiteSpace(string phoneNumber)
