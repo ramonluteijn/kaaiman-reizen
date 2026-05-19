@@ -1,5 +1,4 @@
 @page "/travelleaders/calendar"
-@page "/travelleaders/calendar/{Id:int}"
 @attribute [Authorize(Roles = "Reisleider")]
 @rendermode InteractiveServer
 
@@ -11,15 +10,18 @@
     <div class="card-body">
         @if (_loading)
         {
-            <div>Bezig met laden…</div>
+            <div class="text-muted">Gegevens laden...</div>
         }
-        else if (_notFound)
+        else if (!string.IsNullOrWhiteSpace(_statusMessage))
         {
-            <div class="text-muted">Reisleider niet gevonden.</div>
+            <AlertModal IsOpen="true"
+                        Title="Kalender"
+                        Severity="Severity.Info"
+                        Message="@_statusMessage" />
         }
         else
         {
-            <CalendarView Journeys="GetCalendarJourneys()"/>
+            <CalendarView Journeys="@_journeys"/>
         }
     </div>
 </div>
