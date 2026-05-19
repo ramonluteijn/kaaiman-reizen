@@ -1,8 +1,11 @@
-﻿using Kaaiman_reizen.Data;
+﻿using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Spreadsheet;
+using Kaaiman_reizen.Data;
 using Kaaiman_reizen.Data.Entities;
+using Kaaiman_reizen.Data.Enum;
 using Kaaiman_reizen.Data.Services;
 using Microsoft.EntityFrameworkCore;
-using Kaaiman_reizen.Data.Enum;
 
 namespace Kaaiman_reizen.Tests.Services
 {
@@ -16,6 +19,55 @@ namespace Kaaiman_reizen.Tests.Services
         private IServiceProvider GetMockServiceProvider()
         {
             return new DummyServiceProvider();
+        }
+
+        public static MemoryStream CreateValidJourneyExcel()
+        {
+            var stream = new MemoryStream();
+
+            using (var doc = SpreadsheetDocument.Create(stream, SpreadsheetDocumentType.Workbook, true))
+            {
+                var workbookPart = doc.AddWorkbookPart();
+                workbookPart.Workbook = new Workbook();
+
+                var worksheetPart = workbookPart.AddNewPart<WorksheetPart>();
+                worksheetPart.Worksheet = new Worksheet(new SheetData());
+
+                var sheets = doc.WorkbookPart!.Workbook.AppendChild(new Sheets());
+                sheets.Append(new Sheet
+                {
+                    Id = doc.WorkbookPart.GetIdOfPart(worksheetPart),
+                    SheetId = 1,
+                    Name = "Sheet1"
+                });
+
+                var sheetData = worksheetPart.Worksheet.GetFirstChild<SheetData>()!;
+
+                sheetData.Append(CreateRow(0,
+                    "Valid Import Journey", "45000", "45001", "2", "10", "1"));
+
+                workbookPart.Workbook.Save();
+            }
+
+            stream.Position = 0;
+            return stream;
+        }
+
+        private static Row CreateRow(uint index, params string[] values)
+        {
+            var row = new Row { RowIndex = index };
+
+            for (int i = 0; i < values.Length; i++)
+            {
+                row.Append(new Cell
+                {
+                    CellReference = ((char)('A' + i)).ToString() + (index + 1),
+                    CellValue = new CellValue(values[i]),
+                    DataType = CellValues.String
+                });
+            }
+
+            return row;
         }
 
         // Helper: create a fresh in-memory database for each test
@@ -142,6 +194,19 @@ namespace Kaaiman_reizen.Tests.Services
             var results = journey.Validate(new System.ComponentModel.DataAnnotations.ValidationContext(journey)).ToList();
             Assert.Single(results);
             Assert.Contains("Start datum mag niet later of gelijk zijn aan eind datum", results[0].ErrorMessage);
+        }
+
+        [Fact]
+        public async Task ImportJourneysAsync_ValidExcel_ReturnsNull()
+        {
+            var stream = CreateValidJourneyExcel();
+            var db = GetInMemoryDb();
+            var planningService = new PlanningService(db, GetMockServiceProvider());
+            var service = new JourneyService(db, planningService);
+
+            var result = await service.ImportJourneysAsync(stream);
+
+            Assert.Null(result);
         }
     }
 }
