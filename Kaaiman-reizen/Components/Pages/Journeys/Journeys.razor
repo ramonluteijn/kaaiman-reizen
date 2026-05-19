@@ -2,6 +2,7 @@
 @using Kaaiman_reizen.Data.Services
 @using Kaaiman_reizen.Data.Entities
 @using Kaaiman_reizen.Data.Enum
+@using IronXL;
 @rendermode InteractiveServer
 @inject IJourneyService JourneyService
 
@@ -11,6 +12,8 @@
 
 <div class="card">
     <div class="card-body">
+        <InputFile OnChange="ImportExcelFile" />
+
         <div class="d-flex justify-content-between align-items-center mb-3">
             <input class="form-control w-25"
                    placeholder="Zoek op land..."
@@ -214,4 +217,53 @@
             _journeys = new List<Journey>();
         }
     }
+
+    async Task ImportExcelFile(InputFileChangeEventArgs e)
+    {
+        // Load the uploaded file into a MemoryStream
+        MemoryStream ms = new MemoryStream();
+
+        await e.File.OpenReadStream().CopyToAsync(ms);
+        ms.Position = 0;
+
+        // Create an IronXL workbook from the MemoryStream
+        WorkBook loadedWorkBook = WorkBook.FromStream(ms);
+        WorkSheet loadedWorkSheet = loadedWorkBook.DefaultWorkSheet;
+
+        // Add data from the Excel sheet to the db
+        for (int row = 0; row < loadedWorkSheet.RowCount; row++)
+        {
+            try
+            {
+                RangeRow currentRow = loadedWorkSheet.GetRow(row);
+
+                var journey = new Journey
+                {
+                    Name = currentRow.ElementAt(0).ToString(),
+                    Start = DateOnly.FromDateTime(currentRow.ElementAt(1).DateTimeValue!.Value),
+                    End = DateOnly.FromDateTime(currentRow.ElementAt(2).DateTimeValue!.Value),
+                    Busses = int.TryParse(currentRow.ElementAt(3).ToString(), out int busses) ? busses : 0,
+                    Travelers = int.TryParse(currentRow.ElementAt(4).ToString(), out int travelers) ? travelers : 0,
+                    BookingStatus = GetBookingStatus(int.TryParse(currentRow.ElementAt(5).ToString(), out int bookingStatus) ? bookingStatus : 0),
+                    RequiredLeaders = int.TryParse(currentRow.ElementAt(6).ToString(), out int requiredLeaders) ? requiredLeaders : 0,
+                };
+
+                await JourneyService.AddJourneyAsync(journey, new List<int>());
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"ERROR on row {row}");
+                Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.StackTrace);
+            }
+        }  
+    }
+
+    private BookingStatus GetBookingStatus(int status) => status switch
+    {
+        0 => BookingStatus.Bezig,
+        1 => BookingStatus.Geweest,
+        2 => BookingStatus.Geanuleerd,
+        _ => 0
+    };
 }
