@@ -94,6 +94,7 @@
     </div>
 </div>
 
+@* Alert modal for deletion *@
 <AlertModal IsOpen="@_isDeleteModalOpen"
             IsOpenChanged="HandleDeleteModalChanged"
             Title="Reis verwijderen"
@@ -111,18 +112,40 @@
     </Actions>
 </AlertModal>
 
+@* Alert modal for bulk import *@
+<AlertModal IsOpen="@_isImportModalOpen"
+            IsOpenChanged="HandleDeleteModalChanged"
+            Title="Reizen importeren"
+            Severity="Severity.Info"
+            Dismissible="true"
+            CloseOnBackdropClick="true"
+            Message="@ImportModalMessage">
+    <Actions>
+        <MudButton Variant="Variant.Text" OnClick="CloseImportModalAsync">
+            Annuleren
+        </MudButton>
+    </Actions>
+</AlertModal>
+
 @code {
     private List<Journey> _journeys = new();
     private string _searchTerm = string.Empty;
     private string _sortColumn = "Country";
     private bool _sortAscending = true;
     private int _selectedYear = DateTime.UtcNow.Year;
+
     private bool _isDeleteModalOpen;
+    private bool _isImportModalOpen;
     private Journey? _journeyPendingDelete;
+    private String? _bulkImportInfo;
 
     private string DeleteModalMessage => _journeyPendingDelete is null
         ? "Weet je zeker dat je deze reis wilt verwijderen?"
         : $"Weet je zeker dat je '{_journeyPendingDelete.Name}' wilt verwijderen?";
+
+    private string ImportModalMessage => _bulkImportInfo is null
+        ? "Nieuwe reizen uit excel bestand zijn succesvol toegevoegd"
+        : $"Nieuwe reizen uit excel bestand zijn niet succesvol toegevoegd: '{_bulkImportInfo}'";
 
     private static string GetEditHref(Journey journey)
     {
@@ -263,12 +286,15 @@
 
                 await JourneyService.AddJourneyAsync(journey, new List<int>());
             }
-            catch (Exception ex)
+            catch
             {
-                Console.WriteLine($"ERROR on row {row}");
-                Console.WriteLine(ex.Message);
-                Console.WriteLine(ex.StackTrace);
+                _bulkImportInfo = "Fout gevonden op rij: " + row + ", eerdere rijen zijn wel succesvol toegevoegd";
+                _isImportModalOpen = true;
+                return;
             }
+
+            _bulkImportInfo = null;
+            _isImportModalOpen = true;
         } 
     }
 
@@ -279,4 +305,11 @@
         2 => BookingStatus.Geanuleerd,
         _ => 0
     };
+
+    private Task CloseImportModalAsync()
+    {
+        _isImportModalOpen = false;
+        _bulkImportInfo = null;
+        return Task.CompletedTask;
+    }
 }
