@@ -1,10 +1,8 @@
 ﻿using Kaaiman_reizen.Data;
 using Kaaiman_reizen.Data.Entities;
+using Kaaiman_reizen.Data.Enum;
 using Kaaiman_reizen.Data.Services;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
-using System.Threading.Tasks;
-using Xunit;
 
 namespace Kaaiman_reizen.Tests.Services
 {
@@ -122,6 +120,28 @@ namespace Kaaiman_reizen.Tests.Services
             var results = leader.Validate(new System.ComponentModel.DataAnnotations.ValidationContext(leader)).ToList();
             Assert.Single(results);
             Assert.Contains("Minimaal aantal reizen mag niet groter zijn dan maximaal aantal reizen", results[0].ErrorMessage);
+        }
+
+        [Fact]
+        public async Task GetJourneysOfTravelLeader_Should_Return_Correct_Journeys()
+        {
+            var db = GetInMemoryDb();
+            var leaderService = new TravelLeaderService(db);
+            var journeyService = new JourneyService(db, null);
+
+            var leader1 = new TravelLeader { Id = 1, Name = "Leader 1", PhoneNumber = "123", AmountOfTrips = 3, MinTrips = 1, MaxTrips = 5, IsActive = true };
+            var leader2 = new TravelLeader { Id = 2, Name = "Leader 2", PhoneNumber = "123", AmountOfTrips = 3, MinTrips = 1, MaxTrips = 5, IsActive = true };
+            await leaderService.AddTravelLeaderAsync(leader1);
+            await leaderService.AddTravelLeaderAsync(leader2);
+
+            var journey1 = new Journey { Name = "Journey 1", Start = new DateOnly(0001, 1, 1), End = new DateOnly(0001, 1, 2), Busses = 1, Travelers = 1, BookingStatus = BookingStatus.Geweest };
+            var journey2 = new Journey { Name = "Journey 2", Start = new DateOnly(0001, 1, 1), End = new DateOnly(0001, 1, 2), Busses = 1, Travelers = 1, BookingStatus = BookingStatus.Geweest };
+            await journeyService.AddJourneyAsync(journey1, [1]);
+            await journeyService.AddJourneyAsync(journey2, [2]);
+
+            var journeys = await leaderService.GetJourneysOfTravelLeaderAsync(leader1);
+
+            Assert.Contains(journeys, j => j.Id == journey1.Id);
         }
     }
 }
