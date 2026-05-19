@@ -164,7 +164,6 @@ public class PhoneNumberServiceTests
     public void IsValidPhoneNumber_USNumber_NoPlus_ReturnsTrue()
     {
         var service = new PhoneNumberService();
-        // US local format (without +1)
         Assert.True(service.IsValidPhoneNumber("2025550173", "US"));
     }
 
@@ -179,7 +178,6 @@ public class PhoneNumberServiceTests
     public void IsValidPhoneNumber_BENumber_NoPlus_ReturnsTrue()
     {
         var service = new PhoneNumberService();
-        // Belgian numbers usually start with 0
         Assert.True(service.IsValidPhoneNumber("0470123456", "BE"));
     }
 
