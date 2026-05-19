@@ -21,6 +21,7 @@ public class MainContext : IdentityDbContext<ApplicationUser>
     public DbSet<PlanningVersion> PlanningVersions { get; set; }
     public DbSet<PlanningAssignment> PlanningAssignments { get; set; }
     public DbSet<Notification> Notifications { get; set; }
+    public DbSet<JourneyNotificationHistory> JourneyNotificationHistory { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
