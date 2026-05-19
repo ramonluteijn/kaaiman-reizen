@@ -139,9 +139,13 @@ namespace Kaaiman_reizen.Tests.Services
             await journeyService.AddJourneyAsync(journey1, [1]);
             await journeyService.AddJourneyAsync(journey2, [2]);
 
-            var journeys = await leaderService.GetJourneysOfTravelLeaderAsync(leader1);
+            var journeys1 = await leaderService.GetJourneysOfTravelLeaderAsync(leader1);
+            var journeys2 = await leaderService.GetJourneysOfTravelLeaderAsync(leader2);
 
-            Assert.Contains(journeys, j => j.Id == journey1.Id);
+            Assert.Contains(journeys1, j => j.Id == journey1.Id);
+            Assert.DoesNotContain(journeys1, j => j.Id == journey2.Id);
+            Assert.Contains(journeys2, j => j.Id == journey2.Id);
+            Assert.DoesNotContain(journeys2, j => j.Id == journey1.Id);
         }
     }
 }
