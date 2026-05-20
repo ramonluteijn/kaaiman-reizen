@@ -53,7 +53,7 @@ public class PlannerDraftService : IPlannerDraftService
             AllActiveLeaders = activeLeaderInputs,
             Journeys = journeys
                 // 2. Filter hier direct op het meegegeven jaar!
-                .Where(j => j.BookingStatus == BookingStatus.Bezig && j.Start.Year == year)
+                .Where(j => j.BookingStatus == BookingStatus.Huidig && j.Start.Year == year)
                 .Select(j => new PlannerJourneyInput
                 {
                     Id = j.Id,

@@ -22,7 +22,10 @@
                 
                 <img src="images/Kaaiman-reizen-logo.webp" class="navbar-brand img-fluid auth-logo mb-5" alt="Logo Kaaiman-reizen" />
 
-                <StatusMessage Message="@errorMessage" />
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="alert alert-danger rounded-3 mb-4" role="alert">@errorMessage</div>
+                }
 
                 <EditForm Model="Input" method="post" OnSubmit="LoginUser" FormName="login" class="mt-5">
                     <DataAnnotationsValidator />
@@ -140,7 +143,7 @@
         }
         else
         {
-            errorMessage = "Error: Ongeldige inlogpoging.";
+            errorMessage = "Ongeldige inlogpoging.";
         }
     }
 

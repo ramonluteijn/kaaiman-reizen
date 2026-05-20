@@ -44,7 +44,7 @@ namespace Kaaiman_reizen.Tests.Services
                 End = new DateOnly(0001, 1, 2),
                 Busses = 1,
                 Travelers = 1,
-                BookingStatus = BookingStatus.Bezig,
+                BookingStatus = BookingStatus.Huidig,
             };
             await service.AddJourneyAsync(journey, new List<int>());
 
@@ -93,7 +93,7 @@ namespace Kaaiman_reizen.Tests.Services
                 End = new DateOnly(0001, 1, 2),
                 Busses = 1,
                 Travelers = 1,
-                BookingStatus = BookingStatus.Bezig,
+                BookingStatus = BookingStatus.Huidig,
             };
             await service.AddJourneyAsync(journey, new List<int>());
 
@@ -139,7 +139,7 @@ namespace Kaaiman_reizen.Tests.Services
                 End = new DateOnly(0001, 1, 1),
                 Busses = 1,
                 Travelers = 1,
-                BookingStatus = BookingStatus.Bezig,
+                BookingStatus = BookingStatus.Huidig,
             };
 
             var results = journey.Validate(new System.ComponentModel.DataAnnotations.ValidationContext(journey)).ToList();
