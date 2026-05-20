@@ -1,7 +1,5 @@
 ﻿@page "/"
 
-@using Microsoft.AspNetCore.Components.Authorization
-
 @rendermode InteractiveServer
 
 <PageTitle>Home</PageTitle>
@@ -20,16 +18,8 @@
 }
 else
 {
-    <AuthorizeView>
-        <NotAuthorized>
-            <AlertModal IsOpen="true"
-                        Title="Planningsoverzicht"
-                        Severity="Severity.Info"
-                        Message="Log in om jouw planningsoverzicht te bekijken." />
-        </NotAuthorized>
-        <Authorized>
-            @if (_notifications.Any())
-            {
+    @if (_notifications.Any())
+    {
                 <AlertModal IsOpen="true"
                             Title="Notificaties"
                             Severity="Severity.Info"
@@ -263,6 +253,4 @@ else
                     }
                 </section>
             }
-        </Authorized>
-    </AuthorizeView>
 }

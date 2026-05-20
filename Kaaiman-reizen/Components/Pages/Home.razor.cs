@@ -18,6 +18,7 @@ public partial class Home : ComponentBase
     [Inject] private AuthenticationStateProvider AuthenticationStateProvider { get; set; } = default!;
     [Inject] private Microsoft.AspNetCore.Identity.UserManager<Kaaiman_reizen.Data.Identity.ApplicationUser> UserManager { get; set; } = default!;
     [Inject] private INotificationService NotificationService { get; set; } = default!;
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
     [Inject] private IJSRuntime JS { get; set; }
 
     private bool _loading = true;
@@ -42,6 +43,12 @@ public partial class Home : ComponentBase
     {
         var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authenticationState.User;
+
+        if (user.Identity?.IsAuthenticated is not true)
+        {
+            Navigation.NavigateTo("/Account/Login");
+            return;
+        }
 
         _isPlanner = user.IsInRole("Planner");
         _isReisleider = user.IsInRole("Reisleider");
