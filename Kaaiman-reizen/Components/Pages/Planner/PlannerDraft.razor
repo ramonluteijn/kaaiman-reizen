@@ -15,192 +15,174 @@
     {
         @if (_showEntryModal)
         {
-            <EntryModal
-                ActionInProgress="_entryActionInProgress"
-                AvailableDrafts="_availableDrafts"
-                SelectedDraftId="_selectedDraftId"
-                SelectedDraftIdChanged="id => _selectedDraftId = id"
-                OnGenerateNew="GenerateNewPlanningFromModalAsync"
-                OnResumeDraft="ResumeSelectedDraftAsync"
-                OnClose="() => _showEntryModal = false" />
+            <EntryModal ActionInProgress="_entryActionInProgress" AvailableDrafts="_availableDrafts"
+                        SelectedDraftId="_selectedDraftId" SelectedDraftIdChanged="id => _selectedDraftId = id"
+                        OnGenerateNew="GenerateNewPlanningFromModalAsync" OnResumeDraft="ResumeSelectedDraftAsync"
+                        OnClose="() => _showEntryModal = false" />
         }
 
         @if (!_showEntryModal)
         {
-        @if (!string.IsNullOrWhiteSpace(_saveMessage)
-             && !_saveMessage.StartsWith("Concept geladen", System.StringComparison.OrdinalIgnoreCase))
-        {
-            <MudAlert Severity="@_saveMessageSeverity" Variant="Variant.Outlined" Dense="true">
-                @_saveMessage
-            </MudAlert>
-        }
-
-        @if (_isGenerating)
-        {
-            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
-                OR-Tools optimaliseert de planning...
-                <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mt-2" />
-            </MudAlert>
-        }
-        else if (_result != null)
-        {
-            if (_result.IsSuccess)
+            @if (!string.IsNullOrWhiteSpace(_saveMessage)
+                                         && !_saveMessage.StartsWith("Concept geladen", System.StringComparison.OrdinalIgnoreCase))
             {
-                var leaderRows = BuildLeaderRows();
+                <AlertModal IsOpen="true" Title="Concept opslaan" Severity="@_saveMessageSeverity" Message="@_saveMessage" />
+            }
 
-                <!-- Sidebar toggle -->
-                <div class="d-flex align-center gap-2 mb-2">
-                    <MudIconButton Icon="@Icons.Material.Filled.People"
-                                   Size="Size.Small"
-                                   Variant="Variant.Outlined"
-                                   Color="@(_sidebarOpen ? Color.Primary : Color.Default)"
-                                   OnClick="@(() => _sidebarOpen = !_sidebarOpen)"
-                                   title="Reisleiders tonen/verbergen" />
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">Reisleiders</MudText>
-                </div>
+            @if (_isGenerating)
+            {
+                <AlertModal IsOpen="true" Title="Planning genereren" Severity="Severity.Info" Dismissible="false"
+                            CloseOnBackdropClick="false">
+                    <MudText Typo="Typo.body1">
+                        OR-Tools optimaliseert de planning...
+                    </MudText>
+                    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mt-2" />
+                </AlertModal>
+            }
+            else if (_result != null)
+            {
+                if (_result.IsSuccess)
+                {
+                    var leaderRows = BuildLeaderRows();
 
-                <!-- Calendar + sidebar layout -->
-                <div class="pd-layout">
+                    <!-- Sidebar toggle -->
+                    <div class="d-flex align-center gap-2 mb-2">
+                        <MudIconButton Icon="@Icons.Material.Filled.People" Size="Size.Small" Variant="Variant.Outlined"
+                                       Color="@(_sidebarOpen ? Color.Primary : Color.Default)" OnClick="@(() => _sidebarOpen = !_sidebarOpen)"
+                                       title="Reisleiders tonen/verbergen" />
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">Reisleiders</MudText>
+                    </div>
 
-                    @if (_sidebarOpen)
-                    {
-                        <aside class="pd-sidebar">
-                            <p class="pd-sidebar-title">Reisleiders (@leaderRows.Count)</p>
-                            @foreach (var row in leaderRows)
-                            {
-                                var hasJourneys = row.AssignedJourneys.Count > 0;
-                                <div class="pd-sidebar-row @(hasJourneys ? "pd-sidebar-row--assigned" : "pd-sidebar-row--unassigned") position-relative">
-                                    <div class="pd-sidebar-avatar">@row.LeaderName[0]</div>
-                                    
-                                    <MudIconButton Icon="@Icons.Material.Filled.OpenInNew"
-                                                   Size="Size.Small"
-                                                   Variant="Variant.Outlined"
-                                                   class="position-absolute top-0 end-0"
-                                                   Style="z-index: 2;"
-                                                   title="Reisleider details"
-                                                   OnClick="@((_) => OpenLeaderDetails(row))"
-                                    />
-                                    
-                                    <div class="pd-sidebar-info">
-                                        <span class="pd-sidebar-name">@row.LeaderName</span>
-                                        @if (hasJourneys)
-                                        {
-                                            <span class="pd-sidebar-count">@row.AssignedJourneys.Count rei@(row.AssignedJourneys.Count == 1 ? "s" : "zen")</span>
-                                            <div class="pd-sidebar-journeys">
-                                                @foreach (var item in row.AssignedJourneys)
-                                                {
-                                                    <div class="pd-sidebar-journey">
-                                                        <span class="pd-sidebar-journey-name">@item.Journey.Name</span>
-                                                        <span class="pd-sidebar-journey-dates">@item.Journey.Start.ToString("dd MMM") – @item.Journey.End.ToString("dd MMM")</span>
-                                                        @if (item.RankMatched.HasValue)
+                    <!-- Calendar + sidebar layout -->
+                    <div class="pd-layout">
+
+                        @if (_sidebarOpen)
+                        {
+                            <aside class="pd-sidebar">
+                                <p class="pd-sidebar-title">Reisleiders (@leaderRows.Count)</p>
+                                @foreach (var row in leaderRows)
+                                {
+                                    var hasJourneys = row.AssignedJourneys.Count > 0;
+                                    <div
+                                        class="pd-sidebar-row @(hasJourneys ? "pd-sidebar-row--assigned" : "pd-sidebar-row--unassigned") position-relative">
+                                        <div class="pd-sidebar-avatar">@row.LeaderName[0]</div>
+                                        
+                                        <MudIconButton Icon="@Icons.Material.Filled.OpenInNew" Size="Size.Small" Variant="Variant.Outlined"
+                                                       class="position-absolute top-0 end-0" Style="z-index: 2;" title="Reisleider details"
+                                                       OnClick="@((_) => OpenLeaderDetails(row))" />
+                                        
+                                        <div class="pd-sidebar-info">
+                                            <span class="pd-sidebar-name">@row.LeaderName</span>
+                                            @if (hasJourneys)
+                                            {
+                                                <span class="pd-sidebar-count">@row.AssignedJourneys.Count rei@(row.AssignedJourneys.Count == 1 ?
+                                                                            "s" : "zen")</span>
+                                                    <div class="pd-sidebar-journeys">
+                                                        @foreach (var item in row.AssignedJourneys)
                                                         {
-                                                            <span class="pd-sidebar-rank pd-sidebar-rank--@(item.RankMatched == 1 ? "1" : item.RankMatched == 2 ? "2" : "3")">
-                                                                #@item.RankMatched
-                                                            </span>
+                                                            <div class="pd-sidebar-journey">
+                                                                <span class="pd-sidebar-journey-name">@item.Journey.Name</span>
+                                                                <span class="pd-sidebar-journey-dates">@item.Journey.Start.ToString("dd MMM") ÔÇô
+                                                                    @item.Journey.End.ToString("dd MMM")</span>
+                                                                    @if (item.RankMatched.HasValue)
+                                                                    {
+                                                                        <span
+                                                                            class="pd-sidebar-rank pd-sidebar-rank--@(item.RankMatched == 1 ? "1" : item.RankMatched == 2 ? "2" : "3")">
+                                                                            #@item.RankMatched
+                                                                        </span>
+                                                                    }
+                                                                </div>
+                                                            }
+                                                        </div>
+                                                    }
+                                            else
+                                                    {
+                                                        <span class="pd-sidebar-count pd-sidebar-count--none">Niet ingepland</span>
+                                                        @if (row.Preferences.Count > 0)
+                                                        {
+                                                            <div class="pd-sidebar-prefs">
+                                                                @foreach (var pref in row.Preferences.OrderBy(p => p.Value))
+                                                                {
+                                                                    <span class="pd-sidebar-pref">@pref.Key (#@pref.Value)</span>
+                                                                }
+                                                            </div>
                                                         }
-                                                    </div>
-                                                }
+                                                        else
+                                                        {
+                                                            <span class="pd-sidebar-no-prefs">Geen voorkeuren</span>
+                                                        }
+                                                    }
+                                                </div>
                                             </div>
+                                        }
+                                    </aside>
+                                }
+
+                                <div class="pd-main">
+                                    @if (_result.JourneyWarnings.Any())
+                                    {
+                                        <AlertModal IsOpen="true" Title="Waarschuwingen" Severity="Severity.Warning">
+                                            <MudStack Spacing="1">
+                                                @foreach (var kvp in _result.JourneyWarnings)
+                                                {
+                                                    var warnedJourney = _request!.Journeys.FirstOrDefault(j => j.Id == kvp.Key);
+                                                    if (warnedJourney is null) continue;
+
+                                                    <MudPaper Class="pa-3" Outlined="true">
+                                                        <MudText Typo="Typo.subtitle2">@warnedJourney.Name</MudText>
+                                                        <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                                            @DateDisplay.FormatDate(warnedJourney.Start) - @DateDisplay.FormatDate(warnedJourney.End)
+                                                        </MudText>
+                                                        <MudText Typo="Typo.body2" Class="mt-1">@kvp.Value</MudText>
+                                                    </MudPaper>
+                                                }
+                                            </MudStack>
+                                        </AlertModal>
+                                    }
+                                    <CalendarView Journeys="BuildCalendarJourneys()" OnJourneyClick="HandleJourneyClick" />
+                                </div>
+                            </div>
+
+                            <div class="pd-bottom-actions">
+                                <div class="d-flex flex-wrap gap-2">
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Disabled="@_isSaving" OnClick="SaveDraftAsync">
+                                        @if (_isSaving)
+                                        {
+                                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                            <MudText Class="ms-2">Bezig met opslaan...</MudText>
                                         }
                                         else
                                         {
-                                            <span class="pd-sidebar-count pd-sidebar-count--none">Niet ingepland</span>
-                                            @if (row.Preferences.Count > 0)
-                                            {
-                                                <div class="pd-sidebar-prefs">
-                                                    @foreach (var pref in row.Preferences.OrderBy(p => p.Value))
-                                                    {
-                                                        <span class="pd-sidebar-pref">@pref.Key (#@pref.Value)</span>
-                                                    }
-                                                </div>
-                                            }
-                                            else
-                                            {
-                                                <span class="pd-sidebar-no-prefs">Geen voorkeuren</span>
-                                            }
+                                            <MudText>Opslaan als concept</MudText>
                                         }
-                                    </div>
+                                    </MudButton>
+
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@_isSaving"
+                                               OnClick="PublishPlanningAsync">
+                                        @if (_isSaving)
+                                        {
+                                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                            <MudText Class="ms-2">Bezig met opslaan...</MudText>
+                                        }
+                                        else
+                                        {
+                                            <MudText>Publiceer planning</MudText>
+                                        }
+                                    </MudButton>
                                 </div>
-                            }
-                        </aside>
-                    }
-
-                    <div class="pd-main">
-                        @if (_result.JourneyWarnings.Any())
-                        {
-                            <MudStack Spacing="1" Class="mb-3">
-                                @foreach (var kvp in _result.JourneyWarnings)
-                                {
-                                    var warnedJourney = _request!.Journeys.FirstOrDefault(j => j.Id == kvp.Key);
-                                    if (warnedJourney is null) continue;
-                                    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true">
-                                        <b>@warnedJourney.Name</b>
-                                        <span class="text-secondary ms-1">(@warnedJourney.Start.ToString("dd MMM") – @warnedJourney.End.ToString("dd MMM yyyy"))</span>
-                                        — @kvp.Value
-                                    </MudAlert>
-                                }
-                            </MudStack>
+                            </div>
                         }
-                        <CalendarView Journeys="BuildCalendarJourneys()"
-                                      OnJourneyClick="HandleJourneyClick" />
-                    </div>
-                </div>
-
-                <div class="pd-bottom-actions">
-                    <div class="d-flex flex-wrap gap-2">
-                        <MudButton Variant="Variant.Outlined"
-                                   Color="Color.Primary"
-                                   Disabled="@_isSaving"
-                                   OnClick="SaveDraftAsync">
-                            @if (_isSaving)
-                            {
-                                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-                                <MudText Class="ms-2">Bezig met opslaan...</MudText>
-                            }
-                            else
-                            {
-                                <MudText>Opslaan als concept</MudText>
-                            }
-                        </MudButton>
-
-                        <MudButton Variant="Variant.Filled"
-                                   Color="Color.Primary"
-                                   Disabled="@_isSaving"
-                                   OnClick="PublishPlanningAsync">
-                            @if (_isSaving)
-                            {
-                                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-                                <MudText Class="ms-2">Bezig met opslaan...</MudText>
-                            }
-                            else
-                            {
-                                <MudText>Publiceer planning</MudText>
-                            }
-                        </MudButton>
-                    </div>
-                </div>
+                        else if (!string.IsNullOrEmpty(_result.ErrorMessage))
+                        {
+                            <AlertModal IsOpen="true" Title="Genereren mislukt" Severity="Severity.Error" Message="@_result.ErrorMessage" />
+                        }
+                    }
+                }
             }
-            else if (!string.IsNullOrEmpty(_result.ErrorMessage))
-            {
-                <MudAlert Severity="Severity.Error" Variant="Variant.Filled">
-                    <b>Genereren mislukt:</b> @_result.ErrorMessage
-                </MudAlert>
-            }
-        }
-        }
-    }
-</MudStack>
-<NoteModal
-    IsOpen="_noteModalOpen"
-    Leader="_selectedLeaderRow?.Leader"
-    AssignedJourneys="GetSelectedLeaderJourneys()"
-    OnClose="CloseLeaderDetails" />
-<JourneyDrawer
-    IsOpen="_drawerOpen"
-    SelectedJourney="_selectedJourney"
-    Candidates="_selectedCandidates"
-    OnClose="CloseDrawer"
-    OnAssignLeader="AssignLeader"
-    OnRemoveLeader="RemoveLeader" />
+        </MudStack>
+        <NoteModal IsOpen="_noteModalOpen" Leader="_selectedLeaderRow?.Leader" AssignedJourneys="GetSelectedLeaderJourneys()"
+                   OnClose="CloseLeaderDetails" />
+        <JourneyDrawer IsOpen="_drawerOpen" SelectedJourney="_selectedJourney" Candidates="_selectedCandidates"
+                       OnClose="CloseDrawer" OnAssignLeader="AssignLeader" OnRemoveLeader="RemoveLeader" />
 
 

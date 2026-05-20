@@ -48,7 +48,7 @@
                 <td>@context.MaxTrips</td>
                 <td>@context.Availability</td>
                 <td>
-                    <span class="badge status-toggle-badge @(context.IsActive ? "bg-success" : "bg-danger")" @onclick="@(() => ToggleActive(context))">
+                    <span class="badge @(context.IsActive ? "bg-success" : "bg-danger")">
                         @(context.IsActive ? "Ja" : "Nee")
                     </span>
                 </td>
@@ -78,3 +78,20 @@
         }
     </div>
 </div>
+
+<AlertModal IsOpen="@_isDeleteModalOpen"
+            IsOpenChanged="HandleDeleteModalChanged"
+            Title="Reisleider verwijderen"
+            Severity="Severity.Warning"
+            Dismissible="true"
+            CloseOnBackdropClick="true"
+            Message="@_deleteModalMessage">
+    <Actions>
+        <MudButton Variant="Variant.Text" OnClick="CloseDeleteModalAsync">
+            Annuleren
+        </MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="ConfirmDeleteAsync">
+            Verwijderen
+        </MudButton>
+    </Actions>
+</AlertModal>

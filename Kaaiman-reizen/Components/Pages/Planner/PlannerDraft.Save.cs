@@ -1,4 +1,5 @@
 using MudBlazor;
+using Kaaiman_reizen.Helpers;
 
 namespace Kaaiman_reizen.Components.Pages.Planner;
 
@@ -27,10 +28,11 @@ public partial class PlannerDraft
         try
         {
             var assignments = MapToAssignmentDictionary();
+            var userLocalNow = await GetUserLocalNowAsync();
 
             string planningName = isPublished
-                ? $"Published planning {DateTime.Now:yyyy-MM-dd HH:mm}"
-                : $"Draft planning {DateTime.Now:yyyy-MM-dd HH:mm}";
+                ? $"Published planning {DateDisplay.FormatDateTime(userLocalNow)}"
+                : $"Draft planning {DateDisplay.FormatDateTime(userLocalNow)}";
 
             await PlanningService.SavePlanningAsync(_selectedYear, planningName, isPublished, assignments);
 

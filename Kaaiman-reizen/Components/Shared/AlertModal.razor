@@ -1,0 +1,138 @@
+@using MudBlazor
+
+@if (_isVisible)
+{
+    <div class="km-alert-overlay" @onclick="HandleBackdropClickAsync">
+        <MudPaper Class="@($"km-alert-modal km-alert-modal--{SeverityClass}")" Elevation="10" @onclick:stopPropagation="true">
+            <div class="km-alert-modal__accent"></div>
+
+            <div class="km-alert-modal__header">
+                <div class="km-alert-modal__title-wrap">
+                    <div class="km-alert-modal__icon km-alert-modal__icon--@SeverityClass">
+                        <MudIcon Icon="@GetSeverityIcon()" Size="Size.Medium" />
+                    </div>
+                    <div>
+                        <MudText Typo="Typo.h6" Class="km-alert-modal__title">@Title</MudText>
+                        @if (!string.IsNullOrWhiteSpace(Subtitle))
+                        {
+                            <MudText Typo="Typo.body2" Class="km-alert-modal__subtitle">@Subtitle</MudText>
+                        }
+                    </div>
+                </div>
+
+                @if (Dismissible)
+                {
+                    <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                   Size="Size.Small"
+                                   OnClick="HandleCloseAsync"
+                                   aria-label="Sluiten" />
+                }
+            </div>
+
+            <div class="km-alert-modal__body">
+                @if (!string.IsNullOrWhiteSpace(Message))
+                {
+                    <MudText Typo="Typo.body1" Class="km-alert-modal__message">@Message</MudText>
+                }
+
+                @ChildContent
+            </div>
+
+            @if (Actions is not null || Dismissible)
+            {
+                <div class="km-alert-modal__footer">
+                    @if (Actions is not null)
+                    {
+                        @Actions
+                    }
+                    else if (Dismissible)
+                    {
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="HandleCloseAsync">
+                            @CloseButtonText
+                        </MudButton>
+                    }
+                </div>
+            }
+        </MudPaper>
+    </div>
+}
+
+@code {
+    private bool _isVisible;
+    private string? _lastStateKey;
+
+    [Parameter]
+    public bool IsOpen { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> IsOpenChanged { get; set; }
+
+    [Parameter]
+    public string Title { get; set; } = "Melding";
+
+    [Parameter]
+    public string? Subtitle { get; set; }
+
+    [Parameter]
+    public string? Message { get; set; }
+
+    [Parameter]
+    public Severity Severity { get; set; } = Severity.Info;
+
+    [Parameter]
+    public bool Dismissible { get; set; } = true;
+
+    [Parameter]
+    public bool CloseOnBackdropClick { get; set; } = true;
+
+    [Parameter]
+    public string CloseButtonText { get; set; } = "Sluiten";
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public RenderFragment? Actions { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        var stateKey = $"{IsOpen}|{Title}|{Subtitle}|{Message}|{Severity}|{Dismissible}|{CloseOnBackdropClick}";
+
+        if (_lastStateKey != stateKey)
+        {
+            _lastStateKey = stateKey;
+            _isVisible = IsOpen;
+        }
+    }
+
+    private string SeverityClass => Severity.ToString().ToLowerInvariant();
+
+    private string GetSeverityIcon() => Severity switch
+    {
+        Severity.Success => Icons.Material.Filled.CheckCircle,
+        Severity.Warning => Icons.Material.Filled.WarningAmber,
+        Severity.Error => Icons.Material.Filled.ErrorOutline,
+        Severity.Info => Icons.Material.Filled.Info,
+        _ => Icons.Material.Filled.HelpOutline
+    };
+
+    private async Task HandleCloseAsync()
+    {
+        _isVisible = false;
+
+        if (IsOpenChanged.HasDelegate)
+        {
+            await IsOpenChanged.InvokeAsync(false);
+        }
+    }
+
+    private async Task HandleBackdropClickAsync()
+    {
+        if (!Dismissible || !CloseOnBackdropClick)
+        {
+            return;
+        }
+
+        await HandleCloseAsync();
+    }
+}

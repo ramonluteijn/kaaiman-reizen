@@ -8,7 +8,7 @@
 ├── Models                 # Entity models representing database tables
 ├── Resources              # Resource files for localization (if applicable)
 ├── Rules                  # Business rules and validation logic
-├── Services               # Service classes implementing business logic  
+├── Services               # Service classes implementing business logic
 ```
 
 ## Migrations
@@ -30,19 +30,3 @@ If you need to remove the last added migration before applying it, use:
 ```
 dotnet ef migrations remove -p Kaaiman-reizen.Data -s Kaaiman-reizen
 ```
-
-### Reset local database
-
-- Step 1: Revert all migrations (down to empty database)
-
-```
-dotnet ef database update 0 -p .\Kaaiman-reizen\
-```
-
-- Step 2: Reapply all migrations
-
-```
-dotnet ef database update -p .\Kaaiman-reizen\
-```
-
-Adjust the migration name and project names as needed for other migrations.

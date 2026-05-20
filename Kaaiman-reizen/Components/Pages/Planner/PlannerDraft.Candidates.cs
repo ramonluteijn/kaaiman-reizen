@@ -1,4 +1,5 @@
 using Kaaiman_reizen.Data.Entities;
+using Kaaiman_reizen.Helpers;
 using Kaaiman_reizen.Models.Planner;
 using Kaaiman_reizen.Models.ViewModels;
 
@@ -8,15 +9,15 @@ public partial class PlannerDraft
 {
     private void HandleJourneyClick(JourneyViewModel journey)
     {
-        _selectedJourney    = journey;
+        _selectedJourney = journey;
         _selectedCandidates = GetCandidatesFor(journey);
-        _drawerOpen         = true;
+        _drawerOpen = true;
     }
 
     private void CloseDrawer()
     {
-        _drawerOpen         = false;
-        _selectedJourney    = null;
+        _drawerOpen = false;
+        _selectedJourney = null;
         _selectedCandidates = [];
     }
 
@@ -31,12 +32,12 @@ public partial class PlannerDraft
 
         _selectedJourney = new JourneyViewModel
         {
-            Id              = _selectedJourney.Id,
-            Name            = _selectedJourney.Name,
-            Start           = _selectedJourney.Start,
-            End             = _selectedJourney.End,
+            Id = _selectedJourney.Id,
+            Name = _selectedJourney.Name,
+            Start = _selectedJourney.Start,
+            End = _selectedJourney.End,
             RequiredLeaders = journeyInput.RequiredLeaders,
-            TravelLeaders   = leaders
+            TravelLeaders = leaders
         };
     }
 
@@ -68,12 +69,12 @@ public partial class PlannerDraft
         if (currentCount >= journeyInput.RequiredLeaders) return;
 
         var leader = _request.Leaders.First(l => l.Id == candidate.LeaderId);
-        int? rank  = leader.PreferredDestinations.TryGetValue(_selectedJourney.Name, out int r) ? r : null;
+        int? rank = leader.PreferredDestinations.TryGetValue(_selectedJourney.Name, out int r) ? r : null;
 
         var entry = new JourneyAssignmentResult
         {
-            LeaderId    = candidate.LeaderId,
-            LeaderName  = candidate.LeaderName,
+            LeaderId = candidate.LeaderId,
+            LeaderName = candidate.LeaderName,
             RankMatched = rank
         };
 
@@ -96,8 +97,8 @@ public partial class PlannerDraft
         return _request.Leaders
             .Select(leader => BuildLeaderCandidate(leader, journeyInput))
             .OrderBy(c => c.IsAlreadyAssigned ? 0 : 1)
-            .ThenBy(c  => (c.HasConflict || c.ExceedsMaxTrips || !string.IsNullOrEmpty(c.ValidationReason)) ? 1 : 0)
-            .ThenBy(c  => c.PreferenceRank ?? 99)
+            .ThenBy(c => (c.HasConflict || c.ExceedsMaxTrips || !string.IsNullOrEmpty(c.ValidationReason)) ? 1 : 0)
+            .ThenBy(c => c.PreferenceRank ?? 99)
             .ToList();
     }
 
@@ -136,18 +137,18 @@ public partial class PlannerDraft
             validationReason = "Deze reisleider is niet beschikbaar voor deze reisdatums.";
 
         return new LeaderCandidate(
-            LeaderId           : leader.Id,
-            LeaderName         : leader.Name,
-            PreferenceRank     : rank,
-            IsAlreadyAssigned  : assignedToThis.Contains(leader.Id),
-            HasConflict        : conflictJourney is not null,
+            LeaderId: leader.Id,
+            LeaderName: leader.Name,
+            PreferenceRank: rank,
+            IsAlreadyAssigned: assignedToThis.Contains(leader.Id),
+            HasConflict: conflictJourney is not null,
             ConflictJourneyName: conflictJourney is not null
-                ? $"{conflictJourney.Name} ({conflictJourney.Start:dd MMM}–{conflictJourney.End:dd MMM})"
+                ? $"{conflictJourney.Name} ({DateDisplay.FormatDate(conflictJourney.Start)}-{DateDisplay.FormatDate(conflictJourney.End)})"
                 : string.Empty,
-            ExceedsMaxTrips    : currentCount >= leader.MaxTrips,
-            CurrentAssignments : currentCount,
-            MaxTrips           : leader.MaxTrips,
-            ValidationReason   : validationReason
+            ExceedsMaxTrips: currentCount >= leader.MaxTrips,
+            CurrentAssignments: currentCount,
+            MaxTrips: leader.MaxTrips,
+            ValidationReason: validationReason
         );
     }
 
@@ -165,18 +166,18 @@ public partial class PlannerDraft
 
     private static Journey BuildJourneyEntity(PlannerJourneyInput journeyInput) => new()
     {
-        Id    = journeyInput.Id,
-        Name  = journeyInput.Name,
+        Id = journeyInput.Id,
+        Name = journeyInput.Name,
         Start = journeyInput.Start,
-        End   = journeyInput.End
+        End = journeyInput.End
     };
 
     private static TravelLeader BuildLeaderEntity(PlannerLeaderInput leader) => new()
     {
-        Id            = leader.Id,
-        Name          = leader.Name,
+        Id = leader.Id,
+        Name = leader.Name,
         AmountOfTrips = leader.AmountOfTrips,
-        MinTrips      = leader.MinTrips,
-        MaxTrips      = leader.MaxTrips
+        MinTrips = leader.MinTrips,
+        MaxTrips = leader.MaxTrips
     };
 }

@@ -183,6 +183,35 @@ namespace Kaaiman_reizen.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Kaaiman_reizen.Data.Entities.Notification", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ApplicationUserId")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationUserId");
+
+                    b.ToTable("Notifications");
+                });
+
             modelBuilder.Entity("Kaaiman_reizen.Data.Entities.PlanningAssignment", b =>
                 {
                     b.Property<int>("Id")
@@ -655,12 +684,23 @@ namespace Kaaiman_reizen.Data.Migrations
                     b.Navigation("TravelLeader");
                 });
 
+            modelBuilder.Entity("Kaaiman_reizen.Data.Entities.Notification", b =>
+                {
+                    b.HasOne("Kaaiman_reizen.Data.Identity.ApplicationUser", "ApplicationUser")
+                        .WithMany()
+                        .HasForeignKey("ApplicationUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ApplicationUser");
+                });
+
             modelBuilder.Entity("Kaaiman_reizen.Data.Entities.PlanningAssignment", b =>
                 {
                     b.HasOne("Kaaiman_reizen.Data.Entities.Journey", "Journey")
                         .WithMany()
                         .HasForeignKey("JourneyId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("Kaaiman_reizen.Data.Entities.PlanningVersion", "PlanningVersion")
