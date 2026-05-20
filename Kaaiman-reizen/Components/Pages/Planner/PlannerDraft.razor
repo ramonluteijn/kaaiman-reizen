@@ -82,8 +82,7 @@
                                                         {
                                                             <div class="pd-sidebar-journey">
                                                                 <span class="pd-sidebar-journey-name">@item.Journey.Name</span>
-                                                                <span class="pd-sidebar-journey-dates">@item.Journey.Start.ToString("dd MMM") ÔÇô
-                                                                    @item.Journey.End.ToString("dd MMM")</span>
+                                                                <span class="pd-sidebar-journey-dates">@DateDisplay.FormatDateRange(item.Journey.Start, item.Journey.End)</span>
                                                                     @if (item.RankMatched.HasValue)
                                                                     {
                                                                         <span

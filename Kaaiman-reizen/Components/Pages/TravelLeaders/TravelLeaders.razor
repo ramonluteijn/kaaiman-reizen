@@ -63,7 +63,7 @@
                             @foreach (var journey in context.JourneyHistory)
                             {
                                 <a href="@GetJourneyHref(journey.JourneyId)">
-                                    @journey.JourneyName (@journey.Start.ToString("dd-MM-yyyy") - @journey.End.ToString("dd-MM-yyyy"))
+                                    @journey.JourneyName (@DateDisplay.FormatDateRange(journey.Start, journey.End))
                                 </a>
                             }
                         </div>

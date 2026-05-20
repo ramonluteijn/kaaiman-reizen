@@ -135,7 +135,7 @@ else
                                                         <div class="d-flex flex-column">
                                                             <MudText Typo="Typo.body1"><b>@journey.Name</b></MudText>
                                                             <MudText Typo="Typo.body2" Class="mud-text-secondary">
-                                                                @journey.Start.ToString("dd MMM") t/m @journey.End.ToString("dd MMM yyyy")
+                                                                @DateDisplay.FormatDateRange(journey.Start, journey.End)
                                                             </MudText>
                                                         </div>
                                                     </MudListItem>
