@@ -69,7 +69,7 @@ public partial class PlannerDraft
         if (currentCount >= journeyInput.RequiredLeaders) return;
 
         var leader = _request.Leaders.First(l => l.Id == candidate.LeaderId);
-        int? rank = leader.PreferredDestinations.TryGetValue(_selectedJourney.Name, out int r) ? r : null;
+        int? rank = leader.PreferredDestinations.TryGetValue(_selectedJourney.Id, out int r) ? (r == 0 ? null : r) : null;
 
         var entry = new JourneyAssignmentResult
         {
@@ -104,12 +104,11 @@ public partial class PlannerDraft
 
     private LeaderCandidate BuildLeaderCandidate(PlannerLeaderInput leader, PlannerJourneyInput journeyInput)
     {
-        bool isAvailableForJourney = leader.AvailabilityPeriods.Any(
-            p => p.Start <= journeyInput.Start && p.End >= journeyInput.End);
+        bool isAvailableForJourney = leader.PreferredDestinations.ContainsKey(journeyInput.Id);
 
         int currentCount = CountAssignments(leader.Id);
         var conflictJourney = FindConflictingJourney(leader.Id, journeyInput.Id, journeyInput);
-        int? rank = leader.PreferredDestinations.TryGetValue(journeyInput.Name, out int r) ? r : null;
+        int? rank = leader.PreferredDestinations.TryGetValue(journeyInput.Id, out int r) ? (r == 0 ? null : r) : null;
 
         var assignedToThis = _result!.JourneyAssignments.TryGetValue(journeyInput.Id, out var cur)
             ? cur.Select(a => a.LeaderId).ToHashSet()
@@ -134,7 +133,7 @@ public partial class PlannerDraft
         );
 
         if (!isAvailableForJourney)
-            validationReason = "Deze reisleider is niet beschikbaar voor deze reisdatums.";
+            validationReason = "Deze reisleider heeft geen voorkeur of beschikbaarheid opgegeven voor deze reis.";
 
         return new LeaderCandidate(
             LeaderId: leader.Id,

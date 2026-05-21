@@ -5,16 +5,16 @@ public sealed class TravelLeaderViewModel
 {
     public int Id { get; init; }
     public string Name { get; init; } = string.Empty;
+
+    public string Email { get; init; } = string.Empty;
+
     public string PhoneNumber { get; init; } = string.Empty;
     public int? AmountOfTrips { get; init; }
     public int? MinTrips { get; init; }
     public int? MaxTrips { get; init; }
     public bool IsActive { get; init; }
-    public string Availability { get; init; } = "-";
+    public List<string> AvailableForJourneys { get; init; } = [];
     public int YearsOfExperience { get; set; }
-
-    // Key = Country/Destination string, Value = Rank (1, 2, or 3)
-    public Dictionary<string, int> PreferredDestinations { get; set; } = new();
 
     public List<TravelHistoryItemViewModel> JourneyHistory { get; init; } = [];
 
@@ -24,6 +24,7 @@ public sealed class TravelLeaderViewModel
         {
             Id = this.Id,
             Name = this.Name,
+            Email = this.Email,
             PhoneNumber = this.PhoneNumber,
             AmountOfTrips = this.AmountOfTrips,
             MinTrips = this.MinTrips,
