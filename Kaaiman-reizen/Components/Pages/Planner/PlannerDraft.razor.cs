@@ -4,9 +4,7 @@ using Kaaiman_reizen.Services;
 using Kaaiman_reizen.Data.Services;
 using Kaaiman_reizen.Data.Entities;
 using Kaaiman_reizen.Components.Pages.Planner.Components;
-using Kaaiman_reizen.Helpers;
 using Microsoft.AspNetCore.Components;
-using Microsoft.JSInterop;
 using MudBlazor;
 
 namespace Kaaiman_reizen.Components.Pages.Planner;
@@ -22,7 +20,7 @@ public partial class PlannerDraft : ComponentBase
     [Inject] private IPlanningService PlanningService { get; set; } = default!;
     [Inject] private IRuleService RuleService { get; set; } = default!;
     [Inject] private ISnackbar Snackbar { get; set; } = default!;
-    [Inject] private IJSRuntime JS { get; set; } = default!;
+    [Inject] private IUserTimezoneService UserTimezoneService { get; set; } = default!;
 
     private int _selectedYear = DateTime.UtcNow.Year;
     private PlannerDraftRequest? _request;
@@ -42,8 +40,6 @@ public partial class PlannerDraft : ComponentBase
     private bool _noteModalOpen;
     private LeaderPlanningRow? _selectedLeaderRow;
     private bool _preferenceChangesDetected = false;
-    private int _userTimezoneOffsetMinutes;
-    private bool _userTimezoneOffsetLoaded;
 
     private bool CanPublish =>
         _request is not null && _result is not null && _result.IsSuccess &&
@@ -60,31 +56,13 @@ public partial class PlannerDraft : ComponentBase
     {
         if (!firstRender) return;
 
-        await EnsureUserTimezoneOffsetAsync();
-    }
-
-    private async Task EnsureUserTimezoneOffsetAsync()
-    {
-        if (_userTimezoneOffsetLoaded) return;
-
-        try
-        {
-            _userTimezoneOffsetMinutes = await JS.InvokeAsync<int>("kaaimanDateTime.getTimezoneOffsetMinutes");
-        }
-        catch
-        {
-            _userTimezoneOffsetMinutes = 0;
-        }
-        finally
-        {
-            _userTimezoneOffsetLoaded = true;
-        }
+        await UserTimezoneService.EnsureLoadedAsync();
     }
 
     private async Task<DateTime> GetUserLocalNowAsync()
     {
-        await EnsureUserTimezoneOffsetAsync();
-        return DateDisplay.ToUserLocal(DateTime.UtcNow, _userTimezoneOffsetMinutes);
+        await UserTimezoneService.EnsureLoadedAsync();
+        return UserTimezoneService.ToUserLocal(DateTime.UtcNow);
     }
 
     private async Task LoadDataForYearAsync(int year)

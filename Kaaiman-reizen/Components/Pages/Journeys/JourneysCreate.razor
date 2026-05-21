@@ -2,6 +2,7 @@
 @using Kaaiman_reizen.Data.Entities
 @using Kaaiman_reizen.Data.Enum
 @using Kaaiman_reizen.Data.Services
+@using Kaaiman_reizen.Helpers
 @rendermode InteractiveServer
 @inject IJourneyService JourneyService
 @inject ITravelLeaderService LeaderService
@@ -15,14 +16,12 @@
     <div class="card-body">
         <div class="mb-3">
             <label class="form-label">Start met een eerdere reis</label>
-            <InputSelect TValue="int?" class="form-control"
-                         Value="_selectedTemplateJourneyId"
-                         ValueChanged="OnTemplateChanged"
-                         ValueExpression="() => _selectedTemplateJourneyId">
+            <InputSelect TValue="int?" class="form-control" Value="_selectedTemplateJourneyId"
+                         ValueChanged="OnTemplateChanged" ValueExpression="() => _selectedTemplateJourneyId">
                 <option value="">Geen (lege reis)</option>
                 @foreach (var journey in _journeys)
                 {
-                    <option value="@journey.Id">@journey.Name (@journey.Start.ToString("dd-MM-yyyy"))</option>
+                    <option value="@journey.Id">@journey.Name (@DateDisplay.FormatDate(journey.Start))</option>
                 }
             </InputSelect>
             <small class="text-muted">Kies een vorige reis om dit formulier automatisch te vullen.</small>
@@ -157,7 +156,7 @@
         {
             var leaders = await LeaderService.GetTravelLeadersAsync();
             _leaders = leaders.ToList();
-            
+
             var journeys = await JourneyService.GetJourneysAsync();
             _journeys = journeys.ToList();
         }
