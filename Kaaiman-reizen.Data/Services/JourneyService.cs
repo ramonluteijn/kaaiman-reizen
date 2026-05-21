@@ -1,4 +1,8 @@
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Spreadsheet;
+using DocumentFormat.OpenXml.Wordprocessing;
 using Kaaiman_reizen.Data.Entities;
+using Kaaiman_reizen.Data.Enum;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kaaiman_reizen.Data.Services;
@@ -122,6 +126,63 @@ public class JourneyService : IJourneyService
         await _db.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task<ImportResult> ImportJourneysAsync(Stream stream)
+    {
+        var importResult = new ImportResult()
+        {
+            journeys = new List<Journey>()
+        };
+
+        var workbookPart = SpreadsheetDocument.Open(stream, false).WorkbookPart;
+        var sheet = workbookPart!.Workbook.Sheets!.Elements<Sheet>().FirstOrDefault();
+        if (sheet == null)
+        {
+            importResult.warning = "Geen worksheet gevonden";
+            return importResult;
+        }
+
+        var worksheetPart = (WorksheetPart)workbookPart.GetPartById(sheet.Id!);
+        var sheetData = worksheetPart.Worksheet.GetFirstChild<SheetData>();
+        var sharedStringTable = workbookPart.SharedStringTablePart?.SharedStringTable;
+
+        int rowIndex = 0;
+
+        foreach (var row in sheetData!.Elements<Row>())
+        {
+            try
+            {
+                var columns = row.Elements<Cell>().ToList();
+                var journey = new Journey
+                {
+                    Name = sharedStringTable?.ElementAt(int.Parse(columns[0].CellValue?.InnerText ?? string.Empty))?.InnerText ?? string.Empty,
+                    Start = DateOnly.FromDateTime(DateTime.FromOADate(double.Parse(columns[1].CellValue?.InnerText ?? string.Empty))),
+                    End = DateOnly.FromDateTime(DateTime.FromOADate(double.Parse(columns[2].CellValue?.InnerText ?? string.Empty))),
+                    Busses = int.TryParse(columns[3].CellValue?.InnerText ?? string.Empty, out int busses) ? busses : 0,
+                    Travelers = int.TryParse(columns[4].CellValue?.InnerText ?? string.Empty, out int travelers) ? travelers : 0,
+                    BookingStatus = GetBookingStatus(int.TryParse(columns[5].CellValue?.InnerText ?? string.Empty, out int bookingStatus) ? bookingStatus : 0)
+                };
+
+                if (journey.Start >= journey.End)
+                {
+                    importResult.warning = $"Fout gevonden op rij: {rowIndex}, start datum mag niet later of gelijk zijn aan eind datum. Eerdere rijen zijn wel succesvol toegevoegd";
+                    return importResult;
+                }
+
+                await AddJourneyAsync(journey, new List<int>());
+                importResult.journeys.Add(journey);
+            }
+            catch
+            {
+                importResult.warning = $"Fout gevonden op rij: {rowIndex}, eerdere rijen zijn wel succesvol toegevoegd";
+                return importResult;
+            }
+
+            rowIndex++;
+        }
+
+        return importResult;
+    }
+
     private static IReadOnlyList<Journey> ApplyPlanningVersion(
         IReadOnlyList<Journey> journeys,
         PlanningVersion? planningVersion)
@@ -148,5 +209,19 @@ public class JourneyService : IJourneyService
         }
 
         return journeys;
+    }
+
+    private BookingStatus GetBookingStatus(int status) => status switch
+    {
+        0 => BookingStatus.Bezig,
+        1 => BookingStatus.Geweest,
+        2 => BookingStatus.Geanuleerd,
+        _ => 0
+    };
+
+    public class ImportResult
+    {
+        public String? warning { get; set; }
+        public List<Journey>? journeys { get; set; }
     }
 }

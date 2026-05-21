@@ -13,6 +13,8 @@
 
 ## Migrations
 
+### Global
+
 To add a migration from the solution root, specify the data project with `-p` and the startup project with `-s`. Example:
 
 ```
@@ -29,4 +31,20 @@ If you need to remove the last added migration before applying it, use:
 
 ```
 dotnet ef migrations remove -p Kaaiman-reizen.Data -s Kaaiman-reizen
+```
+
+Adjust the migration name and project names as needed for other migrations.
+
+### Database Reset
+
+Drop the database entirely
+
+```bash
+dotnet ef database drop -p Kaaiman-reizen.Data -s Kaaiman-reizen --force
+```
+
+Recreate it with all migrations + seed data
+
+```bash
+dotnet ef database update -p Kaaiman-reizen.Data -s Kaaiman-reizen
 ```
