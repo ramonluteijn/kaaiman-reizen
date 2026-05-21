@@ -1,3 +1,5 @@
+using static Kaaiman_reizen.Data.Services.JourneyService;
+
 namespace Kaaiman_reizen.Data.Services;
 
 public interface IJourneyService
@@ -10,4 +12,6 @@ public interface IJourneyService
     Task<Entities.Journey?> GetJourneyByIdAsync(int id, CancellationToken cancellationToken = default);
     Task<Entities.Journey?> GetJourneyByIdWithPublishedPlanningAsync(int id, CancellationToken cancellationToken = default);
     Task UpdateJourneyAsync(Entities.Journey journey, List<int> selectedLeaders, CancellationToken cancellationToken = default);
+    Task<ImportResult> ImportJourneysAsync(Stream stream);
+
 }
