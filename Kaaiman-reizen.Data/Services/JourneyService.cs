@@ -166,7 +166,7 @@ public class JourneyService : IJourneyService
                 {
                     importResult.warning = $"Fout gevonden op rij: {rowIndex}, start datum mag niet later of gelijk zijn aan eind datum. Eerdere rijen zijn wel succesvol toegevoegd";
                     return importResult;
-                } 
+                }
 
                 await AddJourneyAsync(journey, new List<int>());
                 importResult.journeys.Add(journey);
