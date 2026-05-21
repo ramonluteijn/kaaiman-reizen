@@ -73,11 +73,34 @@
 
         @if (_journeys.Count == 0)
         {
-            <div class="text-muted">Geen reizen gevonden.</div>
+            <div class="text-muted mb-3">Geen reizen gevonden.</div>
         }
+
+        <div class="mb-3 mt-3">
+            <label for="excelImport">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.UploadFile"
+                           HtmlTag="span">
+                    Excel Importeren
+                </MudButton>
+            </label>
+
+            <InputFile id="excelImport"
+                       OnChange="ImportExcelFile"
+                       hidden />
+        </div>
+
+        <MudText Typo="Typo.body2" Class="mud-text-secondary italic">
+            Excel sheet dient er als volgt uit te zien:
+        </MudText>
+        <MudText Typo="Typo.body2" Class="mud-text-secondary italic">
+            Reis (tekst) | Start datum (datum) | Eind datum (datum) | Busjes (nummer) | Reizigers (nummer) | Boekingsstatus (0, 1, 2)
+        </MudText>
     </div>
 </div>
 
+@* Alert modal for deletion *@
 <AlertModal IsOpen="@_isDeleteModalOpen"
             IsOpenChanged="HandleDeleteModalChanged"
             Title="Reis verwijderen"
@@ -95,18 +118,40 @@
     </Actions>
 </AlertModal>
 
+@* Alert modal for bulk import *@
+<AlertModal IsOpen="@_isImportModalOpen"
+            IsOpenChanged="HandleDeleteModalChanged"
+            Title="Reizen importeren"
+            Severity="Severity.Info"
+            Dismissible="true"
+            CloseOnBackdropClick="true"
+            Message="@ImportModalMessage">
+    <Actions>
+        <MudButton Variant="Variant.Text" OnClick="CloseImportModalAsync">
+            Annuleren
+        </MudButton>
+    </Actions>
+</AlertModal>
+
 @code {
     private List<Journey> _journeys = new();
     private string _searchTerm = string.Empty;
     private string _sortColumn = "Country";
     private bool _sortAscending = true;
     private int _selectedYear = DateTime.UtcNow.Year;
+
     private bool _isDeleteModalOpen;
+    private bool _isImportModalOpen;
     private Journey? _journeyPendingDelete;
+    private String? _bulkImportInfo;
 
     private string DeleteModalMessage => _journeyPendingDelete is null
         ? "Weet je zeker dat je deze reis wilt verwijderen?"
         : $"Weet je zeker dat je '{_journeyPendingDelete.Name}' wilt verwijderen?";
+
+    private string ImportModalMessage => _bulkImportInfo is null
+        ? "Nieuwe reizen uit excel bestand zijn succesvol toegevoegd"
+        : $"Nieuwe reizen uit excel bestand zijn niet succesvol toegevoegd: '{_bulkImportInfo}'";
 
     private static string GetEditHref(Journey journey)
     {
@@ -213,5 +258,28 @@
         {
             _journeys = new List<Journey>();
         }
+    }
+
+    async Task ImportExcelFile(InputFileChangeEventArgs e)
+    {
+        MemoryStream ms = new MemoryStream();
+
+        await e.File.OpenReadStream().CopyToAsync(ms);
+        ms.Position = 0;
+
+        var result = await JourneyService.ImportJourneysAsync(ms);
+        foreach (var journey in result.journeys)
+            _journeys.Add(journey);
+
+        _bulkImportInfo = result.warning;
+        _isImportModalOpen = true;
+    }
+
+    private Task CloseImportModalAsync()
+    {
+        _isImportModalOpen = false;
+        _bulkImportInfo = null;
+
+        return Task.CompletedTask;
     }
 }
