@@ -126,11 +126,20 @@ public class JourneyService : IJourneyService
         await _db.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<string?> ImportJourneysAsync(Stream stream)
+    public async Task<ImportResult> ImportJourneysAsync(Stream stream)
     {
+        var importResult = new ImportResult()
+        {
+            journeys = new List<Journey>()
+        };
+
         var workbookPart = SpreadsheetDocument.Open(stream, false).WorkbookPart;
         var sheet = workbookPart!.Workbook.Sheets!.Elements<Sheet>().FirstOrDefault();
-        if (sheet == null) return "Geen worksheet gevonden";
+        if (sheet == null)
+        {
+            importResult.warning = "Geen worksheet gevonden";
+            return importResult;
+        }
 
         var worksheetPart = (WorksheetPart)workbookPart.GetPartById(sheet.Id!);
         var sheetData = worksheetPart.Worksheet.GetFirstChild<SheetData>();
@@ -153,19 +162,25 @@ public class JourneyService : IJourneyService
                     BookingStatus = GetBookingStatus(int.TryParse(columns[5].CellValue?.InnerText ?? string.Empty, out int bookingStatus) ? bookingStatus : 0)
                 };
 
-                if (journey.Start >= journey.End) return $"Fout gevonden op rij: {rowIndex}, start datum mag niet later of gelijk zijn aan eind datum. Eerdere rijen zijn wel succesvol toegevoegd";
+                if (journey.Start >= journey.End)
+                {
+                    importResult.warning = $"Fout gevonden op rij: {rowIndex}, start datum mag niet later of gelijk zijn aan eind datum. Eerdere rijen zijn wel succesvol toegevoegd";
+                    return importResult;
+                } 
 
                 await AddJourneyAsync(journey, new List<int>());
+                importResult.journeys.Add(journey);
             }
             catch
             {
-                return $"Fout gevonden op rij: {rowIndex}, eerdere rijen zijn wel succesvol toegevoegd";
+                importResult.warning = $"Fout gevonden op rij: {rowIndex}, eerdere rijen zijn wel succesvol toegevoegd";
+                return importResult;
             }
 
             rowIndex++;
         }
 
-        return null;
+        return importResult;
     }
 
     private static IReadOnlyList<Journey> ApplyPlanningVersion(
@@ -203,4 +218,10 @@ public class JourneyService : IJourneyService
         2 => BookingStatus.Geanuleerd,
         _ => 0
     };
+
+    public class ImportResult
+    {
+        public String? warning { get; set; }
+        public List<Journey>? journeys { get; set; }
+    }
 }

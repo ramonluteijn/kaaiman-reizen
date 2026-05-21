@@ -206,7 +206,7 @@ namespace Kaaiman_reizen.Tests.Services
 
             var result = await service.ImportJourneysAsync(stream);
 
-            Assert.Null(result);
+            Assert.Null(result.warning);
         }
     }
 }
