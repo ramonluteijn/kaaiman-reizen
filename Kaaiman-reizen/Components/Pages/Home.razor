@@ -66,15 +66,31 @@ else
                                     <MudText Typo="Typo.h6" Class="mb-3">Concept planning @(_drafts.Count > 0 ? $"({_drafts.Count})" : "")</MudText>
                                     @if (_drafts.Count == 0)
                                     {
-                                        <MudCardActions Class="pl-0">
-                                            <MudButton Href="./planner/draft"
-                                                       Variant="Variant.Filled"
+                                        @if (_anyLeaderHasPreferences)
+                                        {
+                                            <MudCardActions Class="pl-0">
+                                                <MudButton Href="./planner/draft"
+                                                           Variant="Variant.Filled"
+                                                           Color="Color.Primary"
+                                                           Size="Size.Small"
+                                                           EndIcon="@Icons.Material.Filled.ArrowForward">
+                                                    Concept aanmaken
+                                                </MudButton>
+                                            </MudCardActions>
+                                        }
+                                        else
+                                        {
+                                            <MudText Typo="Typo.body2" Class="mud-text-secondary mb-2">
+                                                Geen reisleiders hebben nog voorkeuren ingevuld.
+                                            </MudText>
+                                            <MudButton Href="/travelleaders"
+                                                       Variant="Variant.Outlined"
                                                        Color="Color.Primary"
                                                        Size="Size.Small"
-                                                       EndIcon="@Icons.Material.Filled.ArrowForward">
-                                                Concept aanmaken
+                                                       EndIcon="@Icons.Material.Filled.People">
+                                                Reisleiders beheren
                                             </MudButton>
-                                        </MudCardActions>
+                                        }
                                     }
                                     else
                                     {
@@ -124,7 +140,7 @@ else
                                     }
                                     else
                                     {
-                                        <div style="max-height: 240px; overflow-y: auto;" class="pr-2">
+                                        <div style="max-height: 200px; overflow-y: auto;" class="pr-2 mb-2">
                                             <MudList T="string" Clickable="false" Dense="true">
                                                 @foreach (var journey in _journeysWithoutTravelLeaders)
                                                 {
@@ -140,6 +156,13 @@ else
                                                 }
                                             </MudList>
                                         </div>
+                                        <MudButton Href="/journeys/create"
+                                                   Variant="Variant.Outlined"
+                                                   Color="Color.Warning"
+                                                   Size="Size.Small"
+                                                   EndIcon="@Icons.Material.Filled.Add">
+                                            Nieuwe reis aanmaken
+                                        </MudButton>
                                     }
                                 </MudCardContent>
                             </MudCard>
@@ -160,7 +183,7 @@ else
                                     }
                                     else
                                     {
-                                        <div style="height: 230px; overflow-y: auto; overflow-x: hidden;" class="pr-2">
+                                        <div style="height: 190px; overflow-y: auto; overflow-x: hidden;" class="pr-2 mb-2">
                                             <MudList T="string" Dense="true" DisablePadding="true">
                                                 @foreach (var leader in _travelLeadersWithoutJourneys)
                                                 {
@@ -173,6 +196,13 @@ else
                                                 }
                                             </MudList>
                                         </div>
+                                        <MudButton Href="/travelleaders/create"
+                                                   Variant="Variant.Outlined"
+                                                   Color="Color.Warning"
+                                                   Size="Size.Small"
+                                                   EndIcon="@Icons.Material.Filled.PersonAdd">
+                                            Nieuwe reisleider aanmaken
+                                        </MudButton>
                                     }
                                 </MudCardContent>
                             </MudCard>

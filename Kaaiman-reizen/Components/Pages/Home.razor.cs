@@ -34,6 +34,7 @@ public partial class Home : ComponentBase
     private string _currentUserId = string.Empty;
 
     private List<TravelLeader> _travelLeadersWithoutPreferences = [];
+    private bool _anyLeaderHasPreferences;
     private List<TravelLeader> _travelLeadersWithoutJourneys = [];
     private List<TravelLeader> _travelLeadersWithNotes = [];
     private List<Journey> _journeysWithoutTravelLeaders = [];
@@ -65,7 +66,11 @@ public partial class Home : ComponentBase
             var drafts = await PlanningService.GetDraftsAsync(_selectedYear);
             _drafts = drafts.ToList();
 
-            _travelLeadersWithoutPreferences = await TravelLeaderService.GetTravelLeadersWithoutPreferencesAsync();
+            var allLeaders = await TravelLeaderService.GetTravelLeadersAsync();
+            _anyLeaderHasPreferences = allLeaders.Any(l => l.IsActive && l.PreferredDestinations.Any());
+            _travelLeadersWithoutPreferences = allLeaders
+                .Where(l => !l.PreferredDestinations.Any() && !l.AvailabilityPeriods.Any())
+                .ToList();
             _travelLeadersWithoutJourneys = await TravelLeaderService.GetTravelLeadersWithoutJourneysAsync(_selectedYear);
             _travelLeadersWithNotes = await TravelLeaderService.GetTravelLeadersWithNotesAsync();
             _journeysWithoutTravelLeaders = await TravelLeaderService.GetJourneysWithoutTravelLeadersAsync(_selectedYear);

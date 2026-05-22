@@ -22,6 +22,29 @@
             </a>
         </div>
 
+        @if (_availableYears.Any())
+        {
+            <ul class="nav nav-pills mb-3 gap-2" style="display: flex !important; flex-direction: row !important; align-items: center;">
+                @foreach (var year in _availableYears)
+                {
+                    <li class="nav-item" style="width: auto;">
+                        <button class="nav-link @(_selectedYear == year && !_showAll ? "active" : "")"
+                                style="width: auto; @(_selectedYear == year && !_showAll ? "background-color: #00796b;" : "")"
+                                @onclick="() => SelectYear(year)">
+                            @year
+                        </button>
+                    </li>
+                }
+                <li class="nav-item" style="width: auto;">
+                    <button class="nav-link @(_showAll ? "active" : "")"
+                            style="width: auto; @(_showAll ? "background-color: #00796b;" : "")"
+                            @onclick="SelectAll">
+                        Alle
+                    </button>
+                </li>
+            </ul>
+        }
+
         <Table TItem="Journey" Items="FilteredJourneys" OnDelete="@OnDelete" Path="journeys" EditHrefSelector="@GetEditHref">
             <HeaderContent>
                 <th @onclick='() => SortBy("Name")'>
@@ -96,11 +119,14 @@
 </AlertModal>
 
 @code {
+    private List<Journey> _allJourneys = new();
     private List<Journey> _journeys = new();
+    private List<int> _availableYears = new();
     private string _searchTerm = string.Empty;
     private string _sortColumn = "Country";
     private bool _sortAscending = true;
     private int _selectedYear = DateTime.UtcNow.Year;
+    private bool _showAll = false;
     private bool _isDeleteModalOpen;
     private Journey? _journeyPendingDelete;
 
@@ -190,27 +216,47 @@
     private async Task ConfirmDeleteAsync()
     {
         if (_journeyPendingDelete is null)
-        {
             return;
-        }
 
         var journeyId = _journeyPendingDelete.Id;
         await JourneyService.DeleteJourneyAsync(journeyId);
-        _journeys.RemoveAll(l => l.Id == journeyId);
+        _allJourneys.RemoveAll(j => j.Id == journeyId);
+        _journeys.RemoveAll(j => j.Id == journeyId);
+        _availableYears = _allJourneys.Select(j => j.Start.Year).Distinct().OrderBy(y => y).ToList();
         _isDeleteModalOpen = false;
         _journeyPendingDelete = null;
         StateHasChanged();
+    }
+
+    private void SelectYear(int year)
+    {
+        _selectedYear = year;
+        _showAll = false;
+        _journeys = _allJourneys.Where(j => j.Start.Year == year).ToList();
+    }
+
+    private void SelectAll()
+    {
+        _showAll = true;
+        _journeys = _allJourneys.ToList();
     }
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
-            var items = await JourneyService.GetJourneysWithPublishedPlanningAsync(_selectedYear);
-            _journeys = items.ToList();
+            var items = await JourneyService.GetJourneysAsync();
+            _allJourneys = items.ToList();
+            _availableYears = _allJourneys.Select(j => j.Start.Year).Distinct().OrderBy(y => y).ToList();
+
+            if (!_availableYears.Contains(_selectedYear) && _availableYears.Any())
+                _selectedYear = _availableYears.Last();
+
+            _journeys = _allJourneys.Where(j => j.Start.Year == _selectedYear).ToList();
         }
         catch
         {
+            _allJourneys = new List<Journey>();
             _journeys = new List<Journey>();
         }
     }
