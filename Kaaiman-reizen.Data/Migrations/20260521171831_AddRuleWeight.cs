@@ -44,7 +44,7 @@ namespace Kaaiman_reizen.Data.Migrations
                 keyValue: 4,
                 column: "Weight",
                 value: 1);
-            
+
             migrationBuilder.UpdateData(
                 table: "Rule",
                 keyColumn: "Id",

@@ -212,7 +212,7 @@ public class PlannerDraftServiceTests
             .SelectMany(assignments => assignments)
             .Count(a => a.LeaderId == 1);
         Assert.True(ramonAssignments <= 1, "Ramon should not be assigned to both journeys with gap < 30 days");
-        
+
         // The second journey should be assigned to the Alternative leader
         Assert.True(result.JourneyAssignments.TryGetValue(2, out var secondJourneyAssignments));
         Assert.Contains(secondJourneyAssignments, a => a.LeaderId == 2);
