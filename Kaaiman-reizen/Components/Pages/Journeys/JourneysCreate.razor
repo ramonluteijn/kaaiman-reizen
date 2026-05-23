@@ -175,9 +175,15 @@
 
     private void OnEndDateChanged(DateOnly endDate)
     {
-        BookingStatus.Huidig => "Huidig",
-        BookingStatus.Geweest => "Geweest",
-        BookingStatus.Geanuleerd => "Geannuleerd",
-        _ => status.ToString()
-    };
+        _model.End = endDate;
+        UpdateStatus();
+    }
+
+    private void UpdateStatus()
+    {
+        if (_model.Start < DateOnly.FromDateTime(DateTime.Today) && _model.End < DateOnly.FromDateTime(DateTime.Today))
+            _model.BookingStatus = BookingStatus.Geweest;
+        else
+            _model.BookingStatus = BookingStatus.Huidig;
+    }
 }
