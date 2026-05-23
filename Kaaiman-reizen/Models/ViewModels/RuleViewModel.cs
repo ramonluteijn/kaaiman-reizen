@@ -7,4 +7,5 @@ public class RuleViewModel
     public string Description { get; set; } = null!;
     public object? TypedValue { get; set; }
     public bool IsActive { get; set; }
+    public int Weight { get; set; }
 }

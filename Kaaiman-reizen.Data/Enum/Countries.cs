@@ -46,6 +46,7 @@ public enum Countries
     Roemenie,
     Rusland,
     SanMarino,
+    Schotland,
     Servie,
     Slovenie,
     Slowakije,
@@ -92,5 +93,13 @@ public static class CountryMappings
         }
 
         return builder.ToString();
+    }
+
+    // check if journey title contains the country name
+    public static bool DestinationContainsCountry(string normalizedDestination, string countryName)
+    {
+        var normalizedCountry = NormalizeCountryName(countryName);
+        return !string.IsNullOrEmpty(normalizedCountry) &&
+               normalizedDestination.Contains(normalizedCountry, StringComparison.OrdinalIgnoreCase);
     }
 }

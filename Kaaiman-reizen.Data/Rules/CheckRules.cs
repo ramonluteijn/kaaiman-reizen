@@ -10,7 +10,12 @@ public static class CheckRules
         int MinimumGapDays,
         bool RequiredExperienceActive,
         int RequiredExperience,
-        bool MinMaxJourneysActive
+        bool MinMaxJourneysActive,
+        bool PreferencesEnabled,
+        int PreferenceWeight,
+        int NoOverlapWeight,
+        int MinimumGapWeight,
+        int RequiredExperienceWeight
     );
 
     public static RuleSettings GetDefaultSettings() => new(
@@ -19,7 +24,12 @@ public static class CheckRules
         MinimumGapDays: RuleKeys.DefaultMinimumGapDays,
         RequiredExperienceActive: true,
         RequiredExperience: RuleKeys.DefaultRequiredExperience,
-        MinMaxJourneysActive: true
+        MinMaxJourneysActive: true,
+        PreferencesEnabled: true,
+        PreferenceWeight: RuleKeys.DefaultPreferenceWeight,
+        NoOverlapWeight: RuleKeys.DefaultNoOverlapWeight,
+        MinimumGapWeight: RuleKeys.DefaultMinimumGapWeight,
+        RequiredExperienceWeight: RuleKeys.DefaultRequiredExperienceWeight
     );
 
     public static RuleSettings FromRules(IEnumerable<Rule>? rules)
@@ -40,7 +50,12 @@ public static class CheckRules
             MinimumGapDays: GetIntValue(byKey, RuleKeys.MinimumGapDays, settings.MinimumGapDays),
             RequiredExperienceActive: GetIsActive(byKey, RuleKeys.RequiredExperience, settings.RequiredExperienceActive),
             RequiredExperience: GetIntValue(byKey, RuleKeys.RequiredExperience, settings.RequiredExperience),
-            MinMaxJourneysActive: GetIsActive(byKey, RuleKeys.MinMaxJourneys, settings.MinMaxJourneysActive)
+            MinMaxJourneysActive: GetIsActive(byKey, RuleKeys.MinMaxJourneys, settings.MinMaxJourneysActive),
+            PreferencesEnabled: GetIsActive(byKey, RuleKeys.PreferencesEnabled, settings.PreferencesEnabled),
+            PreferenceWeight: GetWeightValue(byKey, RuleKeys.PreferenceWeight, RuleKeys.PreferencesEnabled, settings.PreferenceWeight),
+            NoOverlapWeight: GetWeightValue(byKey, RuleKeys.NoOverlapWeight, RuleKeys.NoOverlap, settings.NoOverlapWeight),
+            MinimumGapWeight: GetWeightValue(byKey, RuleKeys.MinimumGapWeight, RuleKeys.MinimumGapDays, settings.MinimumGapWeight),
+            RequiredExperienceWeight: GetWeightValue(byKey, RuleKeys.RequiredExperienceWeight, RuleKeys.RequiredExperience, settings.RequiredExperienceWeight)
         );
     }
 
@@ -100,7 +115,7 @@ public static class CheckRules
             (result.NoOverlap, "Deze reisleider is al ingepland op een overlappende reis."),
             (result.HasMinimumGap, $"Deze reisleider moet minimaal {effectiveSettings.MinimumGapDays} dagen tussen reizen hebben."),
             (!result.MinMaxResult.ExceedsMaxAfterAssignment, $"Deze reisleider heeft een aangegeven minimum en maximum van {leader.MinTrips} en {leader.MaxTrips} reizen, momenteel gepland op {journeyWindows.Count()} reizen."),
-            (result.HasExperience, $"Deze reisleider heeft onvoldoende ervaring voor deze bestemming (min {effectiveSettings.RequiredExperience} reizen).")
+            (result.HasExperience, $"Deze reisleider heeft onvoldoende ervaring voor deze bestemming buiten Europa (min {effectiveSettings.RequiredExperience} reizen).")
         };
 
         foreach (var rule in rules.Where(rule => !rule.Condition))
@@ -131,5 +146,21 @@ public static class CheckRules
             string text when int.TryParse(text, out var parsed) => parsed,
             _ => fallback
         };
+    }
+
+    private static int GetWeightValue(IReadOnlyDictionary<string, Rule> byKey, string weightKey, string baseKey, int fallback)
+    {
+        if (byKey.TryGetValue(weightKey, out var weightRule))
+        {
+            return weightRule.TypedValue switch
+            {
+                int i => i,
+                string s when int.TryParse(s, out var p) => p,
+                _ => fallback
+            };
+        }
+
+        if (!byKey.TryGetValue(baseKey, out var baseRule)) return fallback;
+        return baseRule.Weight > 0 ? baseRule.Weight : fallback;
     }
 }
