@@ -2,6 +2,7 @@ using Microsoft.Playwright;
 using Microsoft.Playwright.Xunit;
 
 namespace Kaaiman_reizen.Tests.Pages;
+
 public class HomePageTests : PageTest
 {
     private static readonly string ScreenshotDir = Path.Combine(
