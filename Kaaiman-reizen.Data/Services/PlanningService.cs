@@ -201,4 +201,25 @@ public class PlanningService : IPlanningService
 
     public bool PublishedPlanningExists() => _db.PlanningVersions.Any(planning => planning.IsPublished);
 
+    public async Task<bool> IsPublishedPlanningCompleteAsync(int year, CancellationToken cancellationToken = default)
+    {
+        var hasPublished = await _db.PlanningVersions
+            .AnyAsync(v => v.IsPublished && v.PlanningYear == year, cancellationToken);
+        if (!hasPublished) return false;
+
+        var journeyIds = await _db.Journey
+            .Where(j => j.Start.Year == year && j.BookingStatus == Kaaiman_reizen.Data.Enum.BookingStatus.Huidig)
+            .Select(j => j.Id)
+            .ToListAsync(cancellationToken);
+        if (journeyIds.Count == 0) return false;
+
+        var assignedJourneyIds = await _db.PlanningAssignments
+            .Where(a => a.PlanningVersion.IsPublished && a.PlanningVersion.PlanningYear == year)
+            .Select(a => a.JourneyId)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        return journeyIds.All(id => assignedJourneyIds.Contains(id));
+    }
+
 }

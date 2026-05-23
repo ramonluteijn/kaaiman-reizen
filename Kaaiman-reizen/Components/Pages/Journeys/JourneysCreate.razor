@@ -92,7 +92,7 @@
 </div>
 
 @code {
-    private Journey _model { get; set; } = new();
+    private Journey _model { get; set; } = new() { Start = DateOnly.FromDateTime(DateTime.Today), End = DateOnly.FromDateTime(DateTime.Today) };
     private string[] _preferred = new string[3];
     private List<TravelLeader> _leaders = new();
     private List<int> _selectedLeaderIds = new();
@@ -109,7 +109,7 @@
     {
         if (!_selectedTemplateJourneyId.HasValue)
         {
-            _model = new Journey();
+            _model = new Journey { Start = DateOnly.FromDateTime(DateTime.Today), End = DateOnly.FromDateTime(DateTime.Today) };
             _selectedLeaderIds = new List<int>();
             return;
         }

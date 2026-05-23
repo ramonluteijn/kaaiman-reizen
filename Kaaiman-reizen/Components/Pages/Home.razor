@@ -131,12 +131,18 @@ else
                                         Reizen zonder reisleiders (@_journeysWithoutTravelLeaders.Count)
                                     </MudText>
 
-                                    @if (!_journeysWithoutTravelLeaders.Any())
+                                    @if (_publishedPlanningIsComplete)
                                     {
                                         <AlertModal IsOpen="true"
                                                     Title="Reisplanning compleet"
                                                     Severity="Severity.Success"
                                                     Message="Alle reizen zijn voorzien van reisleiders." />
+                                    }
+                                    else if (!_journeysWithoutTravelLeaders.Any())
+                                    {
+                                        <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                                            Concept is volledig — publiceer de planning om te bevestigen.
+                                        </MudText>
                                     }
                                     else
                                     {

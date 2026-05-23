@@ -16,4 +16,5 @@ public interface IPlanningService
         CancellationToken cancellationToken = default);
     Task<List<Journey>> GetAllJourneysWithTravelLeadersFromLatestPublishedPlanning();
     bool PublishedPlanningExists();
+    Task<bool> IsPublishedPlanningCompleteAsync(int year, CancellationToken cancellationToken = default);
 }
