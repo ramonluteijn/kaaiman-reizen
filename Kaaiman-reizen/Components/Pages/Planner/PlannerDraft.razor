@@ -10,7 +10,15 @@
 <PageTitle>Draft Planning</PageTitle>
 
 <MudStack Spacing="4" Class="pa-4 pd-page">
-    <MudText Typo="Typo.h5">Planner</MudText>
+    <div class="d-flex flex-wrap align-center justify-space-between gap-2">
+        <MudText Typo="Typo.h5">Planner</MudText>
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Error"
+                   Disabled="@_isSaving"
+                   OnClick="OpenArchiveAvailabilityDialog">
+            Nieuwe planningsperiode starten
+        </MudButton>
+    </div>
 
     @if (_loading)
     {
@@ -135,6 +143,23 @@
                                                 <span class="pd-sidebar-no-prefs">Nog geen voorkeuren ingevuld</span>
                                             }
                                         }
+
+    <AlertModal IsOpen="@_archiveDialogOpen"
+                IsOpenChanged="HandleArchiveDialogChanged"
+                Title="Nieuwe planningsperiode starten"
+                Severity="Severity.Warning"
+                Dismissible="true"
+                CloseOnBackdropClick="true"
+                Message="Weet je zeker dat je een nieuwe periode wilt starten? Alle beschikbaarheid wordt gearchiveerd en gereset.">
+        <Actions>
+            <MudButton Variant="Variant.Text" OnClick="CloseArchiveDialog">
+                Annuleren
+            </MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="ConfirmArchiveAsync">
+                Bevestigen
+            </MudButton>
+        </Actions>
+    </AlertModal>
                                     </div>
                                 </div>
                             }

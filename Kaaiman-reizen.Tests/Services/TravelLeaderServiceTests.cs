@@ -13,6 +13,8 @@ namespace Kaaiman_reizen.Tests.Services
         {
             var options = new DbContextOptionsBuilder<MainContext>()
                 .UseInMemoryDatabase(databaseName: System.Guid.NewGuid().ToString())
+                .ConfigureWarnings(warnings =>
+                    warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.InMemoryEventId.TransactionIgnoredWarning))
                 .Options;
             return new MainContext(options);
         }
@@ -146,6 +148,41 @@ namespace Kaaiman_reizen.Tests.Services
             Assert.DoesNotContain(journeys1, j => j.Id == journey2.Id);
             Assert.Contains(journeys2, j => j.Id == journey2.Id);
             Assert.DoesNotContain(journeys2, j => j.Id == journey1.Id);
+        }
+
+        [Fact]
+        public async Task ArchiveAndResetPreferredDestinations_Should_Copy_To_History_And_Clear()
+        {
+            var db = GetInMemoryDb();
+            var service = new TravelLeaderService(db);
+
+            var leader = new TravelLeader
+            {
+                Name = "Leader",
+                PhoneNumber = "123",
+                AmountOfTrips = 1,
+                MinTrips = 0,
+                MaxTrips = 5,
+                IsActive = true
+            };
+            db.TravelLeader.Add(leader);
+            await db.SaveChangesAsync();
+
+            db.PreferredDestinations.AddRange(
+                new PreferredDestination { TravelLeaderId = leader.Id, JourneyId = 10, Rank = 1 },
+                new PreferredDestination { TravelLeaderId = leader.Id, JourneyId = 11, Rank = 0 });
+            await db.SaveChangesAsync();
+
+            var archivedCount = await service.ArchiveAndResetPreferredDestinationsAsync(42);
+
+            Assert.Equal(2, archivedCount);
+            Assert.Empty(db.PreferredDestinations);
+
+            var history = await db.TravelLeaderAvailabilityHistories.ToListAsync();
+            Assert.Equal(2, history.Count);
+            Assert.All(history, entry => Assert.Equal(42, entry.PlanningVersionId));
+            Assert.Contains(history, entry => entry.JourneyId == 10 && entry.Rank == 1);
+            Assert.Contains(history, entry => entry.JourneyId == 11 && entry.Rank == 0);
         }
     }
 }
