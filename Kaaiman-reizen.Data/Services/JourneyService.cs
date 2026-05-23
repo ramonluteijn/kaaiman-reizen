@@ -213,7 +213,7 @@ public class JourneyService : IJourneyService
 
     private BookingStatus GetBookingStatus(int status) => status switch
     {
-        0 => BookingStatus.Bezig,
+        0 => BookingStatus.Huidig,
         1 => BookingStatus.Geweest,
         2 => BookingStatus.Geanuleerd,
         _ => 0

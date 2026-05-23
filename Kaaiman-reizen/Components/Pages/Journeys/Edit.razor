@@ -171,6 +171,6 @@
         if (_model.Start < DateOnly.FromDateTime(DateTime.Today) && _model.End < DateOnly.FromDateTime(DateTime.Today))
             _model.BookingStatus = BookingStatus.Geweest;
         else
-            _model.BookingStatus = BookingStatus.Bezig;
+            _model.BookingStatus = BookingStatus.Huidig;
     }
 }
