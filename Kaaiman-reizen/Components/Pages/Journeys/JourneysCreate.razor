@@ -22,7 +22,7 @@
                 <option value="">Geen (lege reis)</option>
                 @foreach (var journey in _journeys)
                 {
-                    <option value="@journey.Id">@journey.Name</option>
+                    <option value="@journey.Id">@journey.Name (@journey.Start.ToString("dd-MM-yyyy"))</option>
                 }
             </InputSelect>
             <small class="text-muted">Kies een vorige reis om dit formulier automatisch te vullen.</small>
@@ -39,13 +39,13 @@
 
             <div class="mb-3">
                 <label class="form-label">Start datum</label>
-                <InputDate class="form-control" @bind-Value="_model.Start" />
+                <InputDate class="form-control" @bind-Value:get="_model.Start" @bind-Value:set="OnStartDateChanged" />
                 <ValidationMessage For="() => _model.Start" />
             </div>
 
             <div class="mb-3">
                 <label class="form-label">Eind datum</label>
-                <InputDate class="form-control" @bind-Value="_model.End" />
+                <InputDate class="form-control"  @bind-Value:get="_model.End" @bind-Value:set="OnEndDateChanged" />
                 <ValidationMessage For="() => _model.End" />
             </div>
 
@@ -64,10 +64,9 @@
             <div class="mb-3">
                 <label class="form-label">Boekingsstatus</label>
                 <InputSelect class="form-control" @bind-Value="_model.BookingStatus">
-                    @foreach (var status in Enum.GetValues<BookingStatus>())
-                    {
-                        <option value="@status">@GetBookingStatusLabel(status)</option>
-                    }
+                    <option value="@BookingStatus.Bezig">Bezig</option>
+                    <option value="@BookingStatus.Geweest">Geweest</option>
+                    <option value="@BookingStatus.Geanuleerd">Geannuleerd</option>
                 </InputSelect>
                 <ValidationMessage For="() => _model.BookingStatus" />
             </div>
@@ -167,12 +166,24 @@
             _journeys = new List<Journey>();
         }
     }
-
-    private static string GetBookingStatusLabel(BookingStatus status) => status switch
+    
+    private void OnStartDateChanged(DateOnly startDate)
     {
-        BookingStatus.Bezig => "Bezig",
-        BookingStatus.Geweest => "Geweest",
-        BookingStatus.Geanuleerd => "Geannuleerd",
-        _ => status.ToString()
-    };
+        _model.Start = startDate;
+        UpdateStatus();
+    }
+
+    private void OnEndDateChanged(DateOnly endDate)
+    {
+        _model.End = endDate;
+        UpdateStatus();
+    }
+
+    private void UpdateStatus()
+    {
+        if (_model.Start < DateOnly.FromDateTime(DateTime.Today) && _model.End < DateOnly.FromDateTime(DateTime.Today))
+            _model.BookingStatus = BookingStatus.Geweest;
+        else
+            _model.BookingStatus = BookingStatus.Bezig;
+    }
 }

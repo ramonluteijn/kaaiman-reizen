@@ -14,6 +14,9 @@ public partial class TravelLeaders
     private ITravelLeaderService LeaderService { get; set; } = default!;
 
     [Inject]
+    private AccountService _accountService { get; set; } = default!;
+
+    [Inject]
     private ILogger<TravelLeaders> Logger { get; set; } = default!;
 
     [Inject]
@@ -127,7 +130,11 @@ public partial class TravelLeaders
         }
 
         var leaderId = _leaderPendingDelete.Id;
+        var email = _leaderPendingDelete.Email;
+
         await LeaderService.DeleteTravelLeaderAsync(leaderId);
+        await _accountService.DeleteAccountByEmailAsync(email);
+
         _leaders.RemoveAll(l => l.Id == leaderId);
 
         _isDeleteModalOpen = false;

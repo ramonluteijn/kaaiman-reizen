@@ -31,4 +31,18 @@ public class NotificationService : INotificationService
             await _db.SaveChangesAsync(cancellationToken);
         }
     }
+
+    public async Task CreateNotificationAsync(string userId, string message, CancellationToken cancellationToken = default)
+    {
+        var notification = new Notification
+        {
+            ApplicationUserId = userId,
+            Message = message,
+            IsRead = false,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _db.Notifications.Add(notification);
+        await _db.SaveChangesAsync(cancellationToken);
+    }
 }

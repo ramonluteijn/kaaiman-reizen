@@ -1,12 +1,6 @@
 @page "/travelleaders"
-
 @rendermode InteractiveServer
-
-@using Kaaiman_reizen.Models.ViewModels
-@using Microsoft.AspNetCore.Authorization
-
 @attribute [Authorize(Roles = "Planner")]
-
 @inject IJSRuntime JS
 
 <PageTitle>Reisleiders</PageTitle>
@@ -15,18 +9,23 @@
 
 <div class="card">
     <div class="card-body">
-        <div class="mb-3">
-            <input class="form-control"
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <input class="form-control w-25"
                    placeholder="Zoek op naam..."
                    @bind="_searchTerm"
                    @bind:event="oninput" />
-        </div>
 
-            <Table TItem="TravelLeaderViewModel" Items="FilteredLeaders" OnDelete="@OnDelete" Path="travelleaders" CreateText="Nieuwe reisleider" EditHrefSelector="@GetEditHref">
+            <a href="travelleaders/create" class="btn btn-primary text-uppercase" style="background-color: #00796b; border: none;">
+                <i class="bi bi-plus"></i> Nieuwe reisleider
+            </a>
+        </div>
+            
+            <Table TItem="TravelLeaderViewModel" Items="FilteredLeaders" OnDelete="@OnDelete" Path="travelleaders" EditHrefSelector="@GetEditHref">
             <HeaderContent>
                 <th @onclick='() => SortBy("Name")'>
                     Naam @(GetSortIcon("Name"))
                 </th>
+                <th>E-mailadres</th>
                 <th>Telefoon</th>
                 <th @onclick='() => SortBy("Experience")'>
                     Reizen Ervaring @(GetSortIcon("Experience"))
@@ -41,36 +40,33 @@
                 <th @onclick='() => SortBy("Active")'>
                     Actief @(GetSortIcon("Active"))
                 </th>
-                <th>Reisgeschiedenis</th>
             </HeaderContent>
             <RowTemplate>
                 <td>@context.Name</td>
+                <td>@context.Email</td>
                 <td>@context.PhoneNumber</td>
                 <td>@context.AmountOfTrips</td>
                 <td>@context.MinTrips</td>
                 <td>@context.MaxTrips</td>
-                <td>@context.Availability</td>
                 <td>
-                    <span class="badge @(context.IsActive ? "bg-success" : "bg-danger")">
-                        @(context.IsActive ? "Ja" : "Nee")
-                    </span>
-                </td>
-                <td>
-                    @if (context.JourneyHistory.Count == 0)
+                    @if (!context.AvailableForJourneys.Any())
                     {
-                        <span class="text-muted">Nog geen reizen</span>
+                        <span class="text-muted">—</span>
                     }
                     else
                     {
                         <div class="d-flex flex-column gap-1">
-                            @foreach (var journey in context.JourneyHistory)
+                            @foreach (var name in context.AvailableForJourneys)
                             {
-                                <a href="@GetJourneyHref(journey.JourneyId)">
-                                    @journey.JourneyName (@journey.Start.ToString("dd-MM-yyyy") - @journey.End.ToString("dd-MM-yyyy"))
-                                </a>
+                                <span>@name</span>
                             }
                         </div>
                     }
+                </td>
+                <td>
+                    <span class="badge @(context.IsActive ? "bg-success" : "bg-danger")">
+                        @(context.IsActive ? "Ja" : "Nee")
+                    </span>
                 </td>
             </RowTemplate>
         </Table>

@@ -8,6 +8,7 @@ namespace Kaaiman_reizen.Models.Planner;
 public class PlannerDraftRequest
 {
     public List<PlannerLeaderInput> Leaders { get; set; } = [];
+    public List<PlannerLeaderInput> AllActiveLeaders { get; set; } = [];
     public List<PlannerJourneyInput> Journeys { get; set; } = [];
 }
 
@@ -19,8 +20,15 @@ public class PlannerLeaderInput
     public int AmountOfTrips { get; set; }
     public int MinTrips { get; set; }
     public int MaxTrips { get; set; }
-    public List<(DateOnly Start, DateOnly End)> AvailabilityPeriods { get; set; } = [];
-    public Dictionary<string, int> PreferredDestinations { get; set; } = [];
+    public Dictionary<int, int> PreferredDestinations { get; set; } = [];
+    public List<PreferredDestinationDisplayInput> PreferredDestinationDetails { get; set; } = [];
+}
+
+public class PreferredDestinationDisplayInput
+{
+    public int JourneyId { get; set; }
+    public string JourneyTitle { get; set; } = string.Empty;
+    public int Rank { get; set; }
 }
 
 public class PlannerJourneyInput

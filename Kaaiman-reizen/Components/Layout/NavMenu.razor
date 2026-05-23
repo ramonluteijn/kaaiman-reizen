@@ -1,15 +1,15 @@
-@rendermode InteractiveServer
+﻿@rendermode InteractiveServer
 @using Microsoft.AspNetCore.Components.Authorization
 
 <div class="d-flex flex-column nav-shell">
-    <div class="border-bottom p-3 nav-brand d-flex align-items-center">
+    <div class="border-bottom nav-brand d-flex align-items-center p-3">
         <div class="d-flex flex-grow-1">
             <a href="/" @onclick="CloseMenu">
                 <img src="images/kaaiman-logo-footer-1920x405.png.webp" class="navbar-brand img-fluid nav-brand-logo"
                      alt="Logo Kaaiman-reizen" />
             </a>
         </div>
-        <button type="button" class="d-sm-none btn btn-link text-white p-1 nav-toggle-btn" @onclick="ToggleNav"
+        <button type="button" class="d-sm-none btn btn-link nav-toggle-btn p-1 text-white" @onclick="ToggleNav"
                 aria-label="Toggle navigatie">
             <i class="bi @(navExpanded ? "bi-x-lg" : "bi-list") nav-toggle-icon"></i>
         </button>
@@ -22,7 +22,7 @@
                     <i class="bi bi-house-door-fill nav-icon me-3"></i> Home
                 </NavLink>
             </div>
-            
+
             @foreach(var route in routes)
             {
                 <AuthorizeView Roles="@route.role">
@@ -33,37 +33,38 @@
                     </div>
                 </AuthorizeView>
             }
+
+            <AuthorizeView>
+                <Authorized>
+                    <div class="w-100 nav-footer-section m-0 mt-auto p-0">
+                        <a href="profile"
+                               class="border-bottom d-flex align-items-center justify-content-center nav-user-row text-decoration-none px-3 py-2 text-white">
+                            <i class="bi bi-person-circle me-2"></i>
+                            <small class="text-truncate">@context.User.Identity?.Name</small>
+                        </a>
+                        <form action="Account/Logout" method="post" class="d-flex justify-content-center m-0 p-0">
+                            <AntiforgeryToken />
+                            <input type="hidden" name="ReturnUrl" value="" />
+                            <button type="submit"
+                                    class="nav-link btn btn-link d-flex align-items-center rounded-0 nav-auth-button border-0 px-3 py-3 text-start shadow-none">
+                                <i class="bi bi-box-arrow-left nav-icon me-3"></i> Uitloggen
+                            </button>
+                        </form>
+                    </div>
+                </Authorized>
+                <NotAuthorized>
+                    <div class="w-100 nav-footer-section m-0 mt-auto p-0">
+                        <NavLink
+                            class="nav-link btn btn-link d-flex align-items-center rounded-0 nav-auth-button fw-bold border-0 px-3 py-3 text-start text-white shadow-none"
+                            href="Account/Login">
+                            <i class="bi bi-box-arrow-in-right nav-icon me-3"></i> Inloggen
+                        </NavLink>
+                    </div>
+                </NotAuthorized>
+            </AuthorizeView>
+
         </nav>
     </div>
-
-    <AuthorizeView>
-        <Authorized>
-            <div class="w-100 m-0 p-0 nav-footer-section">
-                <a href="profile"
-                    class="border-bottom d-flex align-items-center justify-content-center px-3 py-2 nav-user-row text-decoration-none text-white">
-                    <i class="bi bi-person-circle me-2"></i>
-                    <small class="text-truncate">@context.User.Identity?.Name</small>
-                </a>
-                <form action="Account/Logout" method="post" class="m-0 p-0 d-flex justify-content-center">
-                    <AntiforgeryToken />
-                    <input type="hidden" name="ReturnUrl" value="" />
-                    <button type="submit"
-                            class="nav-link btn btn-link d-flex align-items-center rounded-0 border-0 px-3 py-3 text-start shadow-none nav-auth-button">
-                        <i class="bi bi-box-arrow-left nav-icon me-3"></i> Uitloggen
-                    </button>
-                </form>
-            </div>
-        </Authorized>
-        <NotAuthorized>
-            <div class="w-100 m-0 p-0 nav-footer-section">
-                <NavLink
-                    class="nav-link btn btn-link d-flex align-items-center rounded-0 border-0 px-3 py-3 text-start shadow-none nav-auth-button text-white fw-bold"
-                    href="Account/Login">
-                    <i class="bi bi-box-arrow-in-right nav-icon me-3"></i> Inloggen
-                </NavLink>
-            </div>
-        </NotAuthorized>
-    </AuthorizeView>
 </div>
 
 @code {
