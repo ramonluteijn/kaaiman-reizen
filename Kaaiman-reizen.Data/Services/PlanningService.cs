@@ -210,6 +210,28 @@ public class PlanningService : IPlanningService
         return result;
     }
 
+    public async Task<List<Journey>> GetAllJourneysOfPlanningByIdAsync(int id, CancellationToken cancellationToken)
+    {
+        List<Journey> result = new();
+
+        var assignments = await _db.PlanningAssignments
+         .Where(a => a.PlanningVersionId == id)
+         .Include(a => a.Journey)
+         .Include(a => a.TravelLeader)
+         .ToListAsync();
+
+        result = assignments
+            .GroupBy(a => a.JourneyId)
+            .Select(g =>
+            {
+                var journey = g.First().Journey;
+                journey.TravelLeaders = g.Select(a => a.TravelLeader).ToList();
+                return journey;
+            }).ToList();
+
+        return result;
+    }
+
     public bool PublishedPlanningExists() => _db.PlanningVersions.Any(planning => planning.IsPublished);
 
 }

@@ -13,13 +13,6 @@
         {
             <div class="text-muted">Gegevens laden...</div>
         }
-        else if (!string.IsNullOrWhiteSpace(_statusMessage))
-        {
-            <AlertModal IsOpen="true"
-                        Title="Kalender"
-                        Severity="Severity.Info"
-                        Message="@_statusMessage" />
-        }
         else
         {
             <CalendarView Journeys="@_journeys"/>
