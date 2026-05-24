@@ -17,7 +17,7 @@
                    @bind:event="oninput" />
         </div>
             
-        <Table TItem="PlanningVersion" Items="FilteredPlans" Path="plans">
+        <Table TItem="PlanningVersion" Items="FilteredPlans" Path="plans" DetailHrefSelector="@GetDetailHref">
             <HeaderContent>
                 <th @onclick='() => SortBy("Name")'>
                     Naam @(GetSortIcon("Name"))

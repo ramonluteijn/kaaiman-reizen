@@ -1,6 +1,7 @@
 using Kaaiman_reizen.Data.Entities;
 using Kaaiman_reizen.Data.Services;
 using Kaaiman_reizen.Helpers;
+using Kaaiman_reizen.Models.ViewModels;
 using Microsoft.AspNetCore.Components;
 
 namespace Kaaiman_reizen.Components.Pages.Archive;
@@ -79,9 +80,8 @@ public partial class Archive
         return _sortAscending ? "↑" : "↓";
     }
 
-
-    private static string GetJourneyHref(int journeyId)
+    private static string GetDetailHref(PlanningVersion planning)
     {
-        return $"/journeys/edit/{journeyId}";
+        return $"/archive/planning/{planning.Id}";
     }
 }
