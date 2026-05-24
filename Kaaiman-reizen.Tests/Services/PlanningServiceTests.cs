@@ -99,5 +99,36 @@ namespace Kaaiman_reizen.Tests.Services
             Assert.Contains("test1@example.com", dispatcher.SentEmails);
             Assert.Contains("test2@example.com", dispatcher.SentEmails);
         }
+
+        [Fact]
+        public async Task SavePlanningAsync_WhenPublished_ShouldBeVisibleInArchive()
+        {
+            // Arrange
+            var db = GetInMemoryDb();
+
+            // Setup some users
+            var user1 = new ApplicationUser { Id = "user1", Email = "test1@example.com" };
+            var user2 = new ApplicationUser { Id = "user2", Email = "test2@example.com" };
+
+            db.Users.AddRange(user1, user2);
+            await db.SaveChangesAsync();
+
+            var dispatcher = new DummyEmailDispatcher();
+            var serviceProvider = new DummyServiceProvider(dispatcher);
+
+            var planningService = new PlanningService(db, serviceProvider);
+
+            // Act
+            var assignments = new Dictionary<int, IReadOnlyCollection<int>>();
+            var result = await planningService.SavePlanningAsync(2026, "Definitieve planning", true, assignments);
+
+            // Give the fire-and-forget task a moment to execute (since it runs on a thread pool)
+            await Task.Delay(100);
+
+            // Assert
+            var archivedPlans = await planningService.GetPublishedPlansAsync();
+
+            Assert.Equal(1, archivedPlans.Count);
+        }
     }
 }
