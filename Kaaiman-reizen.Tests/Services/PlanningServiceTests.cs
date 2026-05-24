@@ -128,7 +128,7 @@ namespace Kaaiman_reizen.Tests.Services
             // Assert
             var archivedPlans = await planningService.GetPublishedPlansAsync();
 
-            Assert.Equal(1, archivedPlans.Count);
+            Assert.Single(archivedPlans);
         }
     }
 }
