@@ -8,6 +8,7 @@ public interface IPlanningService
     Task<PlanningVersion?> GetPlanningVersionByIdAsync(int id, CancellationToken cancellationToken = default);
     Task<PlanningVersion?> GetLatestDraftAsync(int year, CancellationToken cancellationToken = default);
     Task<PlanningVersion?> GetLatestPublishedAsync(int year, CancellationToken cancellationToken = default);
+    Task<List<PlanningVersion>> GetPublishedPlansAsync(CancellationToken cancellationToken = default);
     Task<PlanningVersion> SavePlanningAsync(
         int year,
         string name,

@@ -48,6 +48,17 @@ public class PlanningService : IPlanningService
         return GetLatestPlanningVersionAsync(year, isPublished: true, cancellationToken);
     }
 
+    public Task<List<PlanningVersion>> GetPublishedPlansAsync(CancellationToken cancellationToken = default)
+    {
+        return _db.PlanningVersions
+            .Where(version => version.IsPublished == true)
+            .Include(version => version.Assignments)
+                .ThenInclude(assignment => assignment.TravelLeader)
+            .Include(version => version.Assignments)
+                .ThenInclude(assignment => assignment.Journey)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<PlanningVersion> SavePlanningAsync(
         int year,
         string name,
