@@ -20,6 +20,7 @@ public partial class PlannerDraft : ComponentBase
     [Inject] private IPlanningService PlanningService { get; set; } = default!;
     [Inject] private IRuleService RuleService { get; set; } = default!;
     [Inject] private ISnackbar Snackbar { get; set; } = default!;
+    [Inject] private IUserTimezoneService UserTimezoneService { get; set; } = default!;
 
     private int _selectedYear = DateTime.UtcNow.Year;
     private PlannerDraftRequest? _request;
@@ -49,6 +50,19 @@ public partial class PlannerDraft : ComponentBase
     protected override async Task OnInitializedAsync()
     {
         await LoadDataForYearAsync(_selectedYear);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        await UserTimezoneService.EnsureLoadedAsync();
+    }
+
+    private async Task<DateTime> GetUserLocalNowAsync()
+    {
+        await UserTimezoneService.EnsureLoadedAsync();
+        return UserTimezoneService.ToUserLocal(DateTime.UtcNow);
     }
 
     private async Task LoadDataForYearAsync(int year)

@@ -42,8 +42,8 @@
                             {
                                 <tr>
                                     <td>@journey.Name</td>
-                                    <td>@journey.Start.ToString("dd-MM-yyyy")</td>
-                                    <td>@journey.End.ToString("dd-MM-yyyy")</td>
+                                    <td>@DateDisplay.FormatDate(journey.Start)</td>
+                                    <td>@DateDisplay.FormatDate(journey.End)</td>
                                     <td>@GetBookingStatusBadge((int)journey.BookingStatus)</td>
                                 </tr>
                             }
