@@ -8,7 +8,7 @@
 ├── Models                 # Entity models representing database tables
 ├── Resources              # Resource files for localization (if applicable)
 ├── Rules                  # Business rules and validation logic
-├── Services               # Service classes implementing business logic  
+├── Services               # Service classes implementing business logic
 ```
 
 ## Migrations

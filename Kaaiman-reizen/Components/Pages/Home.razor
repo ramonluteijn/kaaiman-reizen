@@ -9,7 +9,8 @@
 @if (_isPlanner)
 {
     <h1 class="h4">Planning dashboard</h1>
-} else
+}
+else
 {
     <h1 class="h4">Home</h1>
 }
@@ -22,28 +23,21 @@ else
 {
     <AuthorizeView>
         <NotAuthorized>
-            <AlertModal IsOpen="true"
-                        Title="Planningsoverzicht"
-                        Severity="Severity.Info"
+            <AlertModal IsOpen="true" Title="Planningsoverzicht" Severity="Severity.Info"
                         Message="Log in om jouw planningsoverzicht te bekijken." />
         </NotAuthorized>
         <Authorized>
             @if (_notifications.Any())
             {
-                <AlertModal IsOpen="true"
-                            Title="Notificaties"
-                            Severity="Severity.Info"
-                            Dismissible="false"
+                <AlertModal IsOpen="true" Title="Notificaties" Severity="Severity.Info" Dismissible="false"
                             CloseOnBackdropClick="false">
                     <MudStack Spacing="1">
                         @foreach (var notification in _notifications)
                         {
                             <MudPaper Class="pa-3 d-flex align-center justify-space-between gap-3" Outlined="true">
                                 <MudText Typo="Typo.body2">@notification.Message</MudText>
-                                <MudIconButton Icon="@Icons.Material.Filled.Close"
-                                               Size="Size.Small"
-                                               OnClick="@(() => MarkNotificationAsRead(notification))"
-                                               aria-label="Melding sluiten" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small"
+                                               OnClick="@(() => MarkNotificationAsRead(notification))" aria-label="Melding sluiten" />
                             </MudPaper>
                         }
                     </MudStack>
@@ -60,9 +54,7 @@ else
                                 <MudCard Elevation="2">
                                     <MudCardContent>
                                         <MudText Typo="Typo.h6" Class="mb-3">Definitieve planning</MudText>
-                                        <MudButton Variant="Variant.Filled"
-                                                   Color="Color.Primary"
-                                                   OnClick="HandlePrintPdf"
+                                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="HandlePrintPdf"
                                                    EndIcon="@Icons.Material.Filled.PictureAsPdf">
                                             Download als PDF
                                         </MudButton>
@@ -70,6 +62,7 @@ else
                                 </MudCard>
                             </MudItem>
                         }
+
                         <MudItem xs="12">
                             <MudCard Elevation="2">
                                 <MudCardContent>
@@ -101,7 +94,7 @@ else
                                                             <div class="d-flex flex-column">
                                                                 <MudText Typo="Typo.body1"><b>@draft.Name</b></MudText>
                                                                 <MudText Typo="Typo.caption" Class="mud-text-secondary">
-                                                                    Aangemaakt: @draft.CreatedAt.ToLocalTime().ToString("dd-MM-yyyy HH:mm")
+                                                                    Aangemaakt: @FormatCreatedAt(draft.CreatedAt)
                                                                 </MudText>
                                                             </div>
                                                             <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Text">
@@ -142,7 +135,7 @@ else
                                                         <div class="d-flex flex-column">
                                                             <MudText Typo="Typo.body1"><b>@journey.Name</b></MudText>
                                                             <MudText Typo="Typo.body2" Class="mud-text-secondary">
-                                                                @journey.Start.ToString("dd MMM") t/m @journey.End.ToString("dd MMM yyyy")
+                                                                @DateDisplay.FormatDateRange(journey.Start, journey.End)
                                                             </MudText>
                                                         </div>
                                                     </MudListItem>
@@ -251,7 +244,7 @@ else
                                             {
                                                 <tr>
                                                     <td>@journey.Name</td>
-                                                    <td>@journey.Start - @journey.End</td>
+                                                    <td>@DateDisplay.FormatDate(journey.Start) - @DateDisplay.FormatDate(journey.End)</td>
                                                     <td>@FormatTravelLeaders(journey)</td>
                                                 </tr>
                                             }
