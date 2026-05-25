@@ -53,7 +53,7 @@ public class JourneyNotificationService
                     var emailBody = $@"
                         <html>
                             <body>
-                                <p>Beste,</p>
+                                <p>Beste, {travelLeader.Name}</p>
                                 <p>Dit is een herinnering dat uw reis naar <strong>{journey.Name}</strong> over {days} dag(en) start op <strong>{journey.Start:dd-MM-yyyy}</strong>.</p>
                                 <p>Tot ziens!</p>
                             </body>
