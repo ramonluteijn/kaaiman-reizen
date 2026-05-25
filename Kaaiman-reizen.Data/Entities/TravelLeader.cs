@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using System.Collections.Generic;
-
+using Kaaiman_reizen.Data.Validators;
 namespace Kaaiman_reizen.Data.Entities;
 
 public class TravelLeader : IValidatableObject
@@ -15,7 +14,7 @@ public class TravelLeader : IValidatableObject
     public string Email { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Telefoon is verplicht.")]
-    [Phone(ErrorMessage = "Vul een geldig telefoonnummer in.")]
+    [ValidPhoneNumber]
     public string PhoneNumber { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Aantal reizen is verplicht.")]
