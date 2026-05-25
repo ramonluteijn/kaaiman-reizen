@@ -67,6 +67,10 @@ public class SmtpEmailSender : IEmailSender, IEmailSender<ApplicationUser>
 
     public Task SendPasswordResetLinkAsync(ApplicationUser user, string email, string resetLink)
     {
-        throw new NotImplementedException();
+        var displayName = string.IsNullOrWhiteSpace(user.UserName) ? email : user.UserName;
+        return SendEmailAsync(
+            email,
+            "Reset your password",
+            $"Hello {displayName},<br><br>Please reset your password by <a href='{resetLink}'>clicking here</a>.");
     }
 }
