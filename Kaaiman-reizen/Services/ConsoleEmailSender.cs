@@ -28,7 +28,13 @@ namespace Kaaiman_reizen.Services
             => SendEmailAsync(email, "Confirm your email", $"Please confirm your account by <a href='{confirmationLink}'>clicking here</a>.");
 
         public Task SendPasswordResetLinkAsync(Data.Identity.ApplicationUser user, string email, string resetLink)
-            => SendEmailAsync(email, "Reset your password", $"Please reset your password by <a href='{resetLink}'>clicking here</a>.");
+        {
+            var displayName = string.IsNullOrWhiteSpace(user.UserName) ? email : user.UserName;
+            return SendEmailAsync(
+                email,
+                "Reset your password",
+                $"Hello {displayName},<br><br>Please reset your password by <a href='{resetLink}'>clicking here</a>.");
+        }
 
         public Task SendPasswordResetCodeAsync(Data.Identity.ApplicationUser user, string email, string resetCode)
             => SendEmailAsync(email, "Reset your password", $"Please reset your password using the following code: {resetCode}");
