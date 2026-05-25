@@ -57,6 +57,7 @@ builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 // SERVICES
 // ======================
 builder.Services.AddScoped<IPlannerDraftService, PlannerDraftService>();
+builder.Services.AddScoped<IUserTimezoneService, UserTimezoneService>();
 builder.Services.AddScoped<JourneyNotificationService>();
 builder.Services.AddHostedService<JourneyReminderHostedService>();
 

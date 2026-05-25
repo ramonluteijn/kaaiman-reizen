@@ -3,6 +3,7 @@
 @rendermode InteractiveServer
 @using Kaaiman_reizen.Data.Entities
 @using Kaaiman_reizen.Data.Services
+@using Kaaiman_reizen.Helpers
 @using MudBlazor
 
 <PageTitle>Mijn Voorkeuren</PageTitle>
@@ -74,7 +75,7 @@
                                         .Where((_, idx) => idx != r)
                                         .Any(id => id == j.Id);
                                     <option value="@j.Id" disabled="@alreadyPicked">
-                                        @j.Name (@j.Start.ToString("dd-MM-yyyy") t/m @j.End.ToString("dd-MM-yyyy"))
+                                        @j.Name (@DateDisplay.FormatDateRange(j.Start, j.End))
                                     </option>
                                 }
                             </InputSelect>
@@ -99,7 +100,7 @@
                                        checked="@(_availableJourneyIds.Contains(jid) || inTop3)"
                                        @onchange="@(e => ToggleAvailable(jid, (bool)e.Value!))" />
                                 <label class="form-check-label @(inTop3 ? "text-muted" : "")" for="avail_@jid">
-                                    @j.Name (@j.Start.ToString("dd-MM-yyyy") t/m @j.End.ToString("dd-MM-yyyy"))
+                                    @j.Name (@DateDisplay.FormatDateRange(j.Start, j.End))
                                     @if (inTop3) { <span class="badge bg-primary ms-1">Top 3</span> }
                                 </label>
                             </div>
