@@ -19,4 +19,5 @@ public interface IPlanningService
     Task<List<Journey>> GetAllJourneysOfPlanningByIdAsync(int id, CancellationToken cancellationToken = default);
 
     bool PublishedPlanningExists();
+    Task<int?> GetLatestPublishedPlanningVersionIdAsync(CancellationToken cancellationToken = default);
 }

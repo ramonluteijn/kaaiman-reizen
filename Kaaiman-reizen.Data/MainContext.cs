@@ -14,6 +14,7 @@ public class MainContext : IdentityDbContext<ApplicationUser>
 
     public DbSet<TravelLeader> TravelLeader { get; set; }
     public DbSet<PreferredDestination> PreferredDestinations { get; set; }
+    public DbSet<TravelLeaderAvailabilityHistory> TravelLeaderAvailabilityHistories { get; set; }
     public DbSet<AvailabilityPeriod> AvailabilityPeriods { get; set; }
     public DbSet<Journey> Journey { get; set; }
     public DbSet<JourneyTravelLeader> JourneyTravelLeaders { get; set; }
@@ -52,6 +53,24 @@ public class MainContext : IdentityDbContext<ApplicationUser>
             .WithMany(t => t.AvailabilityPeriods)
             .HasForeignKey(a => a.TravelLeaderId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<TravelLeaderAvailabilityHistory>()
+            .HasOne(h => h.TravelLeader)
+            .WithMany()
+            .HasForeignKey(h => h.TravelLeaderId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<TravelLeaderAvailabilityHistory>()
+            .HasOne(h => h.PlanningVersion)
+            .WithMany()
+            .HasForeignKey(h => h.PlanningVersionId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.Entity<TravelLeaderAvailabilityHistory>()
+            .HasOne(h => h.Journey)
+            .WithMany()
+            .HasForeignKey(h => h.JourneyId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         builder.Entity<Journey>()
            .HasMany(a => a.TravelLeaders)
