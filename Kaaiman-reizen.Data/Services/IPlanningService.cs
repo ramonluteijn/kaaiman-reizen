@@ -20,4 +20,5 @@ public interface IPlanningService
 
     bool PublishedPlanningExists();
     Task<int?> GetLatestPublishedPlanningVersionIdAsync(CancellationToken cancellationToken = default);
+    Task<bool> IsPublishedPlanningCompleteAsync(int year, CancellationToken cancellationToken = default);
 }

@@ -63,7 +63,7 @@
             <div class="mb-3">
                 <label class="form-label">Boekingsstatus</label>
                 <InputSelect class="form-control" @bind-Value="_model.BookingStatus">
-                    <option value="@BookingStatus.Bezig">Bezig</option>
+                    <option value="@BookingStatus.Huidig">Huidig</option>
                     <option value="@BookingStatus.Geweest">Geweest</option>
                     <option value="@BookingStatus.Geanuleerd">Geannuleerd</option>
                 </InputSelect>
@@ -90,7 +90,7 @@
 </div>
 
 @code {
-    private Journey _model { get; set; } = new();
+    private Journey _model { get; set; } = new() { Start = DateOnly.FromDateTime(DateTime.Today), End = DateOnly.FromDateTime(DateTime.Today) };
     private string[] _preferred = new string[3];
     private List<TravelLeader> _leaders = new();
     private List<int> _selectedLeaderIds = new();
@@ -107,7 +107,7 @@
     {
         if (!_selectedTemplateJourneyId.HasValue)
         {
-            _model = new Journey();
+            _model = new Journey { Start = DateOnly.FromDateTime(DateTime.Today), End = DateOnly.FromDateTime(DateTime.Today) };
             _selectedLeaderIds = new List<int>();
             return;
         }
@@ -183,6 +183,6 @@
         if (_model.Start < DateOnly.FromDateTime(DateTime.Today) && _model.End < DateOnly.FromDateTime(DateTime.Today))
             _model.BookingStatus = BookingStatus.Geweest;
         else
-            _model.BookingStatus = BookingStatus.Bezig;
+            _model.BookingStatus = BookingStatus.Huidig;
     }
 }

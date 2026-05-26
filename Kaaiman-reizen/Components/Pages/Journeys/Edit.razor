@@ -59,7 +59,7 @@
                 <div class="mb-3">
                     <label class="form-label">Boekingsstatus</label>
                     <InputSelect class="form-control" @bind-Value="_model.BookingStatus">
-                        <option value="@BookingStatus.Bezig">Bezig</option>
+                        <option value="@BookingStatus.Huidig">Huidig</option>
                         <option value="@BookingStatus.Geweest">Geweest</option>
                         <option value="@BookingStatus.Geanuleerd">Geannuleerd</option>
                     </InputSelect>
@@ -171,6 +171,6 @@
         if (_model.Start < DateOnly.FromDateTime(DateTime.Today) && _model.End < DateOnly.FromDateTime(DateTime.Today))
             _model.BookingStatus = BookingStatus.Geweest;
         else
-            _model.BookingStatus = BookingStatus.Bezig;
+            _model.BookingStatus = BookingStatus.Huidig;
     }
 }

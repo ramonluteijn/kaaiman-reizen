@@ -56,12 +56,12 @@
                 </td>
                 <td>
                     <span class="badge @(context.BookingStatus switch
-                          {
-                              BookingStatus.Bezig => "bg-success",
-                              BookingStatus.Geweest => "bg-secondary",
-                              BookingStatus.Geanuleerd => "bg-danger",
-                              _ => "bg-secondary"
-                          })">@context.BookingStatus</span>
+                                       {
+                                           BookingStatus.Huidig      => "bg-success",
+                                           BookingStatus.Geweest    => "bg-secondary",
+                                           BookingStatus.Geanuleerd => "bg-danger",
+                                           _                        => "bg-secondary"
+                                       })">@context.BookingStatus</span>
                 </td>
                 <td>
                     <span class="badge @(context.Busses > 0 ? "bg-warning" : "bg-secondary")">

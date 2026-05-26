@@ -58,7 +58,7 @@ public partial class TravelHistory : ComponentBase
     {
         var (badgeClass, label) = status switch
         {
-            0 => ("bg-success", "Bezig"),
+            0 => ("bg-success", "Huidig"),
             1 => ("bg-warning", "Geweest"),
             2 => ("bg-danger", "Geannuleerd"),
             _ => ("bg-secondary", "Onbekend")
