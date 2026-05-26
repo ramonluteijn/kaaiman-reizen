@@ -20,18 +20,6 @@ else
 else
 {
     @if (_notifications.Any())
-    {
-                <AlertModal IsOpen="true"
-                            Title="Notificaties"
-                            Severity="Severity.Info"
-                            Dismissible="false"
-    <AuthorizeView>
-        <NotAuthorized>
-            <AlertModal IsOpen="true" Title="Planningsoverzicht" Severity="Severity.Info"
-                        Message="Log in om jouw planningsoverzicht te bekijken." />
-        </NotAuthorized>
-        <Authorized>
-            @if (_notifications.Any())
             {
                 <AlertModal IsOpen="true" Title="Notificaties" Severity="Severity.Info" Dismissible="false"
                             CloseOnBackdropClick="false">

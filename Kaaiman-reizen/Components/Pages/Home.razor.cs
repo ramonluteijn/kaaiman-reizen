@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.JSInterop;
 using QuestPDF.Fluent;
-using System.Diagnostics;
 using static Kaaiman_reizen.Data.Services.TravelLeaderService;
 
 namespace Kaaiman_reizen.Components.Pages;
@@ -20,7 +19,7 @@ public partial class Home : ComponentBase
     [Inject] private Microsoft.AspNetCore.Identity.UserManager<Kaaiman_reizen.Data.Identity.ApplicationUser> UserManager { get; set; } = default!;
     [Inject] private INotificationService NotificationService { get; set; } = default!;
     [Inject] private NavigationManager Navigation { get; set; } = default!;
-    [Inject] private IJSRuntime JS { get; set; }
+    [Inject] private IJSRuntime JS { get; set; } = default!;
 
     private bool _loading = true;
     private bool _isPlanner;
@@ -30,7 +29,7 @@ public partial class Home : ComponentBase
     private int _selectedYear = DateTime.UtcNow.Year;
     private bool _publishedPlanning;
     private bool _publishedPlanningIsComplete;
-    private List<Journey> _plannedJourneysWithTravelLeaders;
+    private List<Journey> _plannedJourneysWithTravelLeaders = [];
     private int _userTimezoneOffsetMinutes;
     private bool _userTimezoneOffsetLoaded;
 
@@ -146,17 +145,11 @@ public partial class Home : ComponentBase
 
     private async Task HandlePrintPdf()
     {
-        Debug.WriteLine("test");
-
         try
         {
             var userLocalPrintDate = DateDisplay.FormatDate(DateDisplay.ToUserLocal(DateTime.UtcNow, _userTimezoneOffsetMinutes));
-            var journeys = await PlanningService.GetAllJourneysWithTravelLeadersFromLatestPublishedPlanning();
-            var document = new PlanningDocument(journeys, userLocalPrintDate);
+            var document = new PlanningDocument(_plannedJourneysWithTravelLeaders, userLocalPrintDate);
             byte[] pdfBytes = document.GeneratePdf();
-
-            Console.WriteLine($"PDF gegenereerd: {pdfBytes.Length} bytes"); // Zie je dit in je output?
-
             using var stream = new MemoryStream(pdfBytes);
             using var streamRef = new DotNetStreamReference(stream);
             await JS.InvokeVoidAsync("downloadFileFromStream", "Planning.pdf", streamRef);
