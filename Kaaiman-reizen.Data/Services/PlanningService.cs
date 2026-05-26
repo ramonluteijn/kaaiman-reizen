@@ -48,6 +48,17 @@ public class PlanningService : IPlanningService
         return GetLatestPlanningVersionAsync(year, isPublished: true, cancellationToken);
     }
 
+    public Task<List<PlanningVersion>> GetPublishedPlansAsync(CancellationToken cancellationToken = default)
+    {
+        return _db.PlanningVersions
+            .Where(version => version.IsPublished == true)
+            .Include(version => version.Assignments)
+                .ThenInclude(assignment => assignment.TravelLeader)
+            .Include(version => version.Assignments)
+                .ThenInclude(assignment => assignment.Journey)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<PlanningVersion> SavePlanningAsync(
         int year,
         string name,
@@ -199,6 +210,38 @@ public class PlanningService : IPlanningService
         return result;
     }
 
+    public async Task<List<Journey>> GetAllJourneysOfPlanningByIdAsync(int id, CancellationToken cancellationToken)
+    {
+        List<Journey> result = new();
+
+        var assignments = await _db.PlanningAssignments
+         .Where(a => a.PlanningVersionId == id)
+         .Include(a => a.Journey)
+         .Include(a => a.TravelLeader)
+         .ToListAsync();
+
+        result = assignments
+            .GroupBy(a => a.JourneyId)
+            .Select(g =>
+            {
+                var journey = g.First().Journey;
+                journey.TravelLeaders = g.Select(a => a.TravelLeader).ToList();
+                return journey;
+            }).ToList();
+
+        return result;
+    }
+
     public bool PublishedPlanningExists() => _db.PlanningVersions.Any(planning => planning.IsPublished);
+
+    public Task<int?> GetLatestPublishedPlanningVersionIdAsync(CancellationToken cancellationToken = default)
+    {
+        return _db.PlanningVersions
+            .Where(planning => planning.IsPublished)
+            .OrderByDescending(planning => planning.CreatedAt)
+            .ThenByDescending(planning => planning.Id)
+            .Select(planning => (int?)planning.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
 
 }
