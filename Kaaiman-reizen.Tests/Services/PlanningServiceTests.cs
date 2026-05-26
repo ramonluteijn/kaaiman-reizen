@@ -130,5 +130,22 @@ namespace Kaaiman_reizen.Tests.Services
 
             Assert.Single(archivedPlans);
         }
+        
+        [Fact]
+        public async Task SavePlanningAsync_ShouldStoreCreatedAtAsUtc_InDatabase()
+        {
+            // Arrange
+            var db = GetInMemoryDb();
+            var dispatcher = new DummyEmailDispatcher();
+            var serviceProvider = new DummyServiceProvider(dispatcher);
+            var planningService = new PlanningService(db, serviceProvider);
+
+            // Act
+            await planningService.SavePlanningAsync(2026, "Draft planning", false, new Dictionary<int, IReadOnlyCollection<int>>());
+
+            // Assert
+            var planningVersion = await db.PlanningVersions.SingleAsync();
+            Assert.Equal(DateTimeKind.Utc, planningVersion.CreatedAt.Kind);
+        }
     }
 }

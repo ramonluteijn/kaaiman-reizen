@@ -6,21 +6,21 @@
         <div class="cal-nav-row">
             <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft" OnClick="PrevMonth" />
             <div class="cal-nav-center">
-                <MudText Typo="Typo.h5">@_currentDate.ToString("MMMM yyyy")</MudText>
+                <MudText Typo="Typo.h5">@DateDisplay.FormatMonthYear(DateOnly.FromDateTime(_currentDate))</MudText>
                 @if (Journeys.Any())
                 {
                     <div class="cal-pills-bar">
                         @foreach (var group in Journeys
-                            .OrderBy(j => j.Start)
-                            .GroupBy(j => new { j.Start.Year, j.Start.Month }))
+                                                    .OrderBy(j => j.Start)
+                                                    .GroupBy(j => new { j.Start.Year, j.Start.Month }))
                         {
                             var monthDate = new DateOnly(group.Key.Year, group.Key.Month, 1);
-                            var isActive  = _currentDate.Year == group.Key.Year && _currentDate.Month == group.Key.Month;
+                            var isActive = _currentDate.Year == group.Key.Year && _currentDate.Month == group.Key.Month;
 
                             <div class="cal-pill-group">
                                 <button class="cal-month-pill @(isActive ? "cal-pill-active" : "")"
                                         @onclick="() => GoToMonth(monthDate)">
-                                    @monthDate.ToString("MMM yyyy")
+                                    @DateDisplay.FormatMonthYear(monthDate)
                                 </button>
                                 <div class="cal-pill-chips">
                                     @foreach (var j in group)
@@ -55,9 +55,9 @@
             <!-- 6 week rows -->
             @for (int w = 0; w < 6; w++)
             {
-                var weekDays   = _days.Skip(w * 7).Take(7).ToList();
-                var weekStart  = weekDays[0].Date;
-                var weekEnd    = weekDays[6].Date;
+                var weekDays = _days.Skip(w * 7).Take(7).ToList();
+                var weekStart = weekDays[0].Date;
+                var weekEnd = weekDays[6].Date;
 
                 // Journeys that are visible at all in this week
                 var weekJourneys = Journeys
@@ -69,7 +69,7 @@
                     @foreach (var day in weekDays)
                     {
                         var isCurrentMonth = day.Date.Month == _currentDate.Month;
-                        var isToday        = day.Date == DateOnly.FromDateTime(DateTime.Today);
+                        var isToday = day.Date == DateOnly.FromDateTime(DateTime.Today);
                         <div class="cal-day-cell @(isCurrentMonth ? "" : "other-month") @(isToday ? "today-highlight" : "")">
                             <div class="day-number">@day.Date.Day</div>
                         </div>
@@ -81,18 +81,16 @@
                          border-radius is removed on the clipped side to signal continuation. -->
                     @foreach (var journey in weekJourneys)
                     {
-                        var clippedStart   = journey.Start < weekStart ? weekStart : journey.Start;
-                        var clippedEnd     = journey.End   > weekEnd   ? weekEnd   : journey.End;
-                        var startCol       = GetDayColumn(clippedStart);
-                        var spanCols       = clippedEnd.DayNumber - clippedStart.DayNumber + 1;
-                        var continuesLeft  = journey.Start < weekStart;
-                        var continuesRight = journey.End   > weekEnd;
+                        var clippedStart = journey.Start < weekStart ? weekStart : journey.Start;
+                        var clippedEnd = journey.End > weekEnd ? weekEnd : journey.End;
+                        var startCol = GetDayColumn(clippedStart);
+                        var spanCols = clippedEnd.DayNumber - clippedStart.DayNumber + 1;
+                        var continuesLeft = journey.Start < weekStart;
+                        var continuesRight = journey.End > weekEnd;
 
-                           <div class="cal-journey-span @GetJourneyGridClass(startCol, spanCols) @GetJourneyColorClass(journey.Id) @(continuesLeft ? "cal-clip-left" : "") @(continuesRight ? "cal-clip-right" : "")"
-                             @onclick="() => OnJourneyClick.InvokeAsync(journey)"
-                             ondragover="event.preventDefault();"
-                             @ondrop="() => HandleDropOnJourney(journey)"
-                             @ondrop:stopPropagation="true">
+                        <div class="cal-journey-span @GetJourneyGridClass(startCol, spanCols) @GetJourneyColorClass(journey.Id) @(continuesLeft ? "cal-clip-left" : "") @(continuesRight ? "cal-clip-right" : "")"
+                             @onclick="() => OnJourneyClick.InvokeAsync(journey)" ondragover="event.preventDefault();"
+                             @ondrop="() => HandleDropOnJourney(journey)" @ondrop:stopPropagation="true">
 
                             <span class="journey-span-country">@journey.Name</span>
 
