@@ -201,4 +201,14 @@ public class PlanningService : IPlanningService
 
     public bool PublishedPlanningExists() => _db.PlanningVersions.Any(planning => planning.IsPublished);
 
+    public Task<int?> GetLatestPublishedPlanningVersionIdAsync(CancellationToken cancellationToken = default)
+    {
+        return _db.PlanningVersions
+            .Where(planning => planning.IsPublished)
+            .OrderByDescending(planning => planning.CreatedAt)
+            .ThenByDescending(planning => planning.Id)
+            .Select(planning => (int?)planning.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
 }
