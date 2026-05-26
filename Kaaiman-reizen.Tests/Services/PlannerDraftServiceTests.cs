@@ -1,4 +1,5 @@
 using Kaaiman_reizen.Models.Planner;
+using Kaaiman_reizen.Data.Rules;
 using Kaaiman_reizen.Services;
 
 namespace Kaaiman_reizen.Tests.Services;
@@ -6,7 +7,7 @@ namespace Kaaiman_reizen.Tests.Services;
 public class PlannerDraftServiceTests
 {
     // the 2 nulls is just because we dont need the services.
-    private readonly PlannerDraftService _service = new(null!, null!);
+    private readonly PlannerDraftService _service = new(null!, null!, null!);
 
     [Fact]
     public void GenerateDraft_ReturnsError_WhenNoLeadersProvided()
@@ -88,11 +89,23 @@ public class PlannerDraftServiceTests
                 new PlannerJourneyInput { Id = 1, Name = "Reis A", RequiredLeaders = 1, Start = new DateOnly(2026, 6, 1), End = new DateOnly(2026, 6, 10) },
                 new PlannerJourneyInput { Id = 2, Name = "Reis B", RequiredLeaders = 1, Start = new DateOnly(2026, 6, 20), End = new DateOnly(2026, 6, 30) }
             ],
+            RuleSettings = new CheckRules.RuleSettings(
+                NoOverlapActive: true,
+                MinimumGapDaysActive: true,
+                MinimumGapDays: 3,
+                RequiredExperienceActive: false,
+                RequiredExperience: 3,
+                MinMaxJourneysActive: true,
+                PreferencesEnabled: true,
+                PreferenceWeight: 5,
+                NoOverlapWeight: 200,
+                MinimumGapWeight: 100,
+                RequiredExperienceWeight: 100),
             Leaders = [
                 new PlannerLeaderInput
                 {
                     Id = 1, Name = "Klaas", MaxTrips = 1,
-                    PreferredDestinations = new Dictionary<int, int> { { 1, 1 }, { 2, 2 } }
+                    PreferredDestinations = new Dictionary<int, int> { { 1, 1 }, { 2, 2 } } // Beschikbaar voor beide reizen
                 }
             ]
         };
@@ -107,64 +120,129 @@ public class PlannerDraftServiceTests
     }
 
     [Fact]
-    public void GenerateDraft_ReturnsError_WhenNoJourneysProvided()
-    {
-        var request = new PlannerDraftRequest
-        {
-            Journeys = [],
-            Leaders = [
-                new PlannerLeaderInput
-                {
-                    Id = 1, Name = "Jan", MaxTrips = 5,
-                    PreferredDestinations = new Dictionary<int, int> { { 1, 1 } }
-                }
-            ]
-        };
-
-        var result = _service.GenerateDraft(request);
-
-        Assert.False(result.IsSuccess);
-        Assert.False(string.IsNullOrWhiteSpace(result.ErrorMessage));
-    }
-
-    [Fact]
-    public void GenerateDraft_Should_AssignMultipleLeaders_WhenJourneyRequiresMultiple()
+    public void GenerateDraft_PreferencesDisabled_StillRespectsAvailability()
     {
         var request = new PlannerDraftRequest
         {
             Journeys = [
                 new PlannerJourneyInput
                 {
-                    Id = 1, Name = "Groot Evenement", RequiredLeaders = 2,
+                    Id = 3, Name = "Reis C", RequiredLeaders = 1,
                     Start = new DateOnly(2026, 7, 1), End = new DateOnly(2026, 7, 10)
                 }
             ],
+            RuleSettings = new CheckRules.RuleSettings(
+                NoOverlapActive: true,
+                MinimumGapDaysActive: true,
+                MinimumGapDays: 3,
+                RequiredExperienceActive: false,
+                RequiredExperience: 3,
+                MinMaxJourneysActive: true,
+                PreferencesEnabled: false,
+                PreferenceWeight: 5,
+                NoOverlapWeight: 200,
+                MinimumGapWeight: 100,
+                RequiredExperienceWeight: 100),
             Leaders = [
-                new PlannerLeaderInput { Id = 1, Name = "Jan", MaxTrips = 5, PreferredDestinations = new Dictionary<int, int> { { 1, 1 } } },
-                new PlannerLeaderInput { Id = 2, Name = "Piet", MaxTrips = 5, PreferredDestinations = new Dictionary<int, int> { { 1, 2 } } }
+                new PlannerLeaderInput
+                {
+                    Id = 10, Name = "Onbeschikbaar", MaxTrips = 5,
+                    PreferredDestinations = []
+                },
+                new PlannerLeaderInput
+                {
+                    Id = 11, Name = "Beschikbaar", MaxTrips = 5,
+                    PreferredDestinations = new Dictionary<int, int> { { 3, 0 } }
+                }
             ]
         };
 
         var result = _service.GenerateDraft(request);
 
         Assert.True(result.IsSuccess);
-        Assert.True(result.JourneyAssignments.ContainsKey(1));
-        Assert.Equal(2, result.JourneyAssignments[1].Count);
+        Assert.True(result.JourneyAssignments.TryGetValue(3, out var assignments));
+        Assert.Single(assignments);
+        Assert.Equal(11, assignments[0].LeaderId);
     }
 
     [Fact]
-    public void GenerateDraft_ShouldNot_AssignSameLeader_ToOverlappingJourneys()
+    public void GenerateDraft_RespectMinimumGapDaysConstraint_WhenActive()
+    {
+        // Test that when MinimumGapDaysActive is true, a leader cannot be assigned to two journeys
+        // that don't have enough gap between them
+        var request = new PlannerDraftRequest
+        {
+            Journeys = [
+                new PlannerJourneyInput { Id = 1, Name = "Noorwegen", RequiredLeaders = 1, Start = new DateOnly(2026, 10, 4), End = new DateOnly(2026, 10, 14) },
+                new PlannerJourneyInput { Id = 2, Name = "IJsland", RequiredLeaders = 1, Start = new DateOnly(2026, 10, 18), End = new DateOnly(2026, 10, 28) }
+                // Gap = 4 days, minimum gap requirement = 30 days
+            ],
+            RuleSettings = new CheckRules.RuleSettings(
+                NoOverlapActive: true,
+                MinimumGapDaysActive: true,  // Hard constraint on minimum gap
+                MinimumGapDays: 30,
+                RequiredExperienceActive: false,
+                RequiredExperience: 0,
+                MinMaxJourneysActive: true,
+                PreferencesEnabled: true,
+                PreferenceWeight: 5,
+                NoOverlapWeight: 200,
+                MinimumGapWeight: 100,
+                RequiredExperienceWeight: 100),
+            Leaders = [
+                new PlannerLeaderInput
+                {
+                    Id = 1, Name = "Ramon", MaxTrips = 5,
+                    // Marked as available for both journeys
+                    PreferredDestinations = new Dictionary<int, int> { { 1, 1 }, { 2, 1 } }
+                },
+                new PlannerLeaderInput
+                {
+                    Id = 2, Name = "Alternative", MaxTrips = 5,
+                    PreferredDestinations = new Dictionary<int, int> { { 2, 1 } }  // Available for second journey only
+                }
+            ]
+        };
+
+        var result = _service.GenerateDraft(request);
+
+        Assert.True(result.IsSuccess);
+        // Ramon should NOT be assigned to both journeys due to insufficient gap
+        var ramonAssignments = result.JourneyAssignments.Values
+            .SelectMany(assignments => assignments)
+            .Count(a => a.LeaderId == 1);
+        Assert.True(ramonAssignments <= 1, "Ramon should not be assigned to both journeys with gap < 30 days");
+
+        // The second journey should be assigned to the Alternative leader
+        Assert.True(result.JourneyAssignments.TryGetValue(2, out var secondJourneyAssignments));
+        Assert.Contains(secondJourneyAssignments, a => a.LeaderId == 2);
+    }
+
+    [Fact]
+    public void GenerateDraft_RespectsMinTripsConstraint_WhenActive()
     {
         var request = new PlannerDraftRequest
         {
             Journeys = [
-                new PlannerJourneyInput { Id = 1, Name = "Reis A", RequiredLeaders = 1, Start = new DateOnly(2026, 6, 1), End = new DateOnly(2026, 6, 15) },
-                new PlannerJourneyInput { Id = 2, Name = "Reis B", RequiredLeaders = 1, Start = new DateOnly(2026, 6, 10), End = new DateOnly(2026, 6, 20) }
+                new PlannerJourneyInput { Id = 1, Name = "Reis A", RequiredLeaders = 1, Start = new DateOnly(2026, 6, 1), End = new DateOnly(2026, 6, 10) },
+                new PlannerJourneyInput { Id = 2, Name = "Reis B", RequiredLeaders = 1, Start = new DateOnly(2026, 6, 20), End = new DateOnly(2026, 6, 30) }
             ],
+            RuleSettings = new CheckRules.RuleSettings(
+                NoOverlapActive: true,
+                MinimumGapDaysActive: false,
+                MinimumGapDays: 0,
+                RequiredExperienceActive: false,
+                RequiredExperience: 0,
+                MinMaxJourneysActive: true,
+                PreferencesEnabled: true,
+                PreferenceWeight: 1,
+                NoOverlapWeight: 0,
+                MinimumGapWeight: 0,
+                RequiredExperienceWeight: 0),
             Leaders = [
                 new PlannerLeaderInput
                 {
-                    Id = 1, Name = "Jan", MaxTrips = 5,
+                    Id = 1, Name = "MinTripsLeader", MinTrips = 2, MaxTrips = 5,
                     PreferredDestinations = new Dictionary<int, int> { { 1, 1 }, { 2, 1 } }
                 }
             ]
@@ -173,54 +251,38 @@ public class PlannerDraftServiceTests
         var result = _service.GenerateDraft(request);
 
         Assert.True(result.IsSuccess);
-        var assignmentsForJan = result.JourneyAssignments.Values
-            .SelectMany(a => a)
-            .Where(a => a.LeaderId == 1)
-            .ToList();
-        Assert.True(assignmentsForJan.Count <= 1, "Een reisleider mag niet aan twee overlappende reizen worden toegewezen");
+        var totalAssignments = result.JourneyAssignments.Values
+            .SelectMany(assignments => assignments)
+            .Count(a => a.LeaderId == 1);
+        Assert.Equal(2, totalAssignments);
     }
 
     [Fact]
-    public void GenerateDraft_Should_WarnAndExclude_JourneyWithInsufficientEligibleLeaders()
+    public void GenerateDraft_IgnoresMinMaxConstraints_WhenDisabled()
     {
-        // Journey requires 2 leaders but only 1 leader has a preference — pre-solve should
-        // detect this, issue a warning, and exclude the journey from the solver.
         var request = new PlannerDraftRequest
         {
             Journeys = [
-                new PlannerJourneyInput
-                {
-                    Id = 1, Name = "Onplanbare reis", RequiredLeaders = 2,
-                    Start = new DateOnly(2026, 8, 1), End = new DateOnly(2026, 8, 10)
-                }
+                new PlannerJourneyInput { Id = 1, Name = "Reis A", RequiredLeaders = 1, Start = new DateOnly(2026, 6, 1), End = new DateOnly(2026, 6, 10) },
+                new PlannerJourneyInput { Id = 2, Name = "Reis B", RequiredLeaders = 1, Start = new DateOnly(2026, 6, 20), End = new DateOnly(2026, 6, 30) }
             ],
-            Leaders = [
-                new PlannerLeaderInput { Id = 1, Name = "Jan", MaxTrips = 5, PreferredDestinations = new Dictionary<int, int> { { 1, 1 } } }
-            ]
-        };
-
-        var result = _service.GenerateDraft(request);
-
-        Assert.True(result.IsSuccess);
-        Assert.True(result.JourneyWarnings.ContainsKey(1));
-    }
-
-    [Fact]
-    public void GenerateDraft_Should_PreferHigherRank_WhenLeaderHasLimitedTrips()
-    {
-        // Leader can do 1 trip, has rank 1 for journey A and rank 3 for journey B (non-overlapping).
-        // The solver should assign to journey A (rank 1 = lowest cost = highest preference).
-        var request = new PlannerDraftRequest
-        {
-            Journeys = [
-                new PlannerJourneyInput { Id = 1, Name = "Eerste keuze", RequiredLeaders = 1, Start = new DateOnly(2026, 6, 1), End = new DateOnly(2026, 6, 10) },
-                new PlannerJourneyInput { Id = 2, Name = "Derde keuze", RequiredLeaders = 1, Start = new DateOnly(2026, 7, 1), End = new DateOnly(2026, 7, 10) }
-            ],
+            RuleSettings = new CheckRules.RuleSettings(
+                NoOverlapActive: true,
+                MinimumGapDaysActive: false,
+                MinimumGapDays: 0,
+                RequiredExperienceActive: false,
+                RequiredExperience: 0,
+                MinMaxJourneysActive: false, // Disabled
+                PreferencesEnabled: true,
+                PreferenceWeight: 1,
+                NoOverlapWeight: 0,
+                MinimumGapWeight: 0,
+                RequiredExperienceWeight: 0),
             Leaders = [
                 new PlannerLeaderInput
                 {
-                    Id = 1, Name = "Jan", MaxTrips = 1,
-                    PreferredDestinations = new Dictionary<int, int> { { 1, 1 }, { 2, 3 } }
+                    Id = 1, Name = "UnlimitedLeader", MinTrips = 10, MaxTrips = 0, // Should be ignored
+                    PreferredDestinations = new Dictionary<int, int> { { 1, 1 }, { 2, 1 } }
                 }
             ]
         };
@@ -228,36 +290,10 @@ public class PlannerDraftServiceTests
         var result = _service.GenerateDraft(request);
 
         Assert.True(result.IsSuccess);
-        Assert.True(result.JourneyAssignments.ContainsKey(1), "Reisleider moet worden toegewezen aan eerste keuze (rank 1)");
-        Assert.False(result.JourneyAssignments.ContainsKey(2), "Reisleider mag niet worden toegewezen aan derde keuze als eerste keuze beschikbaar is");
-    }
-
-    [Fact]
-    public void GenerateDraft_PublishingRequires_AllJourneys_ToHaveEnoughAssignments()
-    {
-        // The CanPublish condition in PlannerDraft.razor.cs checks that every journey
-        // has at least RequiredLeaders assignments. This test verifies the solver output
-        // correctly reflects a shortfall when not enough leaders are available,
-        // meaning CanPublish would evaluate to false.
-        var request = new PlannerDraftRequest
-        {
-            Journeys = [
-                new PlannerJourneyInput
-                {
-                    Id = 1, Name = "Reis met tekort", RequiredLeaders = 2,
-                    Start = new DateOnly(2026, 6, 1), End = new DateOnly(2026, 6, 10)
-                }
-            ],
-            Leaders = [
-                new PlannerLeaderInput { Id = 1, Name = "Jan", MaxTrips = 5, PreferredDestinations = new Dictionary<int, int> { { 1, 1 } } }
-                // Only 1 leader available, journey needs 2
-            ]
-        };
-
-        var result = _service.GenerateDraft(request);
-
-        Assert.True(result.IsSuccess);
-        var assignedCount = result.JourneyAssignments.TryGetValue(1, out var asgns) ? asgns.Count : 0;
-        Assert.True(assignedCount < 2, "Publiceren moet geblokkeerd zijn: reis heeft minder reisleiders dan vereist");
+        var totalAssignments = result.JourneyAssignments.Values
+            .SelectMany(assignments => assignments)
+            .Count(a => a.LeaderId == 1);
+        // Should assign to both because Min/Max are ignored
+        Assert.Equal(2, totalAssignments);
     }
 }

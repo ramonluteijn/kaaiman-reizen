@@ -13,7 +13,8 @@ public static class RuleExtensions
             Key = rule.Key,
             Description = rule.Description,
             TypedValue = rule.TypedValue,
-            IsActive = rule.IsActive
+            IsActive = rule.IsActive,
+            Weight = rule.Weight
         };
     }
 

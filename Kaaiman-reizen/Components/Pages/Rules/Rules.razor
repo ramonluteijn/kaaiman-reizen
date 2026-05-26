@@ -25,6 +25,7 @@
                     Beschrijving
                 </th>
                 <th>Waarde</th>
+                <th>Gewicht</th>
                 <th @onclick='() => SortBy("Active")'>
                     Actief @(GetSortIcon("Active"))
                 </th>
@@ -39,12 +40,17 @@
                     {
                         <input class="form-control form-control-sm"
                                value="@GetRuleValue(context)"
-                               @onchange="@(async (ChangeEventArgs e) => await UpdateRuleValue(context, e.Value?.ToString()))" />
+                               @onchange="@(e => UpdateRuleValue(context, (e as ChangeEventArgs)?.Value?.ToString()))" />
                     }
                     else
                     {
                         <span class="text-muted">-</span>
                     }
+                </td>
+                <td>
+                    <input class="form-control form-control-sm"
+                           value="@context.Weight"
+                           @onchange="@(e => UpdateRuleWeight(context, (e as ChangeEventArgs)?.Value?.ToString()))" />
                 </td>
                 <td>
                     <span class="badge @(context.IsActive ? "bg-success" : "bg-danger")" style="cursor: pointer;" @onclick="@(() => ToggleActive(context))">

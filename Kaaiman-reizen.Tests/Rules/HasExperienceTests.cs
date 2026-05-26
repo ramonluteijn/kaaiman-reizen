@@ -31,5 +31,15 @@ public class HasExperienceTests
         Assert.False(insufficientExperience);
         Assert.True(enoughExperience);
     }
+
+    [Fact]
+    public void Check_RequiresExperience_ForOutsideEuropeDestination()
+    {
+        var insufficientExperience = HasExperience.Check(requiredExperience: 2, destination: "Brazilie", experience: 1);
+        var enoughExperience = HasExperience.Check(requiredExperience: 2, destination: "Brazilie", experience: 2);
+
+        Assert.False(insufficientExperience);
+        Assert.True(enoughExperience);
+    }
 }
 
