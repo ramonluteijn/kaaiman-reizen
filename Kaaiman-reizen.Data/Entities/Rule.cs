@@ -8,6 +8,7 @@ public class Rule
     public required string Key { get; set; }
     public string Description { get; set; } = null!;
     public string? Value { get; set; }
+    public int Weight { get; set; } = 1;
 
     [NotMapped]
     public object? TypedValue

@@ -10,6 +10,7 @@ public class PlannerDraftRequest
     public List<PlannerLeaderInput> Leaders { get; set; } = [];
     public List<PlannerLeaderInput> AllActiveLeaders { get; set; } = [];
     public List<PlannerJourneyInput> Journeys { get; set; } = [];
+    public Data.Rules.CheckRules.RuleSettings RuleSettings { get; set; } = Data.Rules.CheckRules.GetDefaultSettings();
 }
 
 public class PlannerLeaderInput

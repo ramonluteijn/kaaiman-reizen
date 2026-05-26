@@ -130,7 +130,7 @@ namespace Kaaiman_reizen.Tests.Services
 
             Assert.Single(archivedPlans);
         }
-        
+
         [Fact]
         public async Task SavePlanningAsync_ShouldStoreCreatedAtAsUtc_InDatabase()
         {
