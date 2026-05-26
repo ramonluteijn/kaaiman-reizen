@@ -23,6 +23,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IPlanningService, PlanningService>();
         services.AddScoped<IRuleService, RuleService>();
         services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<IPhoneNumberService, PhoneNumberService>();
         return services;
     }
 
