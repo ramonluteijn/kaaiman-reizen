@@ -1,0 +1,21 @@
+@page "/archive/planning/{Id:int}"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "Planner")]
+@rendermode InteractiveServer
+
+<PageTitle>Bekijk Planning</PageTitle>
+
+<h1 class="h4">Planning</h1>
+
+<div class="card">
+    <div class="card-body">
+        @if (_loading)
+        {
+            <div class="text-muted">Gegevens laden...</div>
+        }
+        else
+        {
+            <CalendarView Journeys="@_journeys"/>
+        }
+    </div>
+</div>

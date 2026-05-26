@@ -1,0 +1,44 @@
+@page "/archive"
+@using Kaaiman_reizen.Data.Entities
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "Planner")]
+@rendermode InteractiveServer
+
+<PageTitle>Archief</PageTitle>
+
+<h1 class="h4">Archief</h1>
+
+<div class="card">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <input class="form-control w-25"
+                   placeholder="Zoek op naam..."
+                   @bind="_searchTerm"
+                   @bind:event="oninput" />
+        </div>
+            
+        <Table TItem="PlanningVersion" Items="FilteredPlans" Path="plans" DetailHrefSelector="@GetDetailHref">
+            <HeaderContent>
+                <th @onclick='() => SortBy("Name")'>
+                    Naam @(GetSortIcon("Name"))
+                </th>
+                <th @onclick='() => SortBy("CreatedAt")'>
+                    Aanmaak Datum @(GetSortIcon("CreatedAt"))
+                </th>
+                <th @onclick='() => SortBy("PlanningYear")'>
+                    Planning Jaar @(GetSortIcon("PlanningYear"))
+                </th>
+            </HeaderContent>
+            <RowTemplate>
+                <td>@context.Name</td>
+                <td>@context.CreatedAt</td>
+                <td>@context.PlanningYear</td>
+            </RowTemplate>
+        </Table>
+
+        @if (_plans.Count == 0)
+        {
+            <div class="text-muted">Geen planningen gevonden.</div>
+        }
+    </div>
+</div>
