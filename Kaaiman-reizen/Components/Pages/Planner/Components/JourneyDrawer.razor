@@ -6,15 +6,15 @@
     @if (SelectedJourney is not null)
     {
         var assignedCount = SelectedJourney.TravelLeaders.Count;
-        var required      = SelectedJourney.RequiredLeaders;
-        var isFull        = assignedCount >= required;
+        var required = SelectedJourney.RequiredLeaders;
+        var isFull = assignedCount >= required;
 
         <!-- Header -->
         <div class="jd-header">
             <div class="jd-header-text">
                 <span class="jd-header-title">@SelectedJourney.Name</span>
                 <span class="jd-header-dates">
-                    @SelectedJourney.Start.ToString("dd MMM yyyy") – @SelectedJourney.End.ToString("dd MMM yyyy")
+                    @DateDisplay.FormatDate(SelectedJourney.Start) - @DateDisplay.FormatDate(SelectedJourney.End)
                 </span>
             </div>
             <button class="jd-close-btn" @onclick="OnClose" aria-label="Sluiten">
@@ -46,7 +46,8 @@
                         <div class="jd-leader-card">
                             <div class="jd-avatar">@leader.Name[0]</div>
                             <span class="jd-leader-name">@leader.Name</span>
-                            <button class="jd-remove-btn" @onclick="() => OnRemoveLeader.InvokeAsync(leader)" title="Verwijder reisleider">
+                            <button class="jd-remove-btn" @onclick="() => OnRemoveLeader.InvokeAsync(leader)"
+                                    title="Verwijder reisleider">
                                 <span class="material-icons">person_remove</span>
                                 Verwijderen
                             </button>

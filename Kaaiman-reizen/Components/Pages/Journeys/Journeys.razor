@@ -2,6 +2,7 @@
 @using Kaaiman_reizen.Data.Services
 @using Kaaiman_reizen.Data.Entities
 @using Kaaiman_reizen.Data.Enum
+@using Kaaiman_reizen.Helpers
 @rendermode InteractiveServer
 @inject IJourneyService JourneyService
 
@@ -12,40 +13,16 @@
 <div class="card">
     <div class="card-body">
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <input class="form-control w-25"
-                   placeholder="Zoek op land..."
-                   @bind="_searchTerm"
-                   @bind:event="oninput" />
+            <input class="form-control w-25" placeholder="Zoek op land..." @bind="_searchTerm" @bind:event="oninput" />
 
-            <a href="journeys/create" class="btn btn-primary text-uppercase" style="background-color: #00796b; border: none;">
+            <a href="journeys/create" class="btn btn-primary text-uppercase"
+               style="background-color: #00796b; border: none;">
                 <i class="bi bi-plus"></i> Nieuwe reis
             </a>
         </div>
 
-        @if (_availableYears.Any())
-        {
-            <ul class="nav nav-pills mb-3 gap-2" style="display: flex !important; flex-direction: row !important; align-items: center;">
-                @foreach (var year in _availableYears)
-                {
-                    <li class="nav-item" style="width: auto;">
-                        <button class="nav-link @(_selectedYear == year && !_showAll ? "active" : "")"
-                                style="width: auto; @(_selectedYear == year && !_showAll ? "background-color: #00796b;" : "")"
-                                @onclick="() => SelectYear(year)">
-                            @year
-                        </button>
-                    </li>
-                }
-                <li class="nav-item" style="width: auto;">
-                    <button class="nav-link @(_showAll ? "active" : "")"
-                            style="width: auto; @(_showAll ? "background-color: #00796b;" : "")"
-                            @onclick="SelectAll">
-                        Alle
-                    </button>
-                </li>
-            </ul>
-        }
-
-        <Table TItem="Journey" Items="FilteredJourneys" OnDelete="@OnDelete" Path="journeys" EditHrefSelector="@GetEditHref">
+        <Table TItem="Journey" Items="FilteredJourneys" OnDelete="@OnDelete" Path="journeys"
+               EditHrefSelector="@GetEditHref">
             <HeaderContent>
                 <th @onclick='() => SortBy("Name")'>
                     Reis @(GetSortIcon("Name"))
@@ -69,10 +46,11 @@
             </HeaderContent>
             <RowTemplate>
                 <td>@context.Name</td>
-                <td>@context.Start</td>
-                <td>@context.End</td>
+                <td>@DateDisplay.FormatDate(context.Start)</td>
+                <td>@DateDisplay.FormatDate(context.End)</td>
                 <td>
-                    @if (context.TravelLeaders != null && context.TravelLeaders.Any()) {
+                    @if (context.TravelLeaders != null && context.TravelLeaders.Any())
+                    {
                         @FormatTravelLeaders(context)
                     }
                 </td>
@@ -101,36 +79,28 @@
 
         <div class="mb-3 mt-3">
             <label for="excelImport">
-                <MudButton Variant="Variant.Filled"
-                           Color="Color.Primary"
-                           StartIcon="@Icons.Material.Filled.UploadFile"
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.UploadFile"
                            HtmlTag="span">
                     Excel Importeren
                 </MudButton>
             </label>
 
-            <InputFile id="excelImport"
-                       OnChange="ImportExcelFile"
-                       hidden />
+            <InputFile id="excelImport" OnChange="ImportExcelFile" hidden />
         </div>
 
         <MudText Typo="Typo.body2" Class="mud-text-secondary italic">
             Excel sheet dient er als volgt uit te zien:
         </MudText>
         <MudText Typo="Typo.body2" Class="mud-text-secondary italic">
-            Reis (tekst) | Start datum (datum) | Eind datum (datum) | Busjes (nummer) | Reizigers (nummer) | Boekingsstatus (0, 1, 2)
+            Reis (tekst) | Start datum (datum) | Eind datum (datum) | Busjes (nummer) | Reizigers (nummer) |
+            Boekingsstatus (0, 1, 2)
         </MudText>
     </div>
 </div>
 
 @* Alert modal for deletion *@
-<AlertModal IsOpen="@_isDeleteModalOpen"
-            IsOpenChanged="HandleDeleteModalChanged"
-            Title="Reis verwijderen"
-            Severity="Severity.Warning"
-            Dismissible="true"
-            CloseOnBackdropClick="true"
-            Message="@DeleteModalMessage">
+<AlertModal IsOpen="@_isDeleteModalOpen" IsOpenChanged="HandleDeleteModalChanged" Title="Reis verwijderen"
+            Severity="Severity.Warning" Dismissible="true" CloseOnBackdropClick="true" Message="@DeleteModalMessage">
     <Actions>
         <MudButton Variant="Variant.Text" OnClick="CloseDeleteModalAsync">
             Annuleren
@@ -142,13 +112,8 @@
 </AlertModal>
 
 @* Alert modal for bulk import *@
-<AlertModal IsOpen="@_isImportModalOpen"
-            IsOpenChanged="HandleDeleteModalChanged"
-            Title="Reizen importeren"
-            Severity="Severity.Info"
-            Dismissible="true"
-            CloseOnBackdropClick="true"
-            Message="@ImportModalMessage">
+<AlertModal IsOpen="@_isImportModalOpen" IsOpenChanged="HandleDeleteModalChanged" Title="Reizen importeren"
+            Severity="Severity.Info" Dismissible="true" CloseOnBackdropClick="true" Message="@ImportModalMessage">
     <Actions>
         <MudButton Variant="Variant.Text" OnClick="CloseImportModalAsync">
             Annuleren
@@ -157,14 +122,12 @@
 </AlertModal>
 
 @code {
-    private List<Journey> _allJourneys = new();
     private List<Journey> _journeys = new();
-    private List<int> _availableYears = new();
     private string _searchTerm = string.Empty;
     private string _sortColumn = "Country";
     private bool _sortAscending = true;
     private int _selectedYear = DateTime.UtcNow.Year;
-    private bool _showAll = false;
+
     private bool _isDeleteModalOpen;
     private bool _isImportModalOpen;
     private Journey? _journeyPendingDelete;
@@ -190,7 +153,7 @@
             .Select(l => $"{l.Name}"));
     }
 
-    private IEnumerable<Journey> FilteredJourneys => 
+    private IEnumerable<Journey> FilteredJourneys =>
         ApplySorting(
             _journeys.Where(j =>
                 string.IsNullOrWhiteSpace(_searchTerm) ||
@@ -260,47 +223,27 @@
     private async Task ConfirmDeleteAsync()
     {
         if (_journeyPendingDelete is null)
+        {
             return;
+        }
 
         var journeyId = _journeyPendingDelete.Id;
         await JourneyService.DeleteJourneyAsync(journeyId);
-        _allJourneys.RemoveAll(j => j.Id == journeyId);
-        _journeys.RemoveAll(j => j.Id == journeyId);
-        _availableYears = _allJourneys.Select(j => j.Start.Year).Distinct().OrderBy(y => y).ToList();
+        _journeys.RemoveAll(l => l.Id == journeyId);
         _isDeleteModalOpen = false;
         _journeyPendingDelete = null;
         StateHasChanged();
-    }
-
-    private void SelectYear(int year)
-    {
-        _selectedYear = year;
-        _showAll = false;
-        _journeys = _allJourneys.Where(j => j.Start.Year == year).ToList();
-    }
-
-    private void SelectAll()
-    {
-        _showAll = true;
-        _journeys = _allJourneys.ToList();
     }
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
-            var items = await JourneyService.GetJourneysAsync();
-            _allJourneys = items.ToList();
-            _availableYears = _allJourneys.Select(j => j.Start.Year).Distinct().OrderBy(y => y).ToList();
-
-            if (!_availableYears.Contains(_selectedYear) && _availableYears.Any())
-                _selectedYear = _availableYears.Last();
-
-            _journeys = _allJourneys.Where(j => j.Start.Year == _selectedYear).ToList();
+            var items = await JourneyService.GetJourneysWithPublishedPlanningAsync(_selectedYear);
+            _journeys = items.ToList();
         }
         catch
         {
-            _allJourneys = new List<Journey>();
             _journeys = new List<Journey>();
         }
     }

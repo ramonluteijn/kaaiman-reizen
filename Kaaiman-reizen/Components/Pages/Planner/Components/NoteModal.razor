@@ -4,9 +4,7 @@
         <MudPaper Class="pd-note-modal" Elevation="8" @onclick:stopPropagation="true">
             <div class="pd-note-header">
                 <MudText Typo="Typo.h6">@Leader.Name</MudText>
-                <MudIconButton Icon="@Icons.Material.Filled.Close"
-                               Size="Size.Small"
-                               OnClick="OnClose"
+                <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="OnClose"
                                aria-label="Sluiten" />
             </div>
 
@@ -45,7 +43,7 @@
                             @foreach (var journey in AssignedJourneys.OrderBy(j => j.Start))
                             {
                                 <MudText Typo="Typo.body2">
-                                    @journey.Name (@journey.Start.ToString("dd MMM") - @journey.End.ToString("dd MMM"))
+                                    @journey.Name (@DateDisplay.FormatDate(journey.Start) - @DateDisplay.FormatDate(journey.End))
                                     @if (journey.RankMatched.HasValue)
                                     {
                                         <span> #@journey.RankMatched</span>

@@ -43,7 +43,10 @@ public partial class TravelHistory : ComponentBase
             return;
         }
 
+        var today = DateOnly.FromDateTime(DateTime.Today);
+
         _journeys = (leader.Journeys ?? [])
+            .Where(journey => journey.End < today)
             .OrderByDescending(journey => journey.End)
             .ThenByDescending(journey => journey.Start)
             .ToList();
