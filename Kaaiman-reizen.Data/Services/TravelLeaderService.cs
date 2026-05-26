@@ -24,6 +24,7 @@ public class TravelLeaderService : ITravelLeaderService
     public async Task<IReadOnlyList<Entities.TravelLeader>> GetTravelLeadersAsync(CancellationToken cancellationToken = default)
     {
         return await _db.TravelLeader
+            .AsNoTracking()
             .Include(t => t.PreferredDestinations)
                 .ThenInclude(pd => pd.Journey)
             .Include(t => t.AvailabilityPeriods)
