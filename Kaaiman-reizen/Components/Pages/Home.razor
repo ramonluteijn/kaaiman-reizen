@@ -1,7 +1,5 @@
 ﻿@page "/"
 
-@using Microsoft.AspNetCore.Components.Authorization
-
 @rendermode InteractiveServer
 
 <PageTitle>Home</PageTitle>
@@ -9,7 +7,8 @@
 @if (_isPlanner)
 {
     <h1 class="h4">Planning dashboard</h1>
-} else
+}
+else
 {
     <h1 class="h4">Home</h1>
 }
@@ -20,30 +19,17 @@
 }
 else
 {
-    <AuthorizeView>
-        <NotAuthorized>
-            <AlertModal IsOpen="true"
-                        Title="Planningsoverzicht"
-                        Severity="Severity.Info"
-                        Message="Log in om jouw planningsoverzicht te bekijken." />
-        </NotAuthorized>
-        <Authorized>
-            @if (_notifications.Any())
+    @if (_notifications.Any())
             {
-                <AlertModal IsOpen="true"
-                            Title="Notificaties"
-                            Severity="Severity.Info"
-                            Dismissible="false"
+                <AlertModal IsOpen="true" Title="Notificaties" Severity="Severity.Info" Dismissible="false"
                             CloseOnBackdropClick="false">
                     <MudStack Spacing="1">
                         @foreach (var notification in _notifications)
                         {
                             <MudPaper Class="pa-3 d-flex align-center justify-space-between gap-3" Outlined="true">
                                 <MudText Typo="Typo.body2">@notification.Message</MudText>
-                                <MudIconButton Icon="@Icons.Material.Filled.Close"
-                                               Size="Size.Small"
-                                               OnClick="@(() => MarkNotificationAsRead(notification))"
-                                               aria-label="Melding sluiten" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small"
+                                               OnClick="@(() => MarkNotificationAsRead(notification))" aria-label="Melding sluiten" />
                             </MudPaper>
                         }
                     </MudStack>
@@ -60,9 +46,7 @@ else
                                 <MudCard Elevation="2">
                                     <MudCardContent>
                                         <MudText Typo="Typo.h6" Class="mb-3">Definitieve planning</MudText>
-                                        <MudButton Variant="Variant.Filled"
-                                                   Color="Color.Primary"
-                                                   OnClick="HandlePrintPdf"
+                                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="HandlePrintPdf"
                                                    EndIcon="@Icons.Material.Filled.PictureAsPdf">
                                             Download als PDF
                                         </MudButton>
@@ -70,21 +54,38 @@ else
                                 </MudCard>
                             </MudItem>
                         }
+
                         <MudItem xs="12">
                             <MudCard Elevation="2">
                                 <MudCardContent>
                                     <MudText Typo="Typo.h6" Class="mb-3">Concept planning @(_drafts.Count > 0 ? $"({_drafts.Count})" : "")</MudText>
                                     @if (_drafts.Count == 0)
                                     {
-                                        <MudCardActions Class="pl-0">
-                                            <MudButton Href="./planner/draft"
-                                                       Variant="Variant.Filled"
+                                        @if (_anyLeaderHasPreferences)
+                                        {
+                                            <MudCardActions Class="pl-0">
+                                                <MudButton Href="./planner/draft"
+                                                           Variant="Variant.Filled"
+                                                           Color="Color.Primary"
+                                                           Size="Size.Small"
+                                                           EndIcon="@Icons.Material.Filled.ArrowForward">
+                                                    Concept aanmaken
+                                                </MudButton>
+                                            </MudCardActions>
+                                        }
+                                        else
+                                        {
+                                            <MudText Typo="Typo.body2" Class="mud-text-secondary mb-2">
+                                                Geen reisleiders hebben nog voorkeuren ingevuld.
+                                            </MudText>
+                                            <MudButton Href="/travelleaders"
+                                                       Variant="Variant.Outlined"
                                                        Color="Color.Primary"
                                                        Size="Size.Small"
-                                                       EndIcon="@Icons.Material.Filled.ArrowForward">
-                                                Concept aanmaken
+                                                       EndIcon="@Icons.Material.Filled.People">
+                                                Reisleiders beheren
                                             </MudButton>
-                                        </MudCardActions>
+                                        }
                                     }
                                     else
                                     {
@@ -101,7 +102,7 @@ else
                                                             <div class="d-flex flex-column">
                                                                 <MudText Typo="Typo.body1"><b>@draft.Name</b></MudText>
                                                                 <MudText Typo="Typo.caption" Class="mud-text-secondary">
-                                                                    Aangemaakt: @draft.CreatedAt.ToLocalTime().ToString("dd-MM-yyyy HH:mm")
+                                                                    Aangemaakt: @FormatCreatedAt(draft.CreatedAt)
                                                                 </MudText>
                                                             </div>
                                                             <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Text">
@@ -125,16 +126,22 @@ else
                                         Reizen zonder reisleiders (@_journeysWithoutTravelLeaders.Count)
                                     </MudText>
 
-                                    @if (!_journeysWithoutTravelLeaders.Any())
+                                    @if (_publishedPlanningIsComplete)
                                     {
                                         <AlertModal IsOpen="true"
                                                     Title="Reisplanning compleet"
                                                     Severity="Severity.Success"
                                                     Message="Alle reizen zijn voorzien van reisleiders." />
                                     }
+                                    else if (!_journeysWithoutTravelLeaders.Any())
+                                    {
+                                        <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                                            Concept is volledig — publiceer de planning om te bevestigen.
+                                        </MudText>
+                                    }
                                     else
                                     {
-                                        <div style="max-height: 240px; overflow-y: auto;" class="pr-2">
+                                        <div style="max-height: 200px; overflow-y: auto;" class="pr-2 mb-2">
                                             <MudList T="string" Clickable="false" Dense="true">
                                                 @foreach (var journey in _journeysWithoutTravelLeaders)
                                                 {
@@ -142,7 +149,7 @@ else
                                                         <div class="d-flex flex-column">
                                                             <MudText Typo="Typo.body1"><b>@journey.Name</b></MudText>
                                                             <MudText Typo="Typo.body2" Class="mud-text-secondary">
-                                                                @journey.Start.ToString("dd MMM") t/m @journey.End.ToString("dd MMM yyyy")
+                                                                @DateDisplay.FormatDateRange(journey.Start, journey.End)
                                                             </MudText>
                                                         </div>
                                                     </MudListItem>
@@ -150,6 +157,13 @@ else
                                                 }
                                             </MudList>
                                         </div>
+                                        <MudButton Href="/journeys/create"
+                                                   Variant="Variant.Outlined"
+                                                   Color="Color.Warning"
+                                                   Size="Size.Small"
+                                                   EndIcon="@Icons.Material.Filled.Add">
+                                            Nieuwe reis aanmaken
+                                        </MudButton>
                                     }
                                 </MudCardContent>
                             </MudCard>
@@ -170,7 +184,7 @@ else
                                     }
                                     else
                                     {
-                                        <div style="height: 230px; overflow-y: auto; overflow-x: hidden;" class="pr-2">
+                                        <div style="height: 190px; overflow-y: auto; overflow-x: hidden;" class="pr-2 mb-2">
                                             <MudList T="string" Dense="true" DisablePadding="true">
                                                 @foreach (var leader in _travelLeadersWithoutJourneys)
                                                 {
@@ -183,6 +197,13 @@ else
                                                 }
                                             </MudList>
                                         </div>
+                                        <MudButton Href="/travelleaders/create"
+                                                   Variant="Variant.Outlined"
+                                                   Color="Color.Warning"
+                                                   Size="Size.Small"
+                                                   EndIcon="@Icons.Material.Filled.PersonAdd">
+                                            Nieuwe reisleider aanmaken
+                                        </MudButton>
                                     }
                                 </MudCardContent>
                             </MudCard>
@@ -251,7 +272,7 @@ else
                                             {
                                                 <tr>
                                                     <td>@journey.Name</td>
-                                                    <td>@journey.Start - @journey.End</td>
+                                                    <td>@DateDisplay.FormatDate(journey.Start) - @DateDisplay.FormatDate(journey.End)</td>
                                                     <td>@FormatTravelLeaders(journey)</td>
                                                 </tr>
                                             }
@@ -263,6 +284,4 @@ else
                     }
                 </section>
             }
-        </Authorized>
-    </AuthorizeView>
 }

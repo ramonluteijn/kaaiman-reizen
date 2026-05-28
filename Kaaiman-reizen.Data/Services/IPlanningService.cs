@@ -8,6 +8,7 @@ public interface IPlanningService
     Task<PlanningVersion?> GetPlanningVersionByIdAsync(int id, CancellationToken cancellationToken = default);
     Task<PlanningVersion?> GetLatestDraftAsync(int year, CancellationToken cancellationToken = default);
     Task<PlanningVersion?> GetLatestPublishedAsync(int year, CancellationToken cancellationToken = default);
+    Task<List<PlanningVersion>> GetPublishedPlansAsync(CancellationToken cancellationToken = default);
     Task<PlanningVersion> SavePlanningAsync(
         int year,
         string name,
@@ -15,5 +16,9 @@ public interface IPlanningService
         IReadOnlyDictionary<int, IReadOnlyCollection<int>> journeyAssignments,
         CancellationToken cancellationToken = default);
     Task<List<Journey>> GetAllJourneysWithTravelLeadersFromLatestPublishedPlanning();
+    Task<List<Journey>> GetAllJourneysOfPlanningByIdAsync(int id, CancellationToken cancellationToken = default);
+
     bool PublishedPlanningExists();
+    Task<int?> GetLatestPublishedPlanningVersionIdAsync(CancellationToken cancellationToken = default);
+    Task<bool> IsPublishedPlanningCompleteAsync(int year, CancellationToken cancellationToken = default);
 }

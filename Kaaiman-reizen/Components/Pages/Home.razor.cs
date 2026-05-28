@@ -1,11 +1,11 @@
 using Kaaiman_reizen.Data.Entities;
 using Kaaiman_reizen.Data.Services;
 using Kaaiman_reizen.Exports;
+using Kaaiman_reizen.Helpers;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.JSInterop;
 using QuestPDF.Fluent;
-using System.Diagnostics;
 using static Kaaiman_reizen.Data.Services.TravelLeaderService;
 
 namespace Kaaiman_reizen.Components.Pages;
@@ -18,7 +18,8 @@ public partial class Home : ComponentBase
     [Inject] private AuthenticationStateProvider AuthenticationStateProvider { get; set; } = default!;
     [Inject] private Microsoft.AspNetCore.Identity.UserManager<Kaaiman_reizen.Data.Identity.ApplicationUser> UserManager { get; set; } = default!;
     [Inject] private INotificationService NotificationService { get; set; } = default!;
-    [Inject] private IJSRuntime JS { get; set; }
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+    [Inject] private IJSRuntime JS { get; set; } = default!;
 
     private bool _loading = true;
     private bool _isPlanner;
@@ -27,12 +28,16 @@ public partial class Home : ComponentBase
     private List<Journey> _publishedJourneys = [];
     private int _selectedYear = DateTime.UtcNow.Year;
     private bool _publishedPlanning;
-    private List<Journey> _plannedJourneysWithTravelLeaders;
+    private bool _publishedPlanningIsComplete;
+    private List<Journey> _plannedJourneysWithTravelLeaders = [];
+    private int _userTimezoneOffsetMinutes;
+    private bool _userTimezoneOffsetLoaded;
 
     private List<Notification> _notifications = [];
     private string _currentUserId = string.Empty;
 
     private List<TravelLeader> _travelLeadersWithoutPreferences = [];
+    private bool _anyLeaderHasPreferences;
     private List<TravelLeader> _travelLeadersWithoutJourneys = [];
     private List<TravelLeader> _travelLeadersWithNotes = [];
     private List<Journey> _journeysWithoutTravelLeaders = [];
@@ -42,6 +47,12 @@ public partial class Home : ComponentBase
     {
         var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authenticationState.User;
+
+        if (user.Identity?.IsAuthenticated is not true)
+        {
+            Navigation.NavigateTo("/Account/Login");
+            return;
+        }
 
         _isPlanner = user.IsInRole("Planner");
         _isReisleider = user.IsInRole("Reisleider");
@@ -58,13 +69,18 @@ public partial class Home : ComponentBase
             var drafts = await PlanningService.GetDraftsAsync(_selectedYear);
             _drafts = drafts.ToList();
 
-            _travelLeadersWithoutPreferences = await TravelLeaderService.GetTravelLeadersWithoutPreferencesAsync();
+            var allLeaders = await TravelLeaderService.GetTravelLeadersAsync();
+            _anyLeaderHasPreferences = allLeaders.Any(l => l.IsActive && l.PreferredDestinations.Any());
+            _travelLeadersWithoutPreferences = allLeaders
+                .Where(l => !l.PreferredDestinations.Any() && !l.AvailabilityPeriods.Any())
+                .ToList();
             _travelLeadersWithoutJourneys = await TravelLeaderService.GetTravelLeadersWithoutJourneysAsync(_selectedYear);
             _travelLeadersWithNotes = await TravelLeaderService.GetTravelLeadersWithNotesAsync();
             _journeysWithoutTravelLeaders = await TravelLeaderService.GetJourneysWithoutTravelLeadersAsync(_selectedYear);
             _travelLeadersWithOverlappingJourneys = await TravelLeaderService.GetTravelLeadersWithOverlappingJourneys();
 
             _publishedPlanning = PlanningService.PublishedPlanningExists();
+            _publishedPlanningIsComplete = await PlanningService.IsPublishedPlanningCompleteAsync(_selectedYear);
             _plannedJourneysWithTravelLeaders = await PlanningService.GetAllJourneysWithTravelLeadersFromLatestPublishedPlanning();
         }
 
@@ -84,6 +100,38 @@ public partial class Home : ComponentBase
         _notifications.Remove(notification);
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        await EnsureUserTimezoneOffsetAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task EnsureUserTimezoneOffsetAsync()
+    {
+        if (_userTimezoneOffsetLoaded) return;
+
+        try
+        {
+            _userTimezoneOffsetMinutes = await JS.InvokeAsync<int>("kaaimanDateTime.getTimezoneOffsetMinutes");
+        }
+        catch
+        {
+            _userTimezoneOffsetMinutes = 0;
+        }
+        finally
+        {
+            _userTimezoneOffsetLoaded = true;
+        }
+    }
+
+    private string FormatCreatedAt(DateTime createdAt)
+    {
+        var userLocal = DateDisplay.ToUserLocal(createdAt, _userTimezoneOffsetMinutes);
+        return DateDisplay.FormatDateTime(userLocal);
+    }
+
     private static string FormatTravelLeaders(Journey journey)
     {
         var leaders = journey.TravelLeaders ?? [];
@@ -97,16 +145,11 @@ public partial class Home : ComponentBase
 
     private async Task HandlePrintPdf()
     {
-        Debug.WriteLine("test");
-
         try
         {
-            var journeys = await PlanningService.GetAllJourneysWithTravelLeadersFromLatestPublishedPlanning();
-            var document = new PlanningDocument(journeys);
+            var userLocalPrintDate = DateDisplay.FormatDate(DateDisplay.ToUserLocal(DateTime.UtcNow, _userTimezoneOffsetMinutes));
+            var document = new PlanningDocument(_plannedJourneysWithTravelLeaders, userLocalPrintDate);
             byte[] pdfBytes = document.GeneratePdf();
-
-            Console.WriteLine($"PDF gegenereerd: {pdfBytes.Length} bytes"); // Zie je dit in je output?
-
             using var stream = new MemoryStream(pdfBytes);
             using var streamRef = new DotNetStreamReference(stream);
             await JS.InvokeVoidAsync("downloadFileFromStream", "Planning.pdf", streamRef);

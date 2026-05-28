@@ -22,6 +22,7 @@ public partial class PlannerDraft : ComponentBase
     [Inject] private IRuleService _ruleService { get; set; } = default!;
     [Inject] private ITravelLeaderService _travelLeaderService { get; set;  } = default!;
     [Inject] private ISnackbar _snackbar { get; set; } = default!;
+    [Inject] private IUserTimezoneService UserTimezoneService { get; set; } = default!;
 
     private int _selectedYear = DateTime.UtcNow.Year;
     private PlannerDraftRequest? _request;
@@ -42,6 +43,7 @@ public partial class PlannerDraft : ComponentBase
     private bool _preferenceChangesDetected = false;
     public CalendarModes selectedMode = CalendarModes.JourneyMode;
     private IReadOnlyList<TravelLeader> _availibilityPeriods = [];
+    private bool _archiveDialogOpen;
 
     private bool CanPublish =>
         _request is not null && _result is not null && _result.IsSuccess &&
@@ -53,6 +55,19 @@ public partial class PlannerDraft : ComponentBase
     {
         await LoadDataForYearAsync(_selectedYear);
         _availibilityPeriods = await BuildCalendarAvailibilityPeriods();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        await UserTimezoneService.EnsureLoadedAsync();
+    }
+
+    private async Task<DateTime> GetUserLocalNowAsync()
+    {
+        await UserTimezoneService.EnsureLoadedAsync();
+        return UserTimezoneService.ToUserLocal(DateTime.UtcNow);
     }
 
     private async Task LoadDataForYearAsync(int year)
@@ -268,5 +283,35 @@ public partial class PlannerDraft : ComponentBase
         if (_request is null || _result is null) return [];
 
         return await _travelLeaderService.GetJourneyAvailabilityForAllTravelLeadersAsync();
+    private void OpenArchiveAvailabilityDialog() => _archiveDialogOpen = true;
+
+    private void CloseArchiveDialog() => _archiveDialogOpen = false;
+
+    private void HandleArchiveDialogChanged(bool isOpen) => _archiveDialogOpen = isOpen;
+
+    private async Task ConfirmArchiveAsync()
+    {
+        if (_archiveDialogOpen is false)
+            return;
+
+        _archiveDialogOpen = false;
+        _isSaving = true;
+
+        try
+        {
+            var planningVersionId = await PlanningService.GetLatestPublishedPlanningVersionIdAsync();
+            var archivedCount = await TravelLeaderService.ArchiveAndResetPreferredDestinationsAsync(planningVersionId);
+
+            Snackbar.Add($"Beschikbaarheid gearchiveerd en gereset ({archivedCount} items).", Severity.Success);
+            await LoadDataForYearAsync(_selectedYear);
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("Archiveren en resetten van beschikbaarheid is mislukt.", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
     }
 }

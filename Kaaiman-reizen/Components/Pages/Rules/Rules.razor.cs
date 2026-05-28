@@ -117,6 +117,29 @@ public partial class Rules
         }
     }
 
+    private async Task UpdateRuleWeight(RuleViewModel? rule, string? newValue)
+    {
+        if (rule == null)
+            return;
+
+        if (!int.TryParse(newValue, out var weight))
+            weight = 1;
+
+        var entity = await RuleService.GetRuleByIdAsync(rule.Id);
+        if (entity == null)
+            return;
+
+        entity.Weight = weight;
+        await RuleService.UpdateRuleAsync(entity);
+
+        var idx = _rules.FindIndex(r => r.Id == rule.Id);
+        if (idx >= 0)
+        {
+            _rules[idx] = entity.ToViewModel();
+            StateHasChanged();
+        }
+    }
+
     private async Task ToggleActive(RuleViewModel? rule)
     {
         if (rule == null)

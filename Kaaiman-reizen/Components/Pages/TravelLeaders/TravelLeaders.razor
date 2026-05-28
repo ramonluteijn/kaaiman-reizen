@@ -1,7 +1,6 @@
 @page "/travelleaders"
-@attribute [Authorize(Roles = "Planner")]
 @rendermode InteractiveServer
-@using Kaaiman_reizen.Models.ViewModels
+@attribute [Authorize(Roles = "Planner")]
 @inject IJSRuntime JS
 
 <PageTitle>Reisleiders</PageTitle>
@@ -37,7 +36,7 @@
                 <th @onclick='() => SortBy("Maximum")'>
                     Maximaal Aantal Reizen @(GetSortIcon("Maximum"))
                 </th>
-                <th>Beschikbaar</th>
+                <th>Voorkeuren</th>
                 <th @onclick='() => SortBy("Active")'>
                     Actief @(GetSortIcon("Active"))
                 </th>

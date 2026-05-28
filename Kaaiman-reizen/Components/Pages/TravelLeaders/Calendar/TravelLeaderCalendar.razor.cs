@@ -67,7 +67,7 @@ public partial class TravelLeaderCalendar : ComponentBase
     private async Task<IReadOnlyList<JourneyViewModel>> BuildCalendarJourneysAsync(TravelLeader leader)
     {
         var journeys = await LeaderService.GetJourneysOfTravelLeaderAsync(leader);
-        Console.WriteLine($"Travel leader journeys count: {journeys.Count}");
+
         return journeys.Select(j =>
         {
             var leaders = new List<TravelLeaderViewModel>();

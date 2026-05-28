@@ -8,12 +8,12 @@ public static class HasExperience
     {
         var normalizedDestination = CountryMappings.NormalizeCountryName(destination);
         // check alternative county names
-        if (CountryMappings.AlternativeCountryNames.Keys.Any(key => CountryMappings.NormalizeCountryName(key) == normalizedDestination))
+        if (CountryMappings.AlternativeCountryNames.Keys.Any(key => CountryMappings.DestinationContainsCountry(normalizedDestination, key)))
         {
             return true;
         }
         // check regular countries list
-        if (System.Enum.GetNames<Countries>().Any(countryName => CountryMappings.NormalizeCountryName(countryName) == normalizedDestination))
+        if (System.Enum.GetNames<Countries>().Any(countryName => CountryMappings.DestinationContainsCountry(normalizedDestination, countryName)))
         {
             return true;
         }

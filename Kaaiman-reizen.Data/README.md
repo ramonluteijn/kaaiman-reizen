@@ -8,10 +8,12 @@
 ├── Models                 # Entity models representing database tables
 ├── Resources              # Resource files for localization (if applicable)
 ├── Rules                  # Business rules and validation logic
-├── Services               # Service classes implementing business logic  
+├── Services               # Service classes implementing business logic
 ```
 
 ## Migrations
+
+### Global
 
 To add a migration from the solution root, specify the data project with `-p` and the startup project with `-s`. Example:
 
@@ -32,3 +34,17 @@ dotnet ef migrations remove -p Kaaiman-reizen.Data -s Kaaiman-reizen
 ```
 
 Adjust the migration name and project names as needed for other migrations.
+
+### Database Reset
+
+Drop the database entirely
+
+```bash
+dotnet ef database drop -p Kaaiman-reizen.Data -s Kaaiman-reizen --force
+```
+
+Recreate it with all migrations + seed data
+
+```bash
+dotnet ef database update -p Kaaiman-reizen.Data -s Kaaiman-reizen
+```

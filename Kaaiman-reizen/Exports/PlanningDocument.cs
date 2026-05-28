@@ -1,4 +1,5 @@
 ﻿using Kaaiman_reizen.Data.Entities;
+using Kaaiman_reizen.Helpers;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
@@ -8,8 +9,15 @@ namespace Kaaiman_reizen.Exports
     public class PlanningDocument : IDocument
     {
         private readonly List<Journey> _reizen;
+        private readonly string _printedOn;
 
-        public PlanningDocument(List<Journey> reizen) => _reizen = reizen;
+        public PlanningDocument(List<Journey> reizen, string? printedOn = null)
+        {
+            _reizen = reizen;
+            _printedOn = string.IsNullOrWhiteSpace(printedOn)
+                ? DateDisplay.FormatDate(DateTime.UtcNow)
+                : printedOn;
+        }
 
         public void Compose(IDocumentContainer container)
         {
@@ -22,7 +30,7 @@ namespace Kaaiman_reizen.Exports
                 {
                     col.Item().PaddingBottom(15).MaxHeight(50).Image("wwwroot/images/Kaaiman-reizen-logo.webp");
                     col.Item().PaddingBottom(10).Text("Planning").FontSize(24).SemiBold().FontColor(Colors.Black);
-                    col.Item().PaddingBottom(20).Text("Geprint op: " + DateTime.Now.ToShortDateString()).FontSize(14).Italic();
+                    col.Item().PaddingBottom(20).Text("Geprint op: " + _printedOn).FontSize(14).Italic();
                 });
 
                 page.Content().Column(col =>
@@ -53,7 +61,7 @@ namespace Kaaiman_reizen.Exports
                 col.Item().Row(row =>
                 {
                     row.RelativeItem().Text($"{reis.Name}").FontSize(16).SemiBold();
-                    row.RelativeItem().AlignRight().Text($"{reis.Start:dd MMM} - {reis.End:dd MMM yyyy}");
+                    row.RelativeItem().AlignRight().Text($"{DateDisplay.FormatDate(reis.Start)} - {DateDisplay.FormatDate(reis.End)}");
                 });
 
                 col.Item().PaddingTop(10).PaddingBottom(5).Text("Reisleiders:").SemiBold();

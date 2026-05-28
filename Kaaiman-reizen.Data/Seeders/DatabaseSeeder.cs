@@ -444,41 +444,41 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
     [
         // ── Voorjaar ─────────────────────────────────────────────────────────────
         // Spanje keert terug in zomer → recurring-patroon zichtbaar in data
-        new() { Name = "Spanje Voorjaar",        Start = new(2026, 3,  8), End = new(2026, 3, 18), Busses = 1, Travelers = 12, RequiredLeaders = 1, BookingStatus = BookingStatus.Bezig },
-        new() { Name = "Portugal",               Start = new(2026, 3, 22), End = new(2026, 4,  1), Busses = 1, Travelers = 10, RequiredLeaders = 1, BookingStatus = BookingStatus.Bezig },
-        new() { Name = "Marokko",                Start = new(2026, 4,  5), End = new(2026, 4, 15), Busses = 1, Travelers = 13, RequiredLeaders = 1, BookingStatus = BookingStatus.Bezig },
+        new() { Name = "Spanje Voorjaar",        Start = new(2026, 3,  8), End = new(2026, 3, 18), Busses = 1, Travelers = 12, RequiredLeaders = 1, BookingStatus = BookingStatus.Huidig },
+        new() { Name = "Portugal",               Start = new(2026, 3, 22), End = new(2026, 4,  1), Busses = 1, Travelers = 10, RequiredLeaders = 1, BookingStatus = BookingStatus.Huidig },
+        new() { Name = "Marokko",                Start = new(2026, 4,  5), End = new(2026, 4, 15), Busses = 1, Travelers = 13, RequiredLeaders = 1, BookingStatus = BookingStatus.Huidig },
         // Vereist 2 leiders → test voor voldoende aanbod bij lentegasten
-        new() { Name = "Italië Voorjaar",        Start = new(2026, 4, 19), End = new(2026, 4, 29), Busses = 2, Travelers = 18, RequiredLeaders = 2, BookingStatus = BookingStatus.Bezig },
-        new() { Name = "Griekenland Lente",      Start = new(2026, 5,  4), End = new(2026, 5, 14), Busses = 1, Travelers = 11, RequiredLeaders = 1, BookingStatus = BookingStatus.Bezig },
-        new() { Name = "Kroatië Lente",          Start = new(2026, 5, 18), End = new(2026, 5, 28), Busses = 1, Travelers = 9,  RequiredLeaders = 1, BookingStatus = BookingStatus.Bezig },
+        new() { Name = "Italië Voorjaar",        Start = new(2026, 4, 19), End = new(2026, 4, 29), Busses = 2, Travelers = 18, RequiredLeaders = 2, BookingStatus = BookingStatus.Huidig },
+        new() { Name = "Griekenland Lente",      Start = new(2026, 5,  4), End = new(2026, 5, 14), Busses = 1, Travelers = 11, RequiredLeaders = 1, BookingStatus = BookingStatus.Huidig },
+        new() { Name = "Kroatië Lente",          Start = new(2026, 5, 18), End = new(2026, 5, 28), Busses = 1, Travelers = 9,  RequiredLeaders = 1, BookingStatus = BookingStatus.Huidig },
 
         // ── Zomer ─────────────────────────────────────────────────────────────
         // Italië / Spanje / Griekenland komen terug (recurring) → history toont eerdere eds.
-        new() { Name = "Turkije",                Start = new(2026, 6,  7), End = new(2026, 6, 17), Busses = 1, Travelers = 9,  RequiredLeaders = 1, BookingStatus = BookingStatus.Bezig },
-        new() { Name = "Spanje Zomer",           Start = new(2026, 6, 21), End = new(2026, 7,  1), Busses = 2, Travelers = 20, RequiredLeaders = 2, BookingStatus = BookingStatus.Bezig },
-        new() { Name = "Italië Zomer",           Start = new(2026, 7,  5), End = new(2026, 7, 18), Busses = 2, Travelers = 20, RequiredLeaders = 2, BookingStatus = BookingStatus.Bezig },
-        new() { Name = "Griekenland Zomer",      Start = new(2026, 7, 20), End = new(2026, 7, 30), Busses = 2, Travelers = 22, RequiredLeaders = 2, BookingStatus = BookingStatus.Bezig },
-        new() { Name = "Kroatië Zomer",          Start = new(2026, 8,  3), End = new(2026, 8, 13), Busses = 1, Travelers = 10, RequiredLeaders = 1, BookingStatus = BookingStatus.Bezig },
-        new() { Name = "Montenegro",             Start = new(2026, 8, 17), End = new(2026, 8, 27), Busses = 1, Travelers = 8,  RequiredLeaders = 1, BookingStatus = BookingStatus.Bezig },
+        new() { Name = "Turkije",                Start = new(2026, 6,  7), End = new(2026, 6, 17), Busses = 1, Travelers = 9,  RequiredLeaders = 1, BookingStatus = BookingStatus.Huidig },
+        new() { Name = "Spanje Zomer",           Start = new(2026, 6, 21), End = new(2026, 7,  1), Busses = 2, Travelers = 20, RequiredLeaders = 2, BookingStatus = BookingStatus.Huidig },
+        new() { Name = "Italië Zomer",           Start = new(2026, 7,  5), End = new(2026, 7, 18), Busses = 2, Travelers = 20, RequiredLeaders = 2, BookingStatus = BookingStatus.Huidig },
+        new() { Name = "Griekenland Zomer",      Start = new(2026, 7, 20), End = new(2026, 7, 30), Busses = 2, Travelers = 22, RequiredLeaders = 2, BookingStatus = BookingStatus.Huidig },
+        new() { Name = "Kroatië Zomer",          Start = new(2026, 8,  3), End = new(2026, 8, 13), Busses = 1, Travelers = 10, RequiredLeaders = 1, BookingStatus = BookingStatus.Huidig },
+        new() { Name = "Montenegro",             Start = new(2026, 8, 17), End = new(2026, 8, 27), Busses = 1, Travelers = 8,  RequiredLeaders = 1, BookingStatus = BookingStatus.Huidig },
 
         // ── Herfst ─────────────────────────────────────────────────────────────
-        new() { Name = "Zwitserland",            Start = new(2026, 9,  6), End = new(2026, 9, 16), Busses = 1, Travelers = 10, RequiredLeaders = 1, BookingStatus = BookingStatus.Bezig },
-        new() { Name = "Albanië",                Start = new(2026, 9, 20), End = new(2026, 9, 30), Busses = 1, Travelers = 8,  RequiredLeaders = 1, BookingStatus = BookingStatus.Bezig },
-        new() { Name = "Noorwegen",              Start = new(2026,10,  4), End = new(2026,10, 14), Busses = 2, Travelers = 16, RequiredLeaders = 2, BookingStatus = BookingStatus.Bezig },
-        new() { Name = "IJsland",                Start = new(2026,10, 18), End = new(2026,10, 28), Busses = 1, Travelers = 8,  RequiredLeaders = 1, BookingStatus = BookingStatus.Bezig },
-        new() { Name = "Schotland",              Start = new(2026,11,  1), End = new(2026,11, 11), Busses = 1, Travelers = 9,  RequiredLeaders = 1, BookingStatus = BookingStatus.Bezig },
-        new() { Name = "Finland",                Start = new(2026,11, 15), End = new(2026,11, 25), Busses = 1, Travelers = 8,  RequiredLeaders = 1, BookingStatus = BookingStatus.Bezig },
+        new() { Name = "Zwitserland",            Start = new(2026, 9,  6), End = new(2026, 9, 16), Busses = 1, Travelers = 10, RequiredLeaders = 1, BookingStatus = BookingStatus.Huidig },
+        new() { Name = "Albanië",                Start = new(2026, 9, 20), End = new(2026, 9, 30), Busses = 1, Travelers = 8,  RequiredLeaders = 1, BookingStatus = BookingStatus.Huidig },
+        new() { Name = "Noorwegen",              Start = new(2026,10,  4), End = new(2026,10, 14), Busses = 2, Travelers = 16, RequiredLeaders = 2, BookingStatus = BookingStatus.Huidig },
+        new() { Name = "IJsland",                Start = new(2026,10, 18), End = new(2026,10, 28), Busses = 1, Travelers = 8,  RequiredLeaders = 1, BookingStatus = BookingStatus.Huidig },
+        new() { Name = "Schotland",              Start = new(2026,11,  1), End = new(2026,11, 11), Busses = 1, Travelers = 9,  RequiredLeaders = 1, BookingStatus = BookingStatus.Huidig },
+        new() { Name = "Finland",                Start = new(2026,11, 15), End = new(2026,11, 25), Busses = 1, Travelers = 8,  RequiredLeaders = 1, BookingStatus = BookingStatus.Huidig },
 
         // ── Edge Cases ─────────────────────────────────────────────────────────
 
         // Egypte Peak: loopt parallel aan Italië Zomer en Griekenland Zomer.
         // Vereist 3 leiders → zwaar te staffelen, test capaciteitsplafond.
-        new() { Name = "Egypte Peak",            Start = new(2026, 7,  1), End = new(2026, 7, 28), Busses = 3, Travelers = 30, RequiredLeaders = 3, BookingStatus = BookingStatus.Bezig },
+        new() { Name = "Egypte Peak",            Start = new(2026, 7,  1), End = new(2026, 7, 28), Busses = 3, Travelers = 30, RequiredLeaders = 3, BookingStatus = BookingStatus.Huidig },
 
         // Noorwegen Kerst: eindigt op 2 januari 2027.
         // GEEN enkele actieve reisleider heeft een beschikbaarheidsperiode die
         // tot 2 jan 2027 reikt → algoritme geeft 'insufficient leaders' waarschuwing.
         // Toont de edge case "reis is onplanbaar" duidelijk aan de planner.
-        new() { Name = "Noorwegen Kerst",        Start = new(2026,12, 22), End = new(2027, 1,  2), Busses = 2, Travelers = 14, RequiredLeaders = 2, BookingStatus = BookingStatus.Bezig },
+        new() { Name = "Noorwegen Kerst",        Start = new(2026,12, 22), End = new(2027, 1,  2), Busses = 2, Travelers = 14, RequiredLeaders = 2, BookingStatus = BookingStatus.Huidig },
     ];
 }

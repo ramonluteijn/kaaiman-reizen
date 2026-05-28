@@ -24,6 +24,7 @@ public class TravelLeaderService : ITravelLeaderService
     public async Task<IReadOnlyList<Entities.TravelLeader>> GetTravelLeadersAsync(CancellationToken cancellationToken = default)
     {
         return await _db.TravelLeader
+            .AsNoTracking()
             .Include(t => t.PreferredDestinations)
                 .ThenInclude(pd => pd.Journey)
             .Include(t => t.AvailabilityPeriods)
@@ -182,6 +183,46 @@ public class TravelLeaderService : ITravelLeaderService
         .Include(tl => tl.PreferredDestinations)
             .ThenInclude(pd => pd.Journey)
         .ToListAsync();
+    public async Task<int> ArchiveAndResetPreferredDestinationsAsync(int? planningVersionId, CancellationToken cancellationToken = default)
+    {
+        var preferredDestinations = await _db.PreferredDestinations
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
+        if (preferredDestinations.Count == 0)
+            return 0;
+
+        var archivedAt = DateTime.UtcNow;
+        var historyEntries = preferredDestinations.Select(dest => new TravelLeaderAvailabilityHistory
+        {
+            TravelLeaderId = dest.TravelLeaderId,
+            JourneyId = dest.JourneyId,
+            Rank = dest.Rank,
+            ArchivedAt = archivedAt,
+            PlanningVersionId = planningVersionId
+        }).ToList();
+
+        await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
+
+        _db.TravelLeaderAvailabilityHistories.AddRange(historyEntries);
+        await _db.SaveChangesAsync(cancellationToken);
+
+        if (_db.Database.IsRelational())
+        {
+            await _db.PreferredDestinations.ExecuteDeleteAsync(cancellationToken);
+        }
+        else
+        {
+            var deletable = await _db.PreferredDestinations
+                .AsNoTracking()
+                .ToListAsync(cancellationToken);
+            _db.ChangeTracker.Clear();
+            _db.PreferredDestinations.RemoveRange(deletable);
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+        await transaction.CommitAsync(cancellationToken);
+
+        return historyEntries.Count;
     }
 
     public class OverlapData

@@ -43,7 +43,10 @@ public partial class TravelHistory : ComponentBase
             return;
         }
 
+        var today = DateOnly.FromDateTime(DateTime.Today);
+
         _journeys = (leader.Journeys ?? [])
+            .Where(journey => journey.End < today)
             .OrderByDescending(journey => journey.End)
             .ThenByDescending(journey => journey.Start)
             .ToList();
@@ -55,7 +58,7 @@ public partial class TravelHistory : ComponentBase
     {
         var (badgeClass, label) = status switch
         {
-            0 => ("bg-success", "Bezig"),
+            0 => ("bg-success", "Huidig"),
             1 => ("bg-warning", "Geweest"),
             2 => ("bg-danger", "Geannuleerd"),
             _ => ("bg-secondary", "Onbekend")

@@ -209,6 +209,40 @@ namespace Kaaiman_reizen.Data.Migrations
                     b.ToTable("PlanningVersions");
                 });
 
+            modelBuilder.Entity("Kaaiman_reizen.Data.Entities.TravelLeaderAvailabilityHistory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("ArchivedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int?>("JourneyId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("PlanningVersionId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Rank")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TravelLeaderId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("JourneyId");
+
+                    b.HasIndex("PlanningVersionId");
+
+                    b.HasIndex("TravelLeaderId");
+
+                    b.ToTable("TravelLeaderAvailabilityHistories");
+                });
+
             modelBuilder.Entity("Kaaiman_reizen.Data.Entities.PreferredDestination", b =>
                 {
                     b.Property<int>("Id")
@@ -257,6 +291,9 @@ namespace Kaaiman_reizen.Data.Migrations
                     b.Property<string>("Value")
                         .HasColumnType("longtext");
 
+                    b.Property<int>("Weight")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Key")
@@ -270,7 +307,8 @@ namespace Kaaiman_reizen.Data.Migrations
                             Id = 1,
                             Description = "Reisleider mag geen overlappende reizen hebben.",
                             IsActive = true,
-                            Key = "NoOverlap"
+                            Key = "NoOverlap",
+                            Weight = 1
                         },
                         new
                         {
@@ -278,7 +316,8 @@ namespace Kaaiman_reizen.Data.Migrations
                             Description = "Minimaal aantal dagen tussen twee reizen.",
                             IsActive = true,
                             Key = "MinimumGapDays",
-                            Value = "3"
+                            Value = "3",
+                            Weight = 1
                         },
                         new
                         {
@@ -286,14 +325,24 @@ namespace Kaaiman_reizen.Data.Migrations
                             Description = "Minimaal aantal reizen ervaring voor niet-standaard bestemmingen.",
                             IsActive = true,
                             Key = "RequiredExperience",
-                            Value = "3"
+                            Value = "3",
+                            Weight = 1
                         },
                         new
                         {
                             Id = 4,
                             Description = "Controle op minimum/maximum aantal reizen per reisleider.",
                             IsActive = true,
-                            Key = "MinMaxJourneys"
+                            Key = "MinMaxJourneys",
+                            Weight = 1
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Description = "Reisleider krijgt voorkeur voor reizen naar zijn favoriete bestemmingen.",
+                            IsActive = true,
+                            Key = "PreferencesEnabled",
+                            Weight = 1
                         });
                 });
 
@@ -541,6 +590,31 @@ namespace Kaaiman_reizen.Data.Migrations
                         .HasForeignKey("TravelLeaderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("TravelLeader");
+                });
+
+            modelBuilder.Entity("Kaaiman_reizen.Data.Entities.TravelLeaderAvailabilityHistory", b =>
+                {
+                    b.HasOne("Kaaiman_reizen.Data.Entities.Journey", "Journey")
+                        .WithMany()
+                        .HasForeignKey("JourneyId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Kaaiman_reizen.Data.Entities.PlanningVersion", "PlanningVersion")
+                        .WithMany()
+                        .HasForeignKey("PlanningVersionId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Kaaiman_reizen.Data.Entities.TravelLeader", "TravelLeader")
+                        .WithMany()
+                        .HasForeignKey("TravelLeaderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Journey");
+
+                    b.Navigation("PlanningVersion");
 
                     b.Navigation("TravelLeader");
                 });

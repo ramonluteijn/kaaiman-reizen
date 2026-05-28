@@ -13,17 +13,17 @@
                 @if (Journeys.Any() || AvailabilityPeriods.Any())
                 {
                     <div class="cal-pills-bar">
-                        @foreach (var group in Journeys
-                            .OrderBy(j => j.Start)
-                            .GroupBy(j => new { j.Start.Year, j.Start.Month }))
+                        foreach (var group in Journeys
+                                                    .OrderBy(j => j.Start)
+                                                    .GroupBy(j => new { j.Start.Year, j.Start.Month }))
                         {
                             var monthDate = new DateOnly(group.Key.Year, group.Key.Month, 1);
-                            var isActive  = _currentDate.Year == group.Key.Year && _currentDate.Month == group.Key.Month;
+                            var isActive = _currentDate.Year == group.Key.Year && _currentDate.Month == group.Key.Month;
 
                             <div class="cal-pill-group">
                                 <button class="cal-month-pill @(isActive ? "cal-pill-active" : "")"
                                         @onclick="() => GoToMonth(monthDate)">
-                                    @monthDate.ToString("MMM yyyy")
+                                    @DateDisplay.FormatMonthYear(monthDate)
                                 </button>
 
                                 @if (Mode is CalendarModes.JourneyMode)
@@ -62,9 +62,9 @@
             <!-- 6 week rows -->
             @for (int w = 0; w < 6; w++)
             {
-                var weekDays   = _days.Skip(w * 7).Take(7).ToList();
-                var weekStart  = weekDays[0].Date;
-                var weekEnd    = weekDays[6].Date;
+                var weekDays = _days.Skip(w * 7).Take(7).ToList();
+                var weekStart = weekDays[0].Date;
+                var weekEnd = weekDays[6].Date;
 
                 // Journeys that are visible at all in this week
                 var weekJourneys = Journeys
@@ -76,7 +76,7 @@
                     @foreach (var day in weekDays)
                     {
                         var isCurrentMonth = day.Date.Month == _currentDate.Month;
-                        var isToday        = day.Date == DateOnly.FromDateTime(DateTime.Today);
+                        var isToday = day.Date == DateOnly.FromDateTime(DateTime.Today);
                         <div class="cal-day-cell @(isCurrentMonth ? "" : "other-month") @(isToday ? "today-highlight" : "")">
                             <div class="day-number">@day.Date.Day</div>
                         </div>

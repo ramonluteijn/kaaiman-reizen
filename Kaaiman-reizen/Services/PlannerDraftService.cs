@@ -9,11 +9,13 @@ public class PlannerDraftService : IPlannerDraftService
 {
     private readonly ITravelLeaderService _leaderService;
     private readonly IJourneyService _journeyService;
+    private readonly IRuleService _ruleService;
 
-    public PlannerDraftService(ITravelLeaderService leaderService, IJourneyService journeyService)
+    public PlannerDraftService(ITravelLeaderService leaderService, IJourneyService journeyService, IRuleService ruleService)
     {
         _leaderService = leaderService;
         _journeyService = journeyService;
+        _ruleService = ruleService;
     }
 
     // 1. Voeg 'int year' toe als eerste parameter
@@ -21,6 +23,9 @@ public class PlannerDraftService : IPlannerDraftService
     {
         var leaders = await _leaderService.GetTravelLeadersAsync(ct);
         var journeys = await _journeyService.GetJourneysAsync(ct);
+
+        var rules = await _ruleService.GetRulesAsync(ct);
+        var settings = Data.Rules.CheckRules.FromRules(rules);
 
         var activeLeaderInputs = leaders
             .Where(l => l.IsActive)
@@ -53,7 +58,7 @@ public class PlannerDraftService : IPlannerDraftService
             AllActiveLeaders = activeLeaderInputs,
             Journeys = journeys
                 // 2. Filter hier direct op het meegegeven jaar!
-                .Where(j => j.BookingStatus == BookingStatus.Bezig && j.Start.Year == year)
+                .Where(j => j.BookingStatus == BookingStatus.Huidig && j.Start.Year == year)
                 .Select(j => new PlannerJourneyInput
                 {
                     Id = j.Id,
@@ -63,6 +68,7 @@ public class PlannerDraftService : IPlannerDraftService
                     RequiredLeaders = j.RequiredLeaders
                 })
                 .ToList(),
+            RuleSettings = settings
         };
     }
 
@@ -71,6 +77,7 @@ public class PlannerDraftService : IPlannerDraftService
         var result = new PlannerDraftResult();
         var leaders = request.Leaders;
         var journeys = request.Journeys;
+        var settings = request.RuleSettings;
 
         int L = leaders.Count;
         int J = journeys.Count;
@@ -97,7 +104,7 @@ public class PlannerDraftService : IPlannerDraftService
             if (eligible < journey.RequiredLeaders)
                 result.JourneyWarnings[journey.Id] =
                     $"Niet genoeg reisleiders beschikbaar ({eligible} van {journey.RequiredLeaders} vereist). " +
-                    "Controleer of reisleiders deze reis hebben geselecteerd in hun voorkeuren.";
+                    "Controleer of reisleiders deze reis hebben geselecteerd als beschikbaarheid of voorkeur.";
             else
                 solvable.Add(journey);
         }
@@ -123,7 +130,7 @@ public class PlannerDraftService : IPlannerDraftService
             model.Add(LinearExpr.Sum(vars) <= solvable[j].RequiredLeaders);
         }
 
-        // Constraint B: block leader if they have no preference for this journey
+        // Constraint B: block leader if they have no availability entry for this journey.
         for (int l = 0; l < L; l++)
         {
             for (int j = 0; j < Js; j++)
@@ -134,24 +141,70 @@ public class PlannerDraftService : IPlannerDraftService
             }
         }
 
-        // Constraint C: each leader can be assigned at most MaxTrips journeys
+        // Pre-calculate journey conflicts to avoid redundant checks in the leader loop
+        var overlaps = new List<(int j1, int j2)>();
+        var gapConflicts = new List<(int j1, int j2)>();
+        for (int j1 = 0; j1 < Js; j1++)
+        {
+            for (int j2 = j1 + 1; j2 < Js; j2++)
+            {
+                var a = solvable[j1];
+                var b = solvable[j2];
+                if (Kaaiman_reizen.Data.Rules.JourneysOverlap.Check(a.Start, a.End, b.Start, b.End))
+                    overlaps.Add((j1, j2));
+                else if (!Kaaiman_reizen.Data.Rules.HasMinimumGapDays.Check(a.Start, a.End, b.Start, b.End, settings.MinimumGapDays))
+                    gapConflicts.Add((j1, j2));
+            }
+        }
+
+        // Constraint C: each leader can be assigned at most MaxTrips journeys (and at least MinTrips if enabled)
         for (int l = 0; l < L; l++)
         {
             var vars = Enumerable.Range(0, Js).Select(j => x[l, j]).ToList();
-            model.Add(LinearExpr.Sum(vars) <= leaders[l].MaxTrips);
+            var sum = LinearExpr.Sum(vars);
+            if (!settings.MinMaxJourneysActive)
+            {
+                // If MinMaxJourneys rule is not active, still enforce any MaxTrips limits but ignore MinTrips to avoid infeasibility and allow more flexible assignments.
+                if (leaders[l].MaxTrips > 0)
+                {
+                    model.Add(sum <= leaders[l].MaxTrips);
+                }
+            }
+            else
+            {
+                if (leaders[l].MaxTrips > 0)
+                {
+                    model.Add(sum <= leaders[l].MaxTrips);
+                }
+                if (leaders[l].MinTrips > 0)
+                {
+                    model.Add(sum >= leaders[l].MinTrips);
+                }
+            }
         }
 
-        // Constraint D: a leader cannot have two overlapping journeys
-        for (int l = 0; l < L; l++)
+        // Constraint D: a leader cannot have two overlapping journeys. If the rule is active, enforce as hard constraint.
+        // Otherwise create soft-violation variables that are penalised by the NoOverlapWeight.
+        var overlapViolations = new List<IntVar>();
+        if (settings.NoOverlapActive || settings.NoOverlapWeight > 0)
         {
-            for (int j1 = 0; j1 < Js; j1++)
+            foreach (var (j1, j2) in overlaps)
             {
-                for (int j2 = j1 + 1; j2 < Js; j2++)
+                for (int l = 0; l < L; l++)
                 {
-                    var a = solvable[j1];
-                    var b = solvable[j2];
-                    if (a.Start < b.End && b.Start < a.End)
+                    if (settings.NoOverlapActive)
+                    {
                         model.Add(x[l, j1] + x[l, j2] <= 1);
+                    }
+                    else
+                    {
+                        // Soft constraint: penalise via objective function if both are assigned
+                        var overlapVar = model.NewIntVar(0, 1, $"overlap_{l}_{j1}_{j2}");
+                        model.Add(overlapVar <= x[l, j1]);
+                        model.Add(overlapVar <= x[l, j2]);
+                        model.Add(overlapVar * 2 >= x[l, j1] + x[l, j2]);
+                        overlapViolations.Add(overlapVar);
+                    }
                 }
             }
         }
@@ -159,13 +212,43 @@ public class PlannerDraftService : IPlannerDraftService
         // Objective: minimize total preference cost (rank 1 = cheapest, no preference = 10)
         var obj = LinearExpr.NewBuilder();
         for (int l = 0; l < L; l++)
+        {
             for (int j = 0; j < Js; j++)
             {
-                int cost = leaders[l].PreferredDestinations.TryGetValue(solvable[j].Id, out int rank)
-                    ? (rank == 0 ? 5 : rank)
-                    : 10;
+                int cost;
+                if (settings.PreferencesEnabled)
+                {
+                    cost = leaders[l].PreferredDestinations.TryGetValue(solvable[j].Id, out int rank)
+                        ? (rank == 0 ? 5 : rank)
+                        : 10;
+                    cost *= settings.PreferenceWeight;
+                }
+                else
+                {
+                    // preferences disabled -> neutral cost for any assignment
+                    cost = 5;
+                }
+
                 obj.AddTerm(x[l, j], cost);
+
+                // Required experience: if the rule is active enforce hard block, otherwise penalise
+                if (settings.RequiredExperienceActive)
+                {
+                    // if leader does not have enough experience for this journey, block
+                    if (!Data.Rules.HasExperience.Check(settings.RequiredExperience, solvable[j].Name, leaders[l].AmountOfTrips))
+                    {
+                        model.Add(x[l, j] == 0);
+                    }
+                }
+                else if (settings.RequiredExperienceWeight > 0)
+                {
+                    if (!Data.Rules.HasExperience.Check(settings.RequiredExperience, solvable[j].Name, leaders[l].AmountOfTrips))
+                    {
+                        obj.AddTerm(x[l, j], settings.RequiredExperienceWeight);
+                    }
+                }
             }
+        }
 
         // Penalise each missing leader slot — high enough to always prefer assigning over not
         const int MissingLeaderPenalty = 1000;
@@ -189,6 +272,47 @@ public class PlannerDraftService : IPlannerDraftService
             var rowVars = Enumerable.Range(0, Js).Select(j => x[l, j]).ToList();
             model.Add(LinearExpr.Sum(rowVars) >= assignedVar);
             obj.AddTerm(assignedVar, -UnassignedPenalty);
+        }
+
+        // Add penalty terms for overlap and minimum gap violations if present
+        if (overlapViolations.Any())
+        {
+            foreach (var ov in overlapViolations)
+                obj.AddTerm(ov, settings.NoOverlapWeight);
+        }
+
+        // Minimum gap: a leader cannot have two journeys with insufficient gap between them.
+        // If the rule is active, enforce as hard constraint. Otherwise create soft-violation variables that are penalised by the MinimumGapWeight.
+        var minGapViolations = new List<IntVar>();
+        if (settings.MinimumGapDaysActive || settings.MinimumGapWeight > 0)
+        {
+            foreach (var (j1, j2) in gapConflicts)
+            {
+                for (int l = 0; l < L; l++)
+                {
+                    if (settings.MinimumGapDaysActive)
+                    {
+                        // Hard constraint: prevent assignment of both journeys
+                        model.Add(x[l, j1] + x[l, j2] <= 1);
+                    }
+                    else
+                    {
+                        // Soft constraint: penalise via objective function
+                        var violation = model.NewIntVar(0, 1, $"mingap_{l}_{j1}_{j2}");
+                        model.Add(violation <= x[l, j1]);
+                        model.Add(violation <= x[l, j2]);
+                        model.Add(violation * 2 >= x[l, j1] + x[l, j2]);
+                        minGapViolations.Add(violation);
+                    }
+                }
+            }
+        }
+
+        // Add penalty terms for minimum gap soft violations if present
+        if (minGapViolations.Any())
+        {
+            foreach (var mv in minGapViolations)
+                obj.AddTerm(mv, settings.MinimumGapWeight);
         }
 
         model.Minimize(obj);
