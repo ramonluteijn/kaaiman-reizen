@@ -7,12 +7,21 @@ using Kaaiman_reizen.Extensions;
 using Kaaiman_reizen.Helpers;
 using Kaaiman_reizen.Services;
 using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Identity;
 using MudBlazor.Services;
 using QuestPDF.Infrastructure;
+using System.Globalization;
 
 QuestPDF.Settings.License = LicenseType.Community;
+
+// ====================================
+// CULTURE FOR DATE AND TIME FORMATTING
+// ====================================
+var culture = new CultureInfo("nl-NL");
+
+CultureInfo.DefaultThreadCurrentCulture = culture;
+CultureInfo.DefaultThreadCurrentUICulture = culture;
 
 var builder = WebApplication.CreateBuilder(args);
 

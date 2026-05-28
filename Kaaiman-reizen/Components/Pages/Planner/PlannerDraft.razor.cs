@@ -1,9 +1,10 @@
+using Kaaiman_reizen.Components.Pages.Planner.Components;
+using Kaaiman_reizen.Data.Entities;
+using Kaaiman_reizen.Data.Enum;
+using Kaaiman_reizen.Data.Services;
 using Kaaiman_reizen.Models.Planner;
 using Kaaiman_reizen.Models.ViewModels;
 using Kaaiman_reizen.Services;
-using Kaaiman_reizen.Data.Services;
-using Kaaiman_reizen.Data.Entities;
-using Kaaiman_reizen.Components.Pages.Planner.Components;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 
@@ -16,10 +17,11 @@ public partial class PlannerDraft : ComponentBase
     [SupplyParameterFromQuery(Name = "versionId")]
     public int? VersionId { get; set; }
 
-    [Inject] private IPlannerDraftService DraftService { get; set; } = default!;
-    [Inject] private IPlanningService PlanningService { get; set; } = default!;
-    [Inject] private IRuleService RuleService { get; set; } = default!;
-    [Inject] private ISnackbar Snackbar { get; set; } = default!;
+    [Inject] private IPlannerDraftService _draftService { get; set; } = default!;
+    [Inject] private IPlanningService _planningService { get; set; } = default!;
+    [Inject] private IRuleService _ruleService { get; set; } = default!;
+    [Inject] private ITravelLeaderService _travelLeaderService { get; set;  } = default!;
+    [Inject] private ISnackbar _snackbar { get; set; } = default!;
 
     private int _selectedYear = DateTime.UtcNow.Year;
     private PlannerDraftRequest? _request;
@@ -30,8 +32,7 @@ public partial class PlannerDraft : ComponentBase
     private string? _saveMessage;
     private Severity _saveMessageSeverity = Severity.Info;
     private CancellationTokenSource? _saveMessageCts;
-    private Kaaiman_reizen.Data.Rules.CheckRules.RuleSettings _ruleSettings =
-        Kaaiman_reizen.Data.Rules.CheckRules.GetDefaultSettings();
+    private Data.Rules.CheckRules.RuleSettings _ruleSettings = Data.Rules.CheckRules.GetDefaultSettings();
     private bool _drawerOpen = false;
     private JourneyViewModel? _selectedJourney;
     private List<LeaderCandidate> _selectedCandidates = [];
@@ -39,6 +40,8 @@ public partial class PlannerDraft : ComponentBase
     private bool _noteModalOpen;
     private LeaderPlanningRow? _selectedLeaderRow;
     private bool _preferenceChangesDetected = false;
+    public CalendarModes selectedMode = CalendarModes.JourneyMode;
+    private IReadOnlyList<TravelLeader> _availibilityPeriods = [];
 
     private bool CanPublish =>
         _request is not null && _result is not null && _result.IsSuccess &&
@@ -49,16 +52,17 @@ public partial class PlannerDraft : ComponentBase
     protected override async Task OnInitializedAsync()
     {
         await LoadDataForYearAsync(_selectedYear);
+        _availibilityPeriods = await BuildCalendarAvailibilityPeriods();
     }
 
     private async Task LoadDataForYearAsync(int year)
     {
         _loading = true;
         _result = null;
-        _request = await DraftService.BuildRequestAsync(year);
-        var rules = await RuleService.GetRulesAsync();
-        _ruleSettings = Kaaiman_reizen.Data.Rules.CheckRules.FromRules(rules);
-        var drafts = await PlanningService.GetDraftsAsync(year);
+        _request = await _draftService.BuildRequestAsync(year);
+        var rules = await _ruleService.GetRulesAsync();
+        _ruleSettings = Data.Rules.CheckRules.FromRules(rules);
+        var drafts = await _planningService.GetDraftsAsync(year);
         var draftToLoad = VersionId is not null
             ? drafts.FirstOrDefault(d => d.Id == VersionId.Value)
             : drafts.FirstOrDefault();
@@ -81,11 +85,11 @@ public partial class PlannerDraft : ComponentBase
     {
         if (_request is null) return false;
 
-        var selectedDraft = await PlanningService.GetPlanningVersionByIdAsync(planningVersionId);
+        var selectedDraft = await _planningService.GetPlanningVersionByIdAsync(planningVersionId);
         if (selectedDraft is null || selectedDraft.IsPublished)
         {
             SetSaveMessage($"Concept met id {planningVersionId} is niet gevonden.", Severity.Warning);
-            Snackbar.Add(_saveMessage, _saveMessageSeverity);
+            _snackbar.Add(_saveMessage, _saveMessageSeverity);
             return false;
         }
 
@@ -106,7 +110,7 @@ public partial class PlannerDraft : ComponentBase
         StateHasChanged();
 
         await Task.Delay(50);
-        _result = await Task.Run(() => DraftService.GenerateDraft(_request));
+        _result = await Task.Run(() => _draftService.GenerateDraft(_request));
         _isGenerating = false;
 
         if (autoUpdated)
@@ -257,5 +261,12 @@ public partial class PlannerDraft : ComponentBase
                 TravelLeaders = leaders
             };
         }).ToList();
+    }
+
+    private async Task<IReadOnlyList<TravelLeader>> BuildCalendarAvailibilityPeriods()
+    {
+        if (_request is null || _result is null) return [];
+
+        return await _travelLeaderService.GetJourneyAvailabilityForAllTravelLeadersAsync();
     }
 }

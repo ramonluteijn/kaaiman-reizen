@@ -24,7 +24,7 @@ public partial class PlannerDraft
         if (isPublished && !CanPublish)
         {
             SetSaveMessage("Publiceren niet mogelijk: niet alle reizen zijn volledig bezet.", Severity.Warning);
-            Snackbar.Add("Niet alle reizen hebben het vereiste aantal reisleiders.", Severity.Warning);
+            _snackbar.Add("Niet alle reizen hebben het vereiste aantal reisleiders.", Severity.Warning);
             return;
         }
 
@@ -39,7 +39,7 @@ public partial class PlannerDraft
                 ? $"Published planning {DateTime.Now:yyyy-MM-dd HH:mm}"
                 : $"Draft planning {DateTime.Now:yyyy-MM-dd HH:mm}";
 
-            await PlanningService.SavePlanningAsync(_selectedYear, planningName, isPublished, assignments);
+            await _planningService.SavePlanningAsync(_selectedYear, planningName, isPublished, assignments);
 
             var message = isPublished
                 ? "Planning is gepubliceerd. Andere gebruikers zien nu deze versie."
@@ -47,7 +47,7 @@ public partial class PlannerDraft
             var severity = isPublished ? Severity.Success : Severity.Info;
 
             SetSaveMessage(message, severity);
-            Snackbar.Add(message, severity);
+            _snackbar.Add(message, severity);
         }
         catch (Exception)
         {
@@ -56,7 +56,7 @@ public partial class PlannerDraft
                 : "Opslaan van het concept is mislukt.";
 
             SetSaveMessage(message, Severity.Error);
-            Snackbar.Add(message, Severity.Error);
+            _snackbar.Add(message, Severity.Error);
         }
         finally
         {

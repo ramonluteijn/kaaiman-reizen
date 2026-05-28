@@ -1,5 +1,8 @@
-@page "/planner/draft"
-@using Kaaiman_reizen.Components.Pages.Planner.Components
+﻿@page "/planner/draft"
+
+@using Kaaiman_reizen.Components.Pages.Planner.Components;
+@using Kaaiman_reizen.Data.Enum;
+
 @rendermode InteractiveServer
 
 <PageTitle>Draft Planning</PageTitle>
@@ -59,15 +62,22 @@
                     </MudAlert>
                 }
 
-                <!-- Sidebar toggle -->
-                <div class="d-flex align-center gap-2 mb-2">
-                    <MudIconButton Icon="@Icons.Material.Filled.People"
-                                   Size="Size.Small"
-                                   Variant="Variant.Outlined"
-                                   Color="@(_sidebarOpen ? Color.Primary : Color.Default)"
-                                   OnClick="@(() => _sidebarOpen = !_sidebarOpen)"
-                                   title="Reisleiders tonen/verbergen" />
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">Reisleiders</MudText>
+                <!-- Sidebar toggle & planning mode buttons-->
+                <div class="d-flex justify-content-between">
+                    <div class="d-flex align-center mb-2 flex-row gap-2">
+                        <MudIconButton Icon="@Icons.Material.Filled.People"
+                                       Size="Size.Small"
+                                       Variant="Variant.Outlined"
+                                       Color="@(_sidebarOpen ? Color.Primary : Color.Default)"
+                                       OnClick="@(() => _sidebarOpen = !_sidebarOpen)"
+                                       title="Reisleiders tonen/verbergen" />
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">Reisleiders</MudText>
+                    </div>
+                   
+                    <MudToggleGroup T="CalendarModes" @bind-Value="selectedMode" SelectionMode="SelectionMode.SingleSelection">
+                        <MudToggleItem Value="@CalendarModes.JourneyMode">Reizen</MudToggleItem>
+                        <MudToggleItem Value="@CalendarModes.AvailibilityPeriodMode">Beschikbaarheden</MudToggleItem>
+                    </MudToggleGroup>
                 </div>
 
                 <!-- Calendar + sidebar layout -->
@@ -86,7 +96,7 @@
                                     <MudIconButton Icon="@Icons.Material.Filled.OpenInNew"
                                                    Size="Size.Small"
                                                    Variant="Variant.Outlined"
-                                                   class="position-absolute top-0 end-0"
+                                                   class="position-absolute end-0 top-0"
                                                    Style="z-index: 2;"
                                                    title="Reisleider details"
                                                    OnClick="@(() => OpenLeaderDetails(row))"
@@ -158,8 +168,9 @@
                                 </MudStack>
                             </AlertModal>
                         }
-                        <CalendarView Journeys="BuildCalendarJourneys()"
-                                      OnJourneyClick="HandleJourneyClick" />
+
+                        <CalendarView Mode="@selectedMode" Journeys="BuildCalendarJourneys()" AvailabilityPeriods="_availibilityPeriods" OnJourneyClick="HandleJourneyClick" />
+
                     </div>
                 </div>
 
@@ -227,3 +238,4 @@
     OnClose="CloseDrawer"
     OnAssignLeader="AssignLeader"
     OnRemoveLeader="RemoveLeader" />
+}

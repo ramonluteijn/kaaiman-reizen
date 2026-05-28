@@ -19,4 +19,5 @@ public interface ITravelLeaderService
     Task<List<Journey>> GetJourneysWithoutTravelLeadersAsync(int year);
     Task<List<OverlapData>> GetTravelLeadersWithOverlappingJourneys();
     Task<IReadOnlyList<Journey>> GetJourneysOfTravelLeaderAsync(TravelLeader leader, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<TravelLeader>> GetJourneyAvailabilityForAllTravelLeadersAsync();
 }
