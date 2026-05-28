@@ -283,6 +283,7 @@ public partial class PlannerDraft : ComponentBase
         if (_request is null || _result is null) return [];
 
         return await _travelLeaderService.GetJourneyAvailabilityForAllTravelLeadersAsync();
+    }
     private void OpenArchiveAvailabilityDialog() => _archiveDialogOpen = true;
 
     private void CloseArchiveDialog() => _archiveDialogOpen = false;
@@ -299,15 +300,15 @@ public partial class PlannerDraft : ComponentBase
 
         try
         {
-            var planningVersionId = await PlanningService.GetLatestPublishedPlanningVersionIdAsync();
-            var archivedCount = await TravelLeaderService.ArchiveAndResetPreferredDestinationsAsync(planningVersionId);
+            var planningVersionId = await _planningService.GetLatestPublishedPlanningVersionIdAsync();
+            var archivedCount = await _travelLeaderService.ArchiveAndResetPreferredDestinationsAsync(planningVersionId);
 
-            Snackbar.Add($"Beschikbaarheid gearchiveerd en gereset ({archivedCount} items).", Severity.Success);
+            _snackbar.Add($"Beschikbaarheid gearchiveerd en gereset ({archivedCount} items).", Severity.Success);
             await LoadDataForYearAsync(_selectedYear);
         }
         catch (Exception)
         {
-            Snackbar.Add("Archiveren en resetten van beschikbaarheid is mislukt.", Severity.Error);
+            _snackbar.Add("Archiveren en resetten van beschikbaarheid is mislukt.", Severity.Error);
         }
         finally
         {

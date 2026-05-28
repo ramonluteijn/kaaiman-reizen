@@ -13,7 +13,7 @@
                 @if (Journeys.Any() || AvailabilityPeriods.Any())
                 {
                     <div class="cal-pills-bar">
-                        foreach (var group in Journeys
+                        @foreach (var group in Journeys
                                                     .OrderBy(j => j.Start)
                                                     .GroupBy(j => new { j.Start.Year, j.Start.Month }))
                         {

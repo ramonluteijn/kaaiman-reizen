@@ -183,6 +183,8 @@ public class TravelLeaderService : ITravelLeaderService
         .Include(tl => tl.PreferredDestinations)
             .ThenInclude(pd => pd.Journey)
         .ToListAsync();
+    }
+
     public async Task<int> ArchiveAndResetPreferredDestinationsAsync(int? planningVersionId, CancellationToken cancellationToken = default)
     {
         var preferredDestinations = await _db.PreferredDestinations
