@@ -575,5 +575,117 @@ namespace Kaaiman_reizen.Tests.Services
                 .CountAsync();
             Assert.Equal(1, history3Days);
         }
+
+        [Fact]
+        public async Task SendJourneyRemindersAsync_WhenDisabledRuleExists_DoesNotSend()
+        {
+            var db = GetInMemoryDb();
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+            var travelLeader = new TravelLeader
+            {
+                Id = 1,
+                Name = "Test Leader",
+                Email = "test@example.com",
+                PhoneNumber = "111111111",
+                AmountOfTrips = 1,
+                MinTrips = 1,
+                MaxTrips = 1
+            };
+
+            var journey = new Journey
+            {
+                Id = 1,
+                Name = "Disabled Notifications Trip",
+                Start = today.AddDays(7),
+                End = today.AddDays(8),
+                Busses = 1,
+                Travelers = 10,
+                RequiredLeaders = 1,
+                TravelLeaders = new List<TravelLeader> { travelLeader }
+            };
+
+            var disabledRule = new Rule
+            {
+                Id = 101,
+                Key = "JourneyReminderEnabled",
+                Description = "Toggle journey reminders",
+                Value = "false",
+                IsActive = true,
+                Weight = 1
+            };
+
+            db.TravelLeader.Add(travelLeader);
+            db.Journey.Add(journey);
+            db.Rule.Add(disabledRule);
+            await db.SaveChangesAsync();
+
+            var emailDispatcher = new DummyEmailDispatcher();
+            var notificationService = new NotificationService(db);
+            var journeyNotificationService = new JourneyNotificationService(db, emailDispatcher, notificationService);
+
+            await journeyNotificationService.SendJourneyRemindersAsync();
+
+            Assert.Empty(emailDispatcher.SentEmails);
+            Assert.Empty(await db.JourneyNotificationHistory.ToListAsync());
+        }
+
+        [Fact]
+        public async Task SendJourneyRemindersAsync_UsesConfiguredReminderDays()
+        {
+            var db = GetInMemoryDb();
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+            var travelLeader = new TravelLeader
+            {
+                Id = 1,
+                Name = "Test Leader",
+                Email = "test@example.com",
+                PhoneNumber = "111111111",
+                AmountOfTrips = 1,
+                MinTrips = 1,
+                MaxTrips = 1
+            };
+
+            var journey = new Journey
+            {
+                Id = 1,
+                Name = "Custom Day Trip",
+                Start = today.AddDays(10),
+                End = today.AddDays(11),
+                Busses = 1,
+                Travelers = 10,
+                RequiredLeaders = 1,
+                TravelLeaders = new List<TravelLeader> { travelLeader }
+            };
+
+            var reminderDaysRule = new Rule
+            {
+                Id = 102,
+                Key = "JourneyReminderDays",
+                Description = "Days before start",
+                Value = "10,5",
+                IsActive = true,
+                Weight = 1
+            };
+
+            db.TravelLeader.Add(travelLeader);
+            db.Journey.Add(journey);
+            db.Rule.Add(reminderDaysRule);
+            await db.SaveChangesAsync();
+
+            var emailDispatcher = new DummyEmailDispatcher();
+            var notificationService = new NotificationService(db);
+            var journeyNotificationService = new JourneyNotificationService(db, emailDispatcher, notificationService);
+
+            await journeyNotificationService.SendJourneyRemindersAsync();
+
+            Assert.Single(emailDispatcher.SentEmails);
+            Assert.Contains("10 dag", emailDispatcher.SentEmails.First().message);
+
+            var history = await db.JourneyNotificationHistory.ToListAsync();
+            Assert.Single(history);
+            Assert.Equal(10, history.First().DaysBeforeStart);
+        }
     }
 }

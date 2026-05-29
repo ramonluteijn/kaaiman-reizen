@@ -8,7 +8,7 @@ using MudBlazor;
 
 namespace Kaaiman_reizen.Components.Pages.Rules;
 
-public partial class Rules
+public partial class Settings
 {
     [Inject]
     private IRuleService RuleService { get; set; } = default!;
@@ -17,7 +17,7 @@ public partial class Rules
     private IDialogService DialogService { get; set; } = default!;
 
     [Inject]
-    private ILogger<Rules> Logger { get; set; } = default!;
+    private ILogger<Settings> Logger { get; set; } = default!;
 
     [Inject]
     private IHostEnvironment HostEnvironment { get; set; } = default!;
@@ -28,6 +28,14 @@ public partial class Rules
     private string _searchTerm = string.Empty;
     private string _sortColumn = "Key";
     private bool _sortAscending = true;
+    private bool _notificationsEnabled = RuleKeys.DefaultJourneyReminderEnabled;
+    private string _notificationDaysInput = string.Join(',', RuleKeys.DefaultJourneyReminderDays);
+
+    private static readonly HashSet<string> NotificationRuleKeys =
+    [
+        RuleKeys.JourneyReminderEnabled,
+        RuleKeys.JourneyReminderDays
+    ];
 
     protected override async Task OnInitializedAsync()
     {
@@ -38,11 +46,12 @@ public partial class Rules
         {
             var items = await RuleService.GetRulesAsync();
             _rules = items.ToViewModels().ToList();
+            LoadNotificationSettingsFromRules();
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Kon regels niet laden");
-            _error = $"Kon regels niet laden: {LoadErrorFormatter.Format(ex, HostEnvironment)}";
+            Logger.LogError(ex, "Kon instellingen niet laden");
+            _error = $"Kon instellingen niet laden: {LoadErrorFormatter.Format(ex, HostEnvironment)}";
             _rules = [];
         }
         finally
@@ -51,9 +60,12 @@ public partial class Rules
         }
     }
 
+    private IEnumerable<RuleViewModel> _planningRules =>
+        _rules.Where(r => !NotificationRuleKeys.Contains(r.Key));
+
     private IEnumerable<RuleViewModel> FilteredRules =>
         ApplySorting(
-            _rules.Where(r =>
+            _planningRules.Where(r =>
                 string.IsNullOrWhiteSpace(_searchTerm) ||
                 r.Key.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase)
             )
@@ -157,6 +169,81 @@ public partial class Rules
                 _rules[idx] = entity.ToViewModel();
                 StateHasChanged();
             }
+        }
+    }
+
+    private async Task OnNotificationsEnabledChanged(ChangeEventArgs args)
+    {
+        _notificationsEnabled = args.Value switch
+        {
+            bool value => value,
+            string text when bool.TryParse(text, out var parsed) => parsed,
+            _ => _notificationsEnabled
+        };
+
+        await UpdateNotificationRuleAsync(RuleKeys.JourneyReminderEnabled, _notificationsEnabled.ToString().ToLowerInvariant());
+    }
+
+    private async Task OnReminderDaysChanged(ChangeEventArgs args)
+    {
+        var input = args.Value?.ToString() ?? string.Empty;
+        var normalized = NormalizeReminderDays(input);
+
+        _notificationDaysInput = string.IsNullOrWhiteSpace(normalized)
+            ? string.Join(',', RuleKeys.DefaultJourneyReminderDays)
+            : normalized;
+
+        await UpdateNotificationRuleAsync(RuleKeys.JourneyReminderDays, _notificationDaysInput);
+    }
+
+    private void LoadNotificationSettingsFromRules()
+    {
+        var enabledRule = _rules.FirstOrDefault(r => r.Key == RuleKeys.JourneyReminderEnabled);
+        _notificationsEnabled = bool.TryParse(enabledRule?.TypedValue?.ToString(), out var enabled)
+            ? enabled
+            : RuleKeys.DefaultJourneyReminderEnabled;
+
+        var daysRule = _rules.FirstOrDefault(r => r.Key == RuleKeys.JourneyReminderDays);
+        var normalizedDays = NormalizeReminderDays(daysRule?.TypedValue?.ToString() ?? string.Empty);
+        _notificationDaysInput = string.IsNullOrWhiteSpace(normalizedDays)
+            ? string.Join(',', RuleKeys.DefaultJourneyReminderDays)
+            : normalizedDays;
+    }
+
+    private static string NormalizeReminderDays(string input)
+    {
+        var parsed = input
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(value => int.TryParse(value, out var day) ? day : (int?)null)
+            .Where(day => day.HasValue && day.Value > 0)
+            .Select(day => day!.Value)
+            .Distinct()
+            .OrderByDescending(day => day)
+            .ToList();
+
+        return parsed.Count == 0
+            ? string.Empty
+            : string.Join(',', parsed);
+    }
+
+    private async Task UpdateNotificationRuleAsync(string key, string value)
+    {
+        var rule = _rules.FirstOrDefault(r => r.Key == key);
+        if (rule == null)
+            return;
+
+        var entity = await RuleService.GetRuleByIdAsync(rule.Id);
+        if (entity == null)
+            return;
+
+        entity.TypedValue = value;
+        await RuleService.UpdateRuleAsync(entity);
+
+        var idx = _rules.FindIndex(r => r.Id == entity.Id);
+        if (idx >= 0)
+        {
+            _rules[idx] = entity.ToViewModel();
+            StateHasChanged();
         }
     }
 }
