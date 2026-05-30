@@ -11,7 +11,18 @@
 
 <MudStack Spacing="4" Class="pa-4 pd-page">
     <div class="d-flex flex-wrap align-center justify-space-between gap-2">
-        <MudText Typo="Typo.h5">Planner</MudText>
+        <h1 class="h5 d-flex align-center gap-2 mb-0">Planner
+            <Tooltip>
+                <strong>Planner — hoe werkt dit?</strong>
+                <ul>
+                    <li>Gebruik "Opnieuw genereren" om met de huidige voorkeuren een nieuwe planning te maken.</li>
+                    <li>Open de zijbalk om reisleiders en hun toegewezen reizen te bekijken.</li>
+                    <li>Klik op een reis in de kalender om reisleiders toe te wijzen of te verwijderen.</li>
+                    <li>Gebruik "Opslaan als concept" of "Publiceer planning" om de planning op te slaan.</li>
+                    <li>"Nieuwe planningsperiode starten" archiveert de huidige periode en begint opnieuw.</li>
+                </ul>
+            </Tooltip>
+        </h1>
         <MudButton Variant="Variant.Outlined"
                    Color="Color.Error"
                    Disabled="@_isSaving"

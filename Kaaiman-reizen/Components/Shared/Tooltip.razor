@@ -1,0 +1,13 @@
+﻿<div class="tooltip">
+    <span class="tooltip-trigger">
+        ?
+    </span>
+    <div id="tooltip-content" class="tooltip-content" role="tooltip">
+        @ChildContent
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}
