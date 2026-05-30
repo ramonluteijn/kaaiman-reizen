@@ -52,7 +52,7 @@
             border: 6px solid transparent;
         }
     }
-    &:hover {
+    &.open {
         .tooltip-trigger {
             background: linear-gradient(180deg, #00796B2E 0%, rgba(0, 121, 107, 0.28) 100%);
             outline: 2px solid rgba(0, 121, 107, 0.28);

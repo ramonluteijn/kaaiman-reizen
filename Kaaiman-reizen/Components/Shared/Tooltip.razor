@@ -1,8 +1,14 @@
-﻿<div class="tooltip">
-    <span class="tooltip-trigger">
+﻿<div class="tooltip @(_isOpen ? "open" : string.Empty)">
+    <span class="tooltip-trigger"
+          role="button"
+          tabindex="0"
+          aria-expanded="@_isOpen"
+          aria-controls="@_contentId"
+          @onclick="ToggleOpen"
+    >
         ?
     </span>
-    <div id="tooltip-content" class="tooltip-content" role="tooltip">
+    <div id="@_contentId" class="tooltip-content" role="tooltip">
         @ChildContent
     </div>
 </div>
@@ -10,4 +16,9 @@
 @code {
     [Parameter]
     public RenderFragment? ChildContent { get; set; }
+
+    private readonly string _contentId = $"tooltip-content-{Guid.NewGuid():N}";
+    private bool _isOpen;
+
+    private void ToggleOpen() => _isOpen = !_isOpen;
 }
