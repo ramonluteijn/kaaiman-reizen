@@ -37,7 +37,8 @@ public partial class PlannerDraft : ComponentBase
     private bool _drawerOpen = false;
     private JourneyViewModel? _selectedJourney;
     private List<LeaderCandidate> _selectedCandidates = [];
-    private bool _sidebarOpen = true;
+    private bool _sidebarLeaderOpen = true;
+    private bool _sidebarJourneyOpen = false;
     private bool _noteModalOpen;
     private LeaderPlanningRow? _selectedLeaderRow;
     private bool _preferenceChangesDetected = false;
