@@ -43,6 +43,7 @@ public partial class PlannerDraft : ComponentBase
     private LeaderPlanningRow? _selectedLeaderRow;
     private bool _preferenceChangesDetected = false;
     private bool _archiveDialogOpen;
+    private DateOnly? _jumpToDate;
 
     private bool CanPublish =>
         _request is not null && _result is not null && _result.IsSuccess &&
@@ -238,6 +239,11 @@ public partial class PlannerDraft : ComponentBase
     {
         _noteModalOpen = false;
         _selectedLeaderRow = null;
+    }
+
+    private void GoToMonth(JourneyViewModel journey)
+    {
+        _jumpToDate = journey.Start;
     }
 
     private List<NoteModal.JourneyDetail> GetSelectedLeaderJourneys()
