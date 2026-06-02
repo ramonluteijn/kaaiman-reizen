@@ -20,7 +20,7 @@ public partial class PlannerDraft : ComponentBase
     [Inject] private IPlannerDraftService _draftService { get; set; } = default!;
     [Inject] private IPlanningService _planningService { get; set; } = default!;
     [Inject] private IRuleService _ruleService { get; set; } = default!;
-    [Inject] private ITravelLeaderService _travelLeaderService { get; set;  } = default!;
+    [Inject] private ITravelLeaderService _travelLeaderService { get; set; } = default!;
     [Inject] private ISnackbar _snackbar { get; set; } = default!;
     [Inject] private IUserTimezoneService UserTimezoneService { get; set; } = default!;
 
