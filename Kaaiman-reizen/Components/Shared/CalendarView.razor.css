@@ -156,6 +156,20 @@
     border-radius: 6px;
 }
 
+.cal-journey-span-small {
+    height: 26px;
+    min-height: 26px;
+    padding: 0 8px;
+    font-size: 0.85rem;
+    margin: 4px 1px;
+    border-radius: 6px;
+    overflow: hidden;
+    color: #333333;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+}
+
 .cal-journey-span:hover {
     filter: brightness(1.12);
 }
