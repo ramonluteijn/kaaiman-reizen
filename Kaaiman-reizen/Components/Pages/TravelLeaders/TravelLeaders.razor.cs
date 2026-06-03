@@ -22,6 +22,9 @@ public partial class TravelLeaders
     [Inject]
     private IHostEnvironment HostEnvironment { get; set; } = default!;
 
+    [Inject]
+    private IPlanningService PlanningService { get; set; } = default!;
+
     protected bool _loading = true;
     private string? _error;
     private List<TravelLeaderViewModel> _leaders = [];
@@ -30,6 +33,8 @@ public partial class TravelLeaders
     private bool _sortAscending = true;
     private bool _isDeleteModalOpen;
     private TravelLeaderViewModel? _leaderPendingDelete;
+
+    private HashSet<int> _publishedLeaderIds = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -40,6 +45,12 @@ public partial class TravelLeaders
         {
             var items = await LeaderService.GetTravelLeadersAsync();
             _leaders = items.ToViewModels().ToList();
+
+            var published = await PlanningService.GetLatestPublishedAsync(DateTime.UtcNow.Year);
+            if (published != null)
+            {
+                _publishedLeaderIds = published.Assignments.Select(a => a.TravelLeaderId).ToHashSet();
+            }
         }
         catch (Exception ex)
         {

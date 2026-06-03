@@ -1,3 +1,64 @@
 .status-toggle-badge {
     cursor: pointer;
 }
+
+.leader-name-column,
+.leader-name-cell {
+    min-width: 15rem;
+}
+
+.leader-contact-column,
+.leader-contact-cell {
+    min-width: 10rem;
+}
+
+.leader-metric-column,
+.leader-metric-cell {
+    width: 5.25rem;
+}
+
+.leader-preferences-column,
+.leader-preferences-cell {
+    min-width: 13rem;
+}
+
+.leader-status-column,
+.leader-status-cell {
+    min-width: 7rem;
+}
+
+.leader-name-cell .text-muted,
+.leader-contact-cell .text-muted,
+.leader-preference {
+    font-size: 0.8125rem;
+}
+
+.leader-metric {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.5rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    background: rgba(0, 121, 107, 0.08);
+    color: #0f172a;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.leader-status-cell .badge {
+    font-size: 0.72rem;
+    letter-spacing: 0.02em;
+}
+
+tr.published-yes td { background-color: rgba(15,81,50,0.03); }
+tr.published-no td { background-color: transparent; }
+
+.leader-preferences-cell {
+    white-space: normal;
+}
+
+.leader-preferences-cell .leader-preference {
+    color: #334155;
+}

@@ -15,6 +15,7 @@
 
 .app-table th,
 .app-table td {
+    vertical-align: middle;
     white-space: nowrap;
     word-break: normal;
     overflow-wrap: normal;
