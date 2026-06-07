@@ -42,13 +42,13 @@
             </HeaderContent>
             <RowTemplate>
                 <td class="leader-name-cell">
-                        <div class="d-flex flex-column">
-                            <span class="fw-semibold">@context.Name</span>
-                            <span class="text-muted small">@context.Email</span>
-                        </div>
+                    <span class="fw-semibold">@context.Name</span>
                 </td>
                 <td class="leader-contact-cell">
-                    <span class="text-muted">@context.PhoneNumber</span>
+                    <div class="d-flex flex-column gap-1">
+                        <span class="text-muted small">@context.Email</span>
+                        <span class="text-muted small">@context.PhoneNumber</span>
+                    </div>
                 </td>
                 <td class="leader-metric-cell text-center">
                     <span class="leader-metric">@(context.AmountOfTrips?.ToString() ?? "—")</span>
@@ -67,9 +67,28 @@
                     else
                     {
                         <div class="d-flex flex-column gap-1">
-                            @foreach (var name in context.AvailableForJourneys)
+                            @{
+                                var allPrefs = context.AvailableForJourneys.ToList();
+                                var isExpanded = _expandedPreferences.Contains(context.Id);
+                                var prefsToShow = isExpanded ? allPrefs : allPrefs.Take(2).ToList();
+                            }
+                            @foreach (var name in prefsToShow)
                             {
                                 <span class="leader-preference">@name</span>
+                            }
+                            @if (allPrefs.Count > 2 && !isExpanded)
+                            {
+                                <button class="btn btn-link btn-sm p-0 text-start leader-pref-toggle leader-pref-expand" 
+                                        @onclick="@(() => TogglePreferences(context.Id))">
+                                    +@(allPrefs.Count - 2) meer
+                                </button>
+                            }
+                            @if (allPrefs.Count > 2 && isExpanded)
+                            {
+                                <button class="btn btn-link btn-sm p-0 text-start leader-pref-toggle leader-pref-collapse" 
+                                        @onclick="@(() => TogglePreferences(context.Id))">
+                                    − minder
+                                </button>
                             }
                         </div>
                     }

@@ -27,7 +27,6 @@
     min-width: 7rem;
 }
 
-.leader-name-cell .text-muted,
 .leader-contact-cell .text-muted,
 .leader-preference {
     font-size: 0.8125rem;
@@ -61,4 +60,32 @@ tr.published-no td { background-color: transparent; }
 
 .leader-preferences-cell .leader-preference {
     color: #334155;
+}
+
+.leader-preferences-cell .btn-link {
+    color: #0f5132 !important;
+    font-weight: 500;
+    transition: color 0.15s ease-in-out;
+}
+
+.leader-preferences-cell .btn-link:hover {
+    color: #00796b !important;
+    text-decoration: underline;
+}
+
+.leader-pref-toggle {
+    text-decoration: none;
+    font-size: 0.75rem;
+    line-height: 1.2;
+    color: #0f5132 !important;
+    font-weight: 500;
+}
+
+.leader-pref-toggle:hover {
+    color: #00796b !important;
+    text-decoration: underline;
+}
+
+.leader-pref-collapse {
+    color: #6b7280 !important;
 }

@@ -35,6 +35,7 @@ public partial class TravelLeaders
     private TravelLeaderViewModel? _leaderPendingDelete;
 
     private HashSet<int> _publishedLeaderIds = new();
+    private HashSet<int> _expandedPreferences = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -160,5 +161,17 @@ public partial class TravelLeaders
     private static string GetJourneyHref(int journeyId)
     {
         return $"/journeys/edit/{journeyId}";
+    }
+
+    private void TogglePreferences(int leaderId)
+    {
+        if (_expandedPreferences.Contains(leaderId))
+        {
+            _expandedPreferences.Remove(leaderId);
+        }
+        else
+        {
+            _expandedPreferences.Add(leaderId);
+        }
     }
 }
