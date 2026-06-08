@@ -1,0 +1,250 @@
+@using System.ComponentModel.DataAnnotations
+@using Kaaiman_reizen.Data.Entities
+@using Kaaiman_reizen.Data.Enum
+@using Kaaiman_reizen.Data.Services
+@using MudBlazor
+@inject IPlanningRoundService PlanningRoundService
+@inject NavigationManager Navigation
+
+@if (IsOpen)
+{
+    <div class="km-alert-overlay" @onclick="Close">
+        <MudPaper Style="width:600px;max-width:96vw;max-height:92vh;overflow-y:auto;border-radius:12px"
+                  Elevation="10" @onclick:stopPropagation="true">
+
+            <div class="km-alert-modal__header">
+                <div class="km-alert-modal__title-wrap">
+                    <MudText Typo="Typo.h6" Class="km-alert-modal__title">Planningsronde aanmaken</MudText>
+                </div>
+                <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small"
+                               OnClick="Close" aria-label="Sluiten" Disabled="_saving" />
+            </div>
+
+            <div class="km-alert-modal__body">
+                @if (!string.IsNullOrEmpty(_errorMessage))
+                {
+                    <div class="alert alert-danger mb-3">@_errorMessage</div>
+                }
+
+                <EditForm Model="_form" OnValidSubmit="HandleSubmit">
+                    <DataAnnotationsValidator />
+
+                    <div class="mb-3">
+                        <label class="form-label">Naam</label>
+                        <InputText class="form-control" @bind-Value="_form.Name"
+                                   placeholder="bijv. Periode 1 2026" />
+                        <ValidationMessage For="() => _form.Name" />
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="form-label">Startdatum</label>
+                            <InputDate TValue="DateOnly" class="form-control"
+                                       @bind-Value:get="_form.StartDate"
+                                       @bind-Value:set="OnStartDateChanged" />
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Einddatum</label>
+                            <InputDate TValue="DateOnly" class="form-control"
+                                       @bind-Value:get="_form.EndDate"
+                                       @bind-Value:set="OnEndDateChanged" />
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="form-label">Voorkeur deadline</label>
+                            <InputDate TValue="DateOnly" class="form-control"
+                                       @bind-Value="_form.PreferenceDeadline" />
+                            <ValidationMessage For="() => _form.PreferenceDeadline" />
+                            <small class="text-muted">Reisleiders moeten vóór deze datum hun voorkeur invullen</small>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Publicatie deadline</label>
+                            <InputDate TValue="DateOnly" class="form-control"
+                                       @bind-Value="_form.PublicationDeadline" />
+                            <ValidationMessage For="() => _form.PublicationDeadline" />
+                            <small class="text-muted">Planner moet vóór deze datum de planning publiceren</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">
+                            Reizen in deze ronde
+                            <span class="badge @(_journeysInRange.Count > 0 ? "bg-success" : "bg-secondary") ms-1">
+                                @_journeysInRange.Count
+                            </span>
+                        </label>
+                        @if (_journeysInRange.Count > 0)
+                        {
+                            <div style="max-height:160px;overflow-y:auto;border:1px solid #dee2e6;border-radius:6px">
+                                @foreach (var j in _journeysInRange)
+                                {
+                                    <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+                                        <span>@j.Name</span>
+                                        <small class="text-muted ms-3 text-nowrap">
+                                            @j.Start.ToString("d MMM") – @j.End.ToString("d MMM")
+                                        </small>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-muted small fst-italic">
+                                Geen actieve reizen gevonden binnen de geselecteerde datumreeks.
+                            </div>
+                        }
+                    </div>
+
+                    <div class="km-alert-modal__footer">
+                        <MudButton Variant="Variant.Text" OnClick="Close" Disabled="_saving">
+                            Annuleren
+                        </MudButton>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                                   ButtonType="ButtonType.Submit" Disabled="_saving">
+                            @if (_saving)
+                            {
+                                <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" />
+                            }
+                            Ronde aanmaken
+                        </MudButton>
+                    </div>
+                </EditForm>
+            </div>
+        </MudPaper>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public EventCallback<bool> IsOpenChanged { get; set; }
+    [Parameter] public List<Journey> Journeys { get; set; } = [];
+
+    private RoundForm _form = new();
+    private List<Journey> _journeysInRange = [];
+    private bool _saving;
+    private string? _errorMessage;
+    private bool _prevIsOpen;
+
+    protected override void OnParametersSet()
+    {
+        if (IsOpen && !_prevIsOpen)
+            InitializeForm();
+        _prevIsOpen = IsOpen;
+    }
+
+    private void InitializeForm()
+    {
+        _form = new RoundForm();
+        _errorMessage = null;
+
+        var huidig = Journeys.Where(j => j.BookingStatus == BookingStatus.Huidig).ToList();
+
+        if (huidig.Count > 0)
+        {
+            _form.StartDate = huidig.Min(j => j.Start);
+            _form.EndDate = huidig.Max(j => j.End);
+            _form.Name = $"Planningsronde {_form.StartDate.Year}";
+        }
+        else
+        {
+            var today = DateOnly.FromDateTime(DateTime.Today);
+            _form.StartDate = new DateOnly(today.Year, 1, 1);
+            _form.EndDate = new DateOnly(today.Year, 12, 31);
+            _form.Name = $"Planningsronde {today.Year}";
+        }
+
+        RefreshJourneysInRange();
+    }
+
+    private void OnStartDateChanged(DateOnly value)
+    {
+        _form.StartDate = value;
+        RefreshJourneysInRange();
+    }
+
+    private void OnEndDateChanged(DateOnly value)
+    {
+        _form.EndDate = value;
+        RefreshJourneysInRange();
+    }
+
+    private void RefreshJourneysInRange()
+    {
+        _journeysInRange = Journeys
+            .Where(j => j.BookingStatus == BookingStatus.Huidig
+                     && j.Start >= _form.StartDate
+                     && j.Start <= _form.EndDate)
+            .OrderBy(j => j.Start)
+            .ToList();
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (_form.EndDate <= _form.StartDate)
+        {
+            _errorMessage = "Einddatum moet na de startdatum liggen.";
+            return;
+        }
+        if (_form.PreferenceDeadline == default)
+        {
+            _errorMessage = "Voorkeur deadline is verplicht.";
+            return;
+        }
+        if (_form.PublicationDeadline == default)
+        {
+            _errorMessage = "Publicatie deadline is verplicht.";
+            return;
+        }
+        if (_form.PublicationDeadline <= _form.PreferenceDeadline)
+        {
+            _errorMessage = "Publicatie deadline moet na de voorkeur deadline liggen.";
+            return;
+        }
+
+        _saving = true;
+        _errorMessage = null;
+
+        try
+        {
+            var round = await PlanningRoundService.CreateAsync(
+                _form.Name,
+                _form.StartDate.Year,
+                _form.StartDate,
+                _form.EndDate,
+                _form.PreferenceDeadline.ToDateTime(new TimeOnly(23, 59, 59)),
+                _form.PublicationDeadline.ToDateTime(new TimeOnly(23, 59, 59))
+            );
+
+            await IsOpenChanged.InvokeAsync(false);
+            Navigation.NavigateTo($"/planner/rounds/{round.Id}/draft");
+        }
+        catch
+        {
+            _errorMessage = "Er is iets misgegaan bij het aanmaken van de ronde. Probeer het opnieuw.";
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private async Task Close()
+    {
+        if (_saving) return;
+        await IsOpenChanged.InvokeAsync(false);
+    }
+
+    private class RoundForm
+    {
+        [Required(ErrorMessage = "Naam is verplicht.")]
+        [MaxLength(100, ErrorMessage = "Naam mag maximaal 100 tekens zijn.")]
+        public string Name { get; set; } = string.Empty;
+
+        public DateOnly StartDate { get; set; }
+        public DateOnly EndDate { get; set; }
+        public DateOnly PreferenceDeadline { get; set; }
+        public DateOnly PublicationDeadline { get; set; }
+    }
+}
