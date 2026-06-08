@@ -282,7 +282,7 @@ public partial class PlannerDraft : ComponentBase
                 RequiredLeaders = j.RequiredLeaders,
                 TravelLeaders = leaders
             };
-        }).ToList();
+        }).OrderBy(j => j.Start).ToList();
     }
 
     private async Task<IReadOnlyList<TravelLeader>> BuildCalendarAvailibilityPeriods()

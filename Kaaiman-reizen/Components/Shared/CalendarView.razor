@@ -9,12 +9,10 @@
             <div class="cal-nav-center">
                 <MudText Typo="Typo.h5">@DateDisplay.FormatMonthYear(DateOnly.FromDateTime(_currentDate))</MudText>
                 @if (Journeys.Any() && ShowNavigation)
-              
-                <MudText Typo="Typo.h5">@(Mode == CalendarModes.JourneyMode ? "Reizen" : "Beschikbaarheden")</MudText>
-                <MudText Typo="Typo.h5" Class="mud-text-secondary">@_currentDate.ToString("MMMM yyyy")</MudText>
-
-<!--                 @if (Journeys.Any() || AvailabilityPeriods.Any()) -->
                 {
+                    <MudText Typo="Typo.h5">@(Mode == CalendarModes.JourneyMode ? "Reizen" : "Beschikbaarheden")</MudText>
+                    <MudText Typo="Typo.h5" Class="mud-text-secondary">@_currentDate.ToString("MMMM yyyy")</MudText>
+                
                     <div class="cal-pills-bar">
                         @foreach (var group in Journeys
                                                     .OrderBy(j => j.Start)

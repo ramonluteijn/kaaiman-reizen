@@ -77,19 +77,19 @@
                 }
 
                 <!-- Sidebar toggle & planning mode buttons-->
-                <div class="d-flex justify-content-between flex-wrap-reverse gap-2">
+                <div class="d-flex flex-wrap-reverse gap-2">
                     <div class="d-flex align-center mb-2 gap-2">
                         <MudIconButton Icon="@Icons.Material.Filled.People"
                                     Size="Size.Small"
                                     Variant="Variant.Outlined"
-                                    Color="@(_sidebarOpen ? Color.Primary : Color.Default)"
-                                    OnClick="@(() => _sidebarOpen = !_sidebarOpen)"
+                                    Color="@(_sidebarLeaderOpen ? Color.Primary : Color.Default)"
+                                       OnClick="@(() => _sidebarLeaderOpen = !_sidebarLeaderOpen)"
                                     title="Reisleiders tonen/verbergen" />
                         <MudText Typo="Typo.body2" Color="Color.Secondary">Reisleiders</MudText>
                     </div>
                   
                     <div class="d-flex align-center mb-2 gap-2">
-                        <MudIconButton Icon="@Icons.Material.Filled.People"
+                        <MudIconButton Icon="@Icons.Material.Filled.Map"
                                        Size="Size.Small"
                                        Variant="Variant.Outlined"
                                        Color="@(_sidebarJourneyOpen ? Color.Primary : Color.Default)"
