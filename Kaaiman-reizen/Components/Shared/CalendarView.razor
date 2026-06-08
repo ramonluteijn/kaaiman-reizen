@@ -1,4 +1,5 @@
 @using Kaaiman_reizen.Data.Entities
+@using Kaaiman_reizen.Data.Enum
 @using Kaaiman_reizen.Models.ViewModels
 
 <MudPaper Elevation="1" Class="pa-4">
@@ -8,6 +9,11 @@
             <div class="cal-nav-center">
                 <MudText Typo="Typo.h5">@DateDisplay.FormatMonthYear(DateOnly.FromDateTime(_currentDate))</MudText>
                 @if (Journeys.Any() && ShowNavigation)
+              
+                <MudText Typo="Typo.h5">@(Mode == CalendarModes.JourneyMode ? "Reizen" : "Beschikbaarheden")</MudText>
+                <MudText Typo="Typo.h5" Class="mud-text-secondary">@_currentDate.ToString("MMMM yyyy")</MudText>
+
+<!--                 @if (Journeys.Any() || AvailabilityPeriods.Any()) -->
                 {
                     <div class="cal-pills-bar">
                         @foreach (var group in Journeys
@@ -22,14 +28,18 @@
                                         @onclick="() => GoToMonth(monthDate)">
                                     @DateDisplay.FormatMonthYear(monthDate)
                                 </button>
-                                <div class="cal-pill-chips">
-                                    @foreach (var j in group)
-                                    {
-                                        <span class="cal-journey-chip" @onclick="() => GoToMonth(j.Start)">
-                                            @j.Name
-                                        </span>
-                                    }
-                                </div>
+
+                                @if (Mode is CalendarModes.JourneyMode)
+                                {
+                                    <div class="cal-pill-chips">
+                                        @foreach (var j in group)
+                                        {
+                                            <span class="cal-journey-chip" @onclick="() => GoToMonth(j.Start)">
+                                                @j.Name
+                                            </span>
+                                        }
+                                    </div>
+                                }
                             </div>
                         }
                     </div>
@@ -79,27 +89,92 @@
                          A journey that starts before this week begins at column 1 (clipped left).
                          A journey that ends after this week ends at column 7 (clipped right).
                          border-radius is removed on the clipped side to signal continuation. -->
-                    @foreach (var journey in weekJourneys)
+                    @if (Mode is CalendarModes.JourneyMode)
                     {
-                        var clippedStart = journey.Start < weekStart ? weekStart : journey.Start;
-                        var clippedEnd = journey.End > weekEnd ? weekEnd : journey.End;
-                        var startCol = GetDayColumn(clippedStart);
-                        var spanCols = clippedEnd.DayNumber - clippedStart.DayNumber + 1;
-                        var continuesLeft = journey.Start < weekStart;
-                        var continuesRight = journey.End > weekEnd;
+                        @foreach (var journey in weekJourneys)
+                        {
+                            var clippedStart = journey.Start < weekStart ? weekStart : journey.Start;
+                            var clippedEnd = journey.End > weekEnd ? weekEnd : journey.End;
+                            var startCol = GetDayColumn(clippedStart);
+                            var spanCols = clippedEnd.DayNumber - clippedStart.DayNumber + 1;
+                            var continuesLeft = journey.Start < weekStart;
+                            var continuesRight = journey.End > weekEnd;
 
-                        <div class="cal-journey-span @GetJourneyGridClass(startCol, spanCols) @GetJourneyColorClass(journey.Id) @(continuesLeft ? "cal-clip-left" : "") @(continuesRight ? "cal-clip-right" : "")"
-                             @onclick="() => OnJourneyClick.InvokeAsync(journey)" ondragover="event.preventDefault();"
-                             @ondrop="() => HandleDropOnJourney(journey)" @ondrop:stopPropagation="true">
+                            <div class="cal-journey-span @GetJourneyGridClass(startCol, spanCols) @GetJourneyColorClass(journey.Id) @(continuesLeft ? "cal-clip-left" : "") @(continuesRight ? "cal-clip-right" : "")"
+                                 @onclick="() => OnJourneyClick.InvokeAsync(journey)"
+                                 ondragover="event.preventDefault();"
+                                 @ondrop="() => HandleDropOnJourney(journey)"
+                                 @ondrop:stopPropagation="true">
 
-                            <span class="journey-span-country">@journey.Name</span>
+                                <span class="journey-span-country">@journey.Name</span>
 
-                            @if (journey.TravelLeaders != null && journey.TravelLeaders.Any())
+                                @if (journey.TravelLeaders != null && journey.TravelLeaders.Any())
+                                {
+                                    <span class="journey-span-leader"> · @journey.TravelLeaders.First().Name</span>
+                                }
+                            </div>
+                        }
+                    } else if (Mode is CalendarModes.AvailibilityPeriodMode)
+                    {
+                       @foreach (var leader in AvailabilityPeriods)
+                        {
+                            if (leader.PreferredDestinations != null && leader.PreferredDestinations.Any())
                             {
-                                <span class="journey-span-leader"> · @journey.TravelLeaders.First().Name</span>
+                                var rawJourneysInWeek = leader.PreferredDestinations
+                                    .Where(pd => pd.Journey != null && pd.Journey.Start <= weekEnd && pd.Journey.End >= weekStart)
+                                    .Select(pd => pd.Journey)
+                                    .OrderBy(j => j.Start)
+                                    .ToList();
+
+                                if (rawJourneysInWeek.Any())
+                                {
+                                    var mergedPeriods = new List<(DateOnly Start, DateOnly End)>();
+                
+                                    var currentStart = rawJourneysInWeek[0].Start;
+                                    var currentEnd = rawJourneysInWeek[0].End;
+
+                                    for (int i = 1; i < rawJourneysInWeek.Count; i++)
+                                    {
+                                        var nextJourney = rawJourneysInWeek[i];
+                    
+                                        // Als de volgende reis start vóór of gelijk aan het einde van de huidige 
+                                        // (of exact aansluit), dan overlappen ze en voegen we ze samen.
+                                        // We gebruiken AddDays(1) om ook aansluitende dagen samen te voegen.
+                                        if (nextJourney.Start <= currentEnd.AddDays(1))
+                                        {
+                                            if (nextJourney.End > currentEnd)
+                                            {
+                                                currentEnd = nextJourney.End;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            mergedPeriods.Add((currentStart, currentEnd));
+                                            currentStart = nextJourney.Start;
+                                            currentEnd = nextJourney.End;
+                                        }
+                                    }
+                                    mergedPeriods.Add((currentStart, currentEnd));
+
+                                    @foreach (var period in mergedPeriods)
+                                    {
+                                        var clippedStart = period.Start < weekStart ? weekStart : period.Start;
+                                        var clippedEnd = period.End > weekEnd ? weekEnd : period.End;
+                    
+                                        var startCol = GetDayColumn(clippedStart);
+                                        var spanCols = clippedEnd.DayNumber - clippedStart.DayNumber + 1;
+                    
+                                        var continuesLeft = period.Start < weekStart;
+                                        var continuesRight = period.End > weekEnd;
+
+                                        <div class="cal-journey-span-small @GetJourneyGridClass(startCol, spanCols) @GetJourneyColorClass(leader.Id) @(continuesLeft ? "cal-clip-left" : "") @(continuesRight ? "cal-clip-right" : "")">
+                                            <span class="journey-span-country">@leader.Name</span>
+                                        </div>
+                                    }
+                                }
                             }
-                        </div>
-                    }
+                        }
+                    }                 
                 </div>
             }
         </div>
@@ -107,6 +182,8 @@
 </MudPaper>
 
 @code {
+    [Parameter] public CalendarModes Mode { get; set; }
+    [Parameter] public IReadOnlyList<TravelLeader> AvailabilityPeriods { get; set; } = [];
     [Parameter] public IReadOnlyList<JourneyViewModel> Journeys { get; set; } = [];
     [Parameter] public EventCallback<JourneyViewModel> OnJourneyDrop { get; set; }
     [Parameter] public EventCallback<JourneyViewModel> OnJourneyClick { get; set; }

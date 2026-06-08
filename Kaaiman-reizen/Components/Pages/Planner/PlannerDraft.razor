@@ -1,5 +1,8 @@
 ﻿@page "/planner/draft"
 
+@using Kaaiman_reizen.Components.Pages.Planner.Components;
+@using Kaaiman_reizen.Data.Enum;
+
 @rendermode InteractiveServer
 
 @using Kaaiman_reizen.Components.Pages.Planner.Components
@@ -10,7 +13,7 @@
 <PageTitle>Draft Planning</PageTitle>
 
 <MudStack Spacing="4" Class="pa-4 pd-page">
-    <div class="d-flex flex-wrap align-center justify-space-between gap-2">
+    <div class="d-flex align-center justify-space-between flex-wrap gap-2">
         <MudText Typo="Typo.h5">Planner</MudText>
         <MudButton Variant="Variant.Outlined"
                    Color="Color.Error"
@@ -73,18 +76,18 @@
                     </MudAlert>
                 }
 
-                <!-- Sidebar toggle -->
-                <div class="pd-layout">
+                <!-- Sidebar toggle & planning mode buttons-->
+                <div class="d-flex justify-content-between flex-wrap-reverse gap-2">
                     <div class="d-flex align-center mb-2 gap-2">
                         <MudIconButton Icon="@Icons.Material.Filled.People"
-                                       Size="Size.Small"
-                                       Variant="Variant.Outlined"
-                                       Color="@(_sidebarLeaderOpen ? Color.Primary : Color.Default)"
-                                       OnClick="@(() => _sidebarLeaderOpen = !_sidebarLeaderOpen)"
-                                       title="Reisleiders tonen/verbergen" />
+                                    Size="Size.Small"
+                                    Variant="Variant.Outlined"
+                                    Color="@(_sidebarOpen ? Color.Primary : Color.Default)"
+                                    OnClick="@(() => _sidebarOpen = !_sidebarOpen)"
+                                    title="Reisleiders tonen/verbergen" />
                         <MudText Typo="Typo.body2" Color="Color.Secondary">Reisleiders</MudText>
                     </div>
-
+                  
                     <div class="d-flex align-center mb-2 gap-2">
                         <MudIconButton Icon="@Icons.Material.Filled.People"
                                        Size="Size.Small"
@@ -94,6 +97,11 @@
                                        title="Reizen tonen/verbergen" />
                         <MudText Typo="Typo.body2" Color="Color.Secondary">Reizen</MudText>
                     </div>
+                  
+                    <MudToggleGroup T="CalendarModes" @bind-Value="selectedMode" SelectionMode="SelectionMode.SingleSelection">
+                        <MudToggleItem Value="@CalendarModes.JourneyMode">Reizen</MudToggleItem>
+                        <MudToggleItem Value="@CalendarModes.AvailibilityPeriodMode">Beschikbaarheden</MudToggleItem>
+                    </MudToggleGroup>
                 </div>
 
                 <!-- Calendar + sidebar layout -->
@@ -264,10 +272,13 @@
                                 </MudStack>
                             </AlertModal>
                         }
+                      
                         <CalendarView Journeys="BuildCalendarJourneys()"
                                       JumpToDate="_jumpToDate"
+                                      AvailabilityPeriods="_availibilityPeriods"
                                       OnJourneyClick="HandleJourneyClick" 
                                       ShowNavigation="false"/>
+
                     </div>
                 </div>
 
@@ -335,3 +346,4 @@
     OnClose="CloseDrawer"
     OnAssignLeader="AssignLeader"
     OnRemoveLeader="RemoveLeader" />
+}
