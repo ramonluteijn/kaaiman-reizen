@@ -27,8 +27,8 @@
                 <th class="journey-name-column" @onclick='() => SortBy("Name")'>
                     Reis @(GetSortIcon("Name"))
                 </th>
-                <th class="journey-period-column">
-                    Periode
+                <th class="journey-period-column" @onclick='() => SortBy("StartDate")'>
+                    Periode @(GetSortIcon("StartDate"))
                 </th>
                 <th class="journey-planning-column">
                     Planning
