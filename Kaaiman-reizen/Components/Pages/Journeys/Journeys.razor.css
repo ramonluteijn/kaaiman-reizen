@@ -1,0 +1,26 @@
+.journey-tabs .nav-item {
+    width: auto !important;
+    display: block !important;
+}
+
+.journey-tabs .nav-link {
+    border-radius: 0.375rem 0.375rem 0 0 !important;
+    border: 1px solid transparent !important;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    background: none;
+    color: #6c757d;
+    white-space: nowrap;
+}
+
+.journey-tabs .nav-link:hover {
+    border-color: #e9ecef #e9ecef #dee2e6 !important;
+    color: #495057;
+}
+
+.journey-tabs .nav-link.active {
+    border: 1px solid #dee2e6 !important;
+    border-bottom-color: #fff !important;
+    color: #495057;
+    background-color: #fff;
+}

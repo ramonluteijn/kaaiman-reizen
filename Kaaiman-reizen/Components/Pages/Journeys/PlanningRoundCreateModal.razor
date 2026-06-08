@@ -51,6 +51,18 @@
                         </div>
                     </div>
 
+                    @if (_overlapRound is not null)
+                    {
+                        <div class="alert alert-warning d-flex align-items-start gap-2 mb-3 py-2">
+                            <i class="bi bi-exclamation-triangle-fill mt-1 flex-shrink-0"></i>
+                            <span>
+                                Dit datumbereik overlapt met <strong>@_overlapRound.Name</strong>
+                                (@_overlapRound.StartDate.ToString("d MMM") – @_overlapRound.EndDate.ToString("d MMM yyyy")).
+                                Pas de datumreeks aan om een nieuwe ronde aan te maken.
+                            </span>
+                        </div>
+                    }
+
                     <div class="row mb-3">
                         <div class="col-6">
                             <label class="form-label">Voorkeur deadline</label>
@@ -68,17 +80,18 @@
                         </div>
                     </div>
 
-                    <div class="mb-4">
+                    @* Vrije reizen — worden opgenomen in de nieuwe ronde *@
+                    <div class="mb-3">
                         <label class="form-label">
                             Reizen in deze ronde
-                            <span class="badge @(_journeysInRange.Count > 0 ? "bg-success" : "bg-secondary") ms-1">
-                                @_journeysInRange.Count
+                            <span class="badge @(_freeJourneys.Count > 0 ? "bg-success" : "bg-secondary") ms-1">
+                                @_freeJourneys.Count
                             </span>
                         </label>
-                        @if (_journeysInRange.Count > 0)
+                        @if (_freeJourneys.Count > 0)
                         {
-                            <div style="max-height:160px;overflow-y:auto;border:1px solid #dee2e6;border-radius:6px">
-                                @foreach (var j in _journeysInRange)
+                            <div style="max-height:140px;overflow-y:auto;border:1px solid #dee2e6;border-radius:6px">
+                                @foreach (var j in _freeJourneys)
                                 {
                                     <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
                                         <span>@j.Name</span>
@@ -92,17 +105,41 @@
                         else
                         {
                             <div class="text-muted small fst-italic">
-                                Geen actieve reizen gevonden binnen de geselecteerde datumreeks.
+                                Geen vrije actieve reizen gevonden binnen de geselecteerde datumreeks.
                             </div>
                         }
                     </div>
+
+                    @* Reizen die al in een andere ronde zitten *@
+                    @if (_alreadyInRound.Count > 0)
+                    {
+                        <div class="mb-4">
+                            <label class="form-label text-muted">
+                                Al in een andere ronde
+                                <span class="badge bg-secondary ms-1">@_alreadyInRound.Count</span>
+                            </label>
+                            <div style="max-height:120px;overflow-y:auto;border:1px solid #dee2e6;border-radius:6px;opacity:.7">
+                                @foreach (var (j, r) in _alreadyInRound)
+                                {
+                                    <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+                                        <span class="text-muted">@j.Name</span>
+                                        <div class="d-flex align-items-center gap-2 ms-3 text-nowrap">
+                                            <small class="text-muted">@j.Start.ToString("d MMM") – @j.End.ToString("d MMM")</small>
+                                            <span class="badge bg-secondary" style="font-size:.7rem">@r.Name</span>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
 
                     <div class="km-alert-modal__footer">
                         <MudButton Variant="Variant.Text" OnClick="Close" Disabled="_saving">
                             Annuleren
                         </MudButton>
                         <MudButton Variant="Variant.Filled" Color="Color.Primary"
-                                   ButtonType="ButtonType.Submit" Disabled="_saving">
+                                   ButtonType="ButtonType.Submit"
+                                   Disabled="@(_saving || _overlapRound is not null)">
                             @if (_saving)
                             {
                                 <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" />
@@ -120,9 +157,12 @@
     [Parameter] public bool IsOpen { get; set; }
     [Parameter] public EventCallback<bool> IsOpenChanged { get; set; }
     [Parameter] public List<Journey> Journeys { get; set; } = [];
+    [Parameter] public IReadOnlyList<PlanningRound> ExistingRounds { get; set; } = [];
 
     private RoundForm _form = new();
-    private List<Journey> _journeysInRange = [];
+    private List<Journey> _freeJourneys = [];
+    private List<(Journey Journey, PlanningRound Round)> _alreadyInRound = [];
+    private PlanningRound? _overlapRound;
     private bool _saving;
     private string? _errorMessage;
     private bool _prevIsOpen;
@@ -139,12 +179,15 @@
         _form = new RoundForm();
         _errorMessage = null;
 
-        var huidig = Journeys.Where(j => j.BookingStatus == BookingStatus.Huidig).ToList();
+        var freeHuidig = Journeys
+            .Where(j => j.BookingStatus == BookingStatus.Huidig
+                     && !ExistingRounds.Any(r => j.Start >= r.StartDate && j.Start <= r.EndDate))
+            .ToList();
 
-        if (huidig.Count > 0)
+        if (freeHuidig.Count > 0)
         {
-            _form.StartDate = huidig.Min(j => j.Start);
-            _form.EndDate = huidig.Max(j => j.End);
+            _form.StartDate = freeHuidig.Min(j => j.Start);
+            _form.EndDate = freeHuidig.Max(j => j.End);
             _form.Name = $"Planningsronde {_form.StartDate.Year}";
         }
         else
@@ -172,11 +215,24 @@
 
     private void RefreshJourneysInRange()
     {
-        _journeysInRange = Journeys
+        _overlapRound = ExistingRounds
+            .FirstOrDefault(r => r.StartDate <= _form.EndDate && _form.StartDate <= r.EndDate);
+
+        var inRange = Journeys
             .Where(j => j.BookingStatus == BookingStatus.Huidig
                      && j.Start >= _form.StartDate
                      && j.Start <= _form.EndDate)
             .OrderBy(j => j.Start)
+            .ToList();
+
+        _freeJourneys = inRange
+            .Where(j => !ExistingRounds.Any(r => j.Start >= r.StartDate && j.Start <= r.EndDate))
+            .ToList();
+
+        _alreadyInRound = inRange
+            .Select(j => (j, Round: ExistingRounds.FirstOrDefault(r => j.Start >= r.StartDate && j.Start <= r.EndDate)))
+            .Where(x => x.Round is not null)
+            .Select(x => (x.j, x.Round!))
             .ToList();
     }
 
@@ -219,6 +275,10 @@
 
             await IsOpenChanged.InvokeAsync(false);
             Navigation.NavigateTo($"/planner/rounds/{round.Id}/draft");
+        }
+        catch (InvalidOperationException ex)
+        {
+            _errorMessage = ex.Message;
         }
         catch
         {

@@ -5,6 +5,7 @@
 @using Kaaiman_reizen.Helpers
 @rendermode InteractiveServer
 @inject IJourneyService JourneyService
+@inject IPlanningRoundService RoundService
 
 <PageTitle>Reizen</PageTitle>
 
@@ -29,6 +30,45 @@
                 </a>
             </div>
         </div>
+
+        @* Tabs *@
+        <div class="journey-tabs">
+        <ul class="nav nav-tabs mb-3">
+            <li class="nav-item">
+                <button class="nav-link @(_activeTab == 0 ? "active" : "")" type="button" @onclick="() => SetTab(0)">
+                    Alle reizen
+                    <span class="badge bg-secondary ms-1">@_journeys.Count</span>
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link @(_activeTab == 1 ? "active" : "")" type="button" @onclick="() => SetTab(1)">
+                    Geen ronde
+                    <span class="badge @(FreeJourneyCount > 0 ? "bg-warning text-dark" : "bg-secondary") ms-1">@FreeJourneyCount</span>
+                </button>
+            </li>
+            @for (int i = 0; i < _rounds.Count; i++)
+            {
+                var round = _rounds[i];
+                var capturedTab = i + 2;
+                var count = JourneyCountForRound(round);
+                <li class="nav-item">
+                    <button class="nav-link @(_activeTab == capturedTab ? "active" : "")" type="button" @onclick="() => SetTab(capturedTab)">
+                        @round.Name
+                        <span class="badge bg-primary ms-1">@count</span>
+                    </button>
+                </li>
+            }
+        </ul>
+        </div>
+
+        @* Contextuele melding op "Geen ronde" tab *@
+        @if (_activeTab == 1 && FreeJourneyCount == 0 && _journeys.Any(j => j.BookingStatus == BookingStatus.Huidig))
+        {
+            <div class="alert alert-success small mb-3 py-2">
+                <i class="bi bi-check-circle me-1"></i>
+                Alle actieve reizen zijn gekoppeld aan een planningsronde.
+            </div>
+        }
 
         <Table TItem="Journey" Items="FilteredJourneys" OnDelete="@OnDelete" Path="journeys"
                EditHrefSelector="@GetEditHref">
@@ -81,7 +121,7 @@
             </RowTemplate>
         </Table>
 
-        @if (_journeys.Count == 0)
+        @if (!FilteredJourneys.Any())
         {
             <div class="text-muted mb-3">Geen reizen gevonden.</div>
         }
@@ -110,7 +150,8 @@
 @* Modal voor aanmaken planningsronde *@
 <PlanningRoundCreateModal IsOpen="@_isCreateRoundModalOpen"
                           IsOpenChanged="@(v => _isCreateRoundModalOpen = v)"
-                          Journeys="_journeys" />
+                          Journeys="_journeys"
+                          ExistingRounds="_rounds" />
 
 @* Alert modal for deletion *@
 <AlertModal IsOpen="@_isDeleteModalOpen" IsOpenChanged="HandleDeleteModalChanged" Title="Reis verwijderen"
@@ -137,10 +178,11 @@
 
 @code {
     private List<Journey> _journeys = new();
+    private List<PlanningRound> _rounds = [];
     private string _searchTerm = string.Empty;
     private string _sortColumn = "Country";
     private bool _sortAscending = true;
-    private int _selectedYear = DateTime.UtcNow.Year;
+    private int _activeTab = 0;
 
     private bool _isDeleteModalOpen;
     private bool _isImportModalOpen;
@@ -156,25 +198,45 @@
         ? "Nieuwe reizen uit excel bestand zijn succesvol toegevoegd"
         : $"Nieuwe reizen uit excel bestand zijn niet succesvol toegevoegd: '{_bulkImportInfo}'";
 
-    private static string GetEditHref(Journey journey)
-    {
-        return $"/journeys/edit/{journey.Id}";
-    }
+    private int FreeJourneyCount => _journeys.Count(j =>
+        j.BookingStatus == BookingStatus.Huidig &&
+        !_rounds.Any(r => j.Start >= r.StartDate && j.Start <= r.EndDate));
+
+    private int JourneyCountForRound(PlanningRound round) =>
+        _journeys.Count(j => j.BookingStatus == BookingStatus.Huidig
+                           && j.Start >= round.StartDate
+                           && j.Start <= round.EndDate);
+
+    private void SetTab(int tab) => _activeTab = tab;
+
+    private static string GetEditHref(Journey journey) => $"/journeys/edit/{journey.Id}";
 
     private string FormatTravelLeaders(Journey journey)
     {
         var leaders = journey.TravelLeaders ?? new List<TravelLeader>();
-        return string.Join("; ", leaders.OrderBy(l => l.Name)
-            .Select(l => $"{l.Name}"));
+        return string.Join("; ", leaders.OrderBy(l => l.Name).Select(l => l.Name));
     }
+
+    private IEnumerable<Journey> TabFilteredJourneys => _activeTab switch
+    {
+        0 => _journeys,
+        1 => _journeys.Where(j =>
+                j.BookingStatus == BookingStatus.Huidig &&
+                !_rounds.Any(r => j.Start >= r.StartDate && j.Start <= r.EndDate)),
+        _ when _activeTab - 2 < _rounds.Count =>
+            _journeys.Where(j =>
+                j.BookingStatus == BookingStatus.Huidig &&
+                j.Start >= _rounds[_activeTab - 2].StartDate &&
+                j.Start <= _rounds[_activeTab - 2].EndDate),
+        _ => _journeys
+    };
 
     private IEnumerable<Journey> FilteredJourneys =>
         ApplySorting(
-            _journeys.Where(j =>
+            TabFilteredJourneys.Where(j =>
                 string.IsNullOrWhiteSpace(_searchTerm) ||
                 j.Name.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase)
-        )
-    );
+        ));
 
     private IEnumerable<Journey> ApplySorting(IEnumerable<Journey> query)
     {
@@ -186,7 +248,6 @@
             "BookingStatus" => _sortAscending ? query.OrderBy(x => x.BookingStatus) : query.OrderByDescending(x => x.BookingStatus),
             "Busses" => _sortAscending ? query.OrderBy(x => x.Busses) : query.OrderByDescending(x => x.Busses),
             "Travelers" => _sortAscending ? query.OrderBy(x => x.Travelers) : query.OrderByDescending(x => x.Travelers),
-
             _ => query
         };
     }
@@ -204,15 +265,12 @@
     private string GetSortIcon(string column)
     {
         if (_sortColumn != column) return "";
-
         return _sortAscending ? "↑" : "↓";
     }
 
     private async Task OnDelete(Journey? journey)
     {
-        if (journey == null)
-            return;
-
+        if (journey == null) return;
         _journeyPendingDelete = journey;
         _isDeleteModalOpen = true;
     }
@@ -220,11 +278,7 @@
     private Task HandleDeleteModalChanged(bool isOpen)
     {
         _isDeleteModalOpen = isOpen;
-        if (!isOpen)
-        {
-            _journeyPendingDelete = null;
-        }
-
+        if (!isOpen) _journeyPendingDelete = null;
         return Task.CompletedTask;
     }
 
@@ -237,10 +291,7 @@
 
     private async Task ConfirmDeleteAsync()
     {
-        if (_journeyPendingDelete is null)
-        {
-            return;
-        }
+        if (_journeyPendingDelete is null) return;
 
         var journeyId = _journeyPendingDelete.Id;
         await JourneyService.DeleteJourneyAsync(journeyId);
@@ -254,19 +305,28 @@
     {
         try
         {
-            var items = await JourneyService.GetJourneysWithPublishedPlanningAsync(_selectedYear);
+            var items = await JourneyService.GetJourneysAsync();
             _journeys = items.ToList();
         }
         catch
         {
             _journeys = new List<Journey>();
         }
+
+        try
+        {
+            var rounds = await RoundService.GetAllAsync();
+            _rounds = rounds.ToList();
+        }
+        catch
+        {
+            _rounds = [];
+        }
     }
 
     async Task ImportExcelFile(InputFileChangeEventArgs e)
     {
         MemoryStream ms = new MemoryStream();
-
         await e.File.OpenReadStream().CopyToAsync(ms);
         ms.Position = 0;
 
@@ -282,7 +342,6 @@
     {
         _isImportModalOpen = false;
         _bulkImportInfo = null;
-
         return Task.CompletedTask;
     }
 }

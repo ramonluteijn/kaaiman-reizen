@@ -21,4 +21,14 @@ public interface IPlanningService
     bool PublishedPlanningExists();
     Task<int?> GetLatestPublishedPlanningVersionIdAsync(CancellationToken cancellationToken = default);
     Task<bool> IsPublishedPlanningCompleteAsync(int year, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<PlanningVersion>> GetDraftsByRoundAsync(int roundId, CancellationToken cancellationToken = default);
+    Task<PlanningVersion?> GetPublishedByRoundAsync(int roundId, CancellationToken cancellationToken = default);
+    Task<PlanningVersion> SavePlanningForRoundAsync(
+        int roundId,
+        int year,
+        string name,
+        bool isPublished,
+        IReadOnlyDictionary<int, IReadOnlyCollection<int>> journeyAssignments,
+        CancellationToken cancellationToken = default);
 }

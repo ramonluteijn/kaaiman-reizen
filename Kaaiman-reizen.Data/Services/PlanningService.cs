@@ -265,4 +265,119 @@ public class PlanningService : IPlanningService
             .FirstOrDefaultAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<PlanningVersion>> GetDraftsByRoundAsync(int roundId, CancellationToken cancellationToken = default)
+    {
+        return await _db.PlanningVersions
+            .Where(v => !v.IsPublished && v.PlanningRoundId == roundId)
+            .Include(v => v.Assignments)
+                .ThenInclude(a => a.TravelLeader)
+            .Include(v => v.Assignments)
+                .ThenInclude(a => a.Journey)
+            .OrderByDescending(v => v.CreatedAt)
+            .ThenByDescending(v => v.Id)
+            .ToListAsync(cancellationToken);
+    }
+
+    public Task<PlanningVersion?> GetPublishedByRoundAsync(int roundId, CancellationToken cancellationToken = default)
+    {
+        return _db.PlanningVersions
+            .Where(v => v.IsPublished && v.PlanningRoundId == roundId)
+            .Include(v => v.Assignments)
+                .ThenInclude(a => a.TravelLeader)
+            .Include(v => v.Assignments)
+                .ThenInclude(a => a.Journey)
+            .OrderByDescending(v => v.CreatedAt)
+            .ThenByDescending(v => v.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<PlanningVersion> SavePlanningForRoundAsync(
+        int roundId,
+        int year,
+        string name,
+        bool isPublished,
+        IReadOnlyDictionary<int, IReadOnlyCollection<int>> journeyAssignments,
+        CancellationToken cancellationToken = default)
+    {
+        PlanningVersion version;
+
+        if (isPublished)
+        {
+            var publishedVersions = await _db.PlanningVersions
+                .Where(v => v.IsPublished && v.PlanningRoundId == roundId)
+                .ToListAsync(cancellationToken);
+
+            foreach (var v in publishedVersions)
+                v.IsPublished = false;
+
+            version = new PlanningVersion
+            {
+                PlanningYear = year,
+                PlanningRoundId = roundId,
+                Name = name,
+                CreatedAt = DateTime.UtcNow,
+                IsPublished = true,
+                Assignments = MapAssignments(journeyAssignments)
+            };
+            _db.PlanningVersions.Add(version);
+
+            var allUsers = await _db.Users.ToListAsync(cancellationToken);
+            var notifications = allUsers.Select(u => new Notification
+            {
+                ApplicationUserId = u.Id,
+                Message = $"De definitieve planning '{name}' is gepubliceerd. Bekijk het dashboard en geef uw input.",
+                CreatedAt = DateTime.UtcNow,
+                IsRead = false
+            });
+            _db.Notifications.AddRange(notifications);
+
+            var emails = allUsers.Where(u => !string.IsNullOrWhiteSpace(u.Email)).Select(u => u.Email!).ToList();
+            if (emails.Any())
+            {
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        using var scope = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.CreateScope(_serviceProvider);
+                        var emailDispatcher = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<IEmailDispatcher>(scope.ServiceProvider);
+                        var subject = $"Nieuwe planning gepubliceerd: {name}";
+                        var message = $"De definitieve planning '{name}' is gepubliceerd. Log in op het dashboard om de planning te bekijken en uw input te geven.";
+                        await emailDispatcher.SendEmailToUsersAsync(emails, subject, message);
+                    }
+                    catch { }
+                });
+            }
+        }
+        else
+        {
+            version = await _db.PlanningVersions
+                .Include(v => v.Assignments)
+                .FirstOrDefaultAsync(v => !v.IsPublished && v.PlanningRoundId == roundId, cancellationToken);
+
+            if (version == null)
+            {
+                version = new PlanningVersion
+                {
+                    PlanningYear = year,
+                    PlanningRoundId = roundId,
+                    Name = name,
+                    CreatedAt = DateTime.UtcNow,
+                    IsPublished = false,
+                    Assignments = MapAssignments(journeyAssignments)
+                };
+                _db.PlanningVersions.Add(version);
+            }
+            else
+            {
+                version.Name = name;
+                version.CreatedAt = DateTime.UtcNow;
+                _db.RemoveRange(version.Assignments);
+                version.Assignments = MapAssignments(journeyAssignments);
+            }
+        }
+
+        await _db.SaveChangesAsync(cancellationToken);
+        return version;
+    }
+
 }
