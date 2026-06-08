@@ -45,15 +45,21 @@ public class JourneyNotificationService
             {
                 foreach (var travelLeader in journey.TravelLeaders)
                 {
-                    var alreadySent = await _db.JourneyNotificationHistory
-                        .AnyAsync(
-                            h => h.JourneyId == journey.Id &&
-                                 h.ApplicationUserId == travelLeader.Id.ToString() &&
-                                 h.DaysBeforeStart == days,
-                            cancellationToken);
+                    var applicationUser = await _db.Users
+                        .FirstOrDefaultAsync(u => u.Email == travelLeader.Email, cancellationToken);
 
-                    if (alreadySent)
-                        continue;
+                    if (applicationUser != null)
+                    {
+                        var alreadySent = await _db.JourneyNotificationHistory
+                            .AnyAsync(
+                                h => h.JourneyId == journey.Id &&
+                                     h.ApplicationUserId == applicationUser.Id &&
+                                     h.DaysBeforeStart == days,
+                                cancellationToken);
+
+                        if (alreadySent)
+                            continue;
+                    }
 
                     var dashboardMessage = $"Uw reis naar {journey.Name} start op {journey.Start:dd-MM-yyyy}.";
                     var emailSubject = $"Herinnering: Uw reis naar {journey.Name}";
@@ -68,26 +74,24 @@ public class JourneyNotificationService
 
                     await _emailDispatcher.SendEmailAsync(travelLeader.Email, emailSubject, emailBody);
 
-                    var applicationUser = await _db.Users
-                        .FirstOrDefaultAsync(u => u.Email == travelLeader.Email, cancellationToken);
-
+                    // Only create dashboard notification and history if user exists
                     if (applicationUser != null)
                     {
                         await _notificationService.CreateNotificationAsync(
                             applicationUser.Id,
                             dashboardMessage,
                             cancellationToken);
+
+                        var history = new JourneyNotificationHistory
+                        {
+                            JourneyId = journey.Id,
+                            ApplicationUserId = applicationUser.Id,
+                            DaysBeforeStart = days,
+                            SentAt = DateTime.UtcNow
+                        };
+
+                        _db.JourneyNotificationHistory.Add(history);
                     }
-
-                    var history = new JourneyNotificationHistory
-                    {
-                        JourneyId = journey.Id,
-                        ApplicationUserId = travelLeader.Id.ToString(),
-                        DaysBeforeStart = days,
-                        SentAt = DateTime.UtcNow
-                    };
-
-                    _db.JourneyNotificationHistory.Add(history);
                 }
             }
         }
