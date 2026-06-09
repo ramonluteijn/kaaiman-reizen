@@ -20,7 +20,7 @@ namespace Kaaiman_reizen.Services
 
         public async Task ScheduleJobsForJourney(int journeyId, CancellationToken cancellationToken)
         {
-            var journey = await _db.Journey.FindAsync(new [] { journeyId }, cancellationToken);
+            var journey = await _db.Journey.FindAsync(new object[] { journeyId }, cancellationToken);
 
             if (journey is null)
                 return; 
@@ -28,7 +28,7 @@ namespace Kaaiman_reizen.Services
             var executionTime = journey.End.ToDateTime(new TimeOnly(23, 59), DateTimeKind.Utc);
 
             var nieuwJobId = _backgroundJobClient.Schedule<JobScheduler>(
-                service => service.HandleJourneyConclusion(journey.Id, cancellationToken),
+                service => service.HandleJourneyConclusion(journey.Id, CancellationToken.None),
                 executionTime
             );
 
@@ -45,7 +45,7 @@ namespace Kaaiman_reizen.Services
 
         public async Task RemoveJobsForJourney(int journeyId, CancellationToken cancellationToken)
         {
-            var journey = await _db.Journey.FindAsync(new [] { journeyId }, cancellationToken);
+            var journey = await _db.Journey.FindAsync(new object[] { journeyId }, cancellationToken);
 
             if (journey is null || string.IsNullOrEmpty(journey.HangfireJobId))
                 return;
@@ -58,14 +58,16 @@ namespace Kaaiman_reizen.Services
 
         public async Task HandleJourneyConclusion(int journeyId, CancellationToken cancellationToken)
         {
-            var journey = await _db.Journey.FindAsync(journeyId);
+            var journey = await _db.Journey.FindAsync(new object[] { journeyId }, cancellationToken);
+
             if (journey is not null)
             {
-                journey.BookingStatus = BookingStatus.Geweest;
-                await _db.SaveChangesAsync();
-            }
+                await _travelLeaderService.IncrementTravelLeadersExperience(journeyId, cancellationToken);
 
-            await _travelLeaderService.IncrementTravelLeadersExperience(journeyId, cancellationToken);
+                journey.BookingStatus = BookingStatus.Geweest;
+                journey.IsProcessed = true;
+                await _db.SaveChangesAsync(cancellationToken);
+            }
         }
     }
 }

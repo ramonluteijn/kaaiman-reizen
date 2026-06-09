@@ -67,7 +67,7 @@ builder.Services.AddHangfire(config => config
     .UseStorage(new MySqlStorage(connectionString, new MySqlStorageOptions
     {
         TransactionIsolationLevel = IsolationLevel.ReadCommitted,
-        QueuePollInterval = TimeSpan.FromMinutes(15),
+        QueuePollInterval = TimeSpan.FromSeconds(30),
         JobExpirationCheckInterval = TimeSpan.FromHours(1),
         PrepareSchemaIfNecessary = true
     })));
