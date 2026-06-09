@@ -322,28 +322,28 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
 
         var j2024 = new Dictionary<string, Journey>
         {
-            ["ital"] = J("Italië",      2024, 7,  1, 7, 14, 2, 20, 2),
+            ["ital"] = J("Italië", 2024, 7, 1, 7, 14, 2, 20, 2),
             ["griek"] = J("Griekenland", 2024, 4, 10, 4, 22, 1, 10, 1),
-            ["span"] = J("Spanje",       2024, 3, 15, 3, 25, 1, 12, 1),
-            ["kro"]  = J("Kroatië",      2024, 6,  2, 6, 14, 1,  9, 1),
-            ["port"] = J("Portugal",     2024, 9,  8, 9, 18, 1, 11, 1),
-            ["norw"] = J("Noorwegen",    2024,10,  5,10, 15, 2, 18, 2),
-            ["turk"] = J("Turkije",      2024, 4, 28, 5,  8, 1,  8, 1),
-            ["oost"] = J("Oostenrijk",   2024, 3, 20, 3, 30, 1,  9, 1),
+            ["span"] = J("Spanje", 2024, 3, 15, 3, 25, 1, 12, 1),
+            ["kro"] = J("Kroatië", 2024, 6, 2, 6, 14, 1, 9, 1),
+            ["port"] = J("Portugal", 2024, 9, 8, 9, 18, 1, 11, 1),
+            ["norw"] = J("Noorwegen", 2024, 10, 5, 10, 15, 2, 18, 2),
+            ["turk"] = J("Turkije", 2024, 4, 28, 5, 8, 1, 8, 1),
+            ["oost"] = J("Oostenrijk", 2024, 3, 20, 3, 30, 1, 9, 1),
         };
 
         var j2025 = new Dictionary<string, Journey>
         {
-            ["ital"]  = J("Italië",      2025, 7,  6, 7, 19, 2, 20, 2),
-            ["span"]  = J("Spanje",      2025, 3,  9, 3, 19, 1, 12, 1),
-            ["griek"] = J("Griekenland", 2025, 4,  6, 4, 16, 2, 22, 2),
-            ["port"]  = J("Portugal",    2025, 3, 23, 4,  2, 1, 10, 1),
-            ["kro"]   = J("Kroatië",     2025, 5,  5, 5, 17, 1, 11, 1),
-            ["turk"]  = J("Turkije",     2025, 4, 21, 5,  1, 1,  9, 1),
-            ["norw"]  = J("Noorwegen",   2025,10,  6,10, 16, 2, 16, 2),
-            ["ijsl"]  = J("IJsland",     2025,11,  3,11, 13, 1,  8, 1),
-            ["zwit"]  = J("Zwitserland", 2025, 9,  8, 9, 18, 1, 10, 1),
-            ["mar"]   = J("Marokko",     2025, 2, 10, 2, 22, 1, 13, 1),
+            ["ital"] = J("Italië", 2025, 7, 6, 7, 19, 2, 20, 2),
+            ["span"] = J("Spanje", 2025, 3, 9, 3, 19, 1, 12, 1),
+            ["griek"] = J("Griekenland", 2025, 4, 6, 4, 16, 2, 22, 2),
+            ["port"] = J("Portugal", 2025, 3, 23, 4, 2, 1, 10, 1),
+            ["kro"] = J("Kroatië", 2025, 5, 5, 5, 17, 1, 11, 1),
+            ["turk"] = J("Turkije", 2025, 4, 21, 5, 1, 1, 9, 1),
+            ["norw"] = J("Noorwegen", 2025, 10, 6, 10, 16, 2, 16, 2),
+            ["ijsl"] = J("IJsland", 2025, 11, 3, 11, 13, 1, 8, 1),
+            ["zwit"] = J("Zwitserland", 2025, 9, 8, 9, 18, 1, 10, 1),
+            ["mar"] = J("Marokko", 2025, 2, 10, 2, 22, 1, 13, 1),
         };
 
         return (j2024, j2025);
@@ -613,7 +613,7 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
             StartDate = new DateOnly(2026, 1, 1),
             EndDate = new DateOnly(2026, 6, 30),
             PreferenceDeadline = new DateTime(2026, 2, 15, 23, 59, 59),
-            PublicationDeadline = new DateTime(2026, 3,  1, 23, 59, 59),
+            PublicationDeadline = new DateTime(2026, 3, 1, 23, 59, 59),
             Participations = participations
         };
 

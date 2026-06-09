@@ -182,7 +182,7 @@ public partial class Preferences : ComponentBase
         {
             if (_preferredJourneyIds[i].HasValue)
                 _model.PreferredDestinations.Add(new PreferredDestination
-                    { Rank = i + 1, JourneyId = _preferredJourneyIds[i] });
+                { Rank = i + 1, JourneyId = _preferredJourneyIds[i] });
         }
 
         var top3Ids = _preferredJourneyIds.Where(id => id.HasValue).Select(id => id!.Value).ToHashSet();
