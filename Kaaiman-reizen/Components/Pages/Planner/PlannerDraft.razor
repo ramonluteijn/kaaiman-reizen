@@ -275,7 +275,8 @@
                             </AlertModal>
                         }
                       
-                        <CalendarView Journeys="BuildCalendarJourneys()"
+                        <CalendarView Mode="@selectedMode"
+                                      Journeys="BuildCalendarJourneys()"
                                       JumpToDate="_jumpToDate"
                                       AvailabilityPeriods="_availibilityPeriods"
                                       OnJourneyClick="HandleJourneyClick" 
