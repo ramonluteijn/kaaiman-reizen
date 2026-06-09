@@ -66,6 +66,7 @@
             if (_result.IsSuccess)
             {
                 var leaderRows = BuildLeaderRows();
+                var journeyRows = BuildCalendarJourneys();
 
                 @if (_preferenceChangesDetected)
                 {
@@ -85,18 +86,31 @@
                         </div>
                     </MudAlert>
                 }
-                
-                <!-- Sidebar & planning mode buttons-->
-                <div class="d-flex justify-content-between flex-wrap-reverse gap-2">
-                    <div class="d-flex align-center mb-2 gap-2">
-                        <MudIconButton Icon="@Icons.Material.Filled.People"
-                                    Size="Size.Small"
-                                    Variant="Variant.Outlined"
-                                    Color="@(_sidebarOpen ? Color.Primary : Color.Default)"
-                                    OnClick="@(() => _sidebarOpen = !_sidebarOpen)"
-                                    title="Reisleiders tonen/verbergen" />
-                        <MudText Typo="Typo.body2" Color="Color.Secondary">Reisleiders</MudText>
+
+                <!-- Sidebar toggle & planning mode buttons-->
+                <div class="d-flex justify-content-between mb-2 flex-wrap-reverse gap-2">
+                    <div class="d-flex align-center gap-2">
+                        <div class="d-flex align-center gap-2">
+                            <MudIconButton Icon="@Icons.Material.Filled.People"
+                                        Size="Size.Small"
+                                        Variant="Variant.Outlined"
+                                        Color="@(_sidebarLeaderOpen ? Color.Primary : Color.Default)"
+                                           OnClick="@(() => _sidebarLeaderOpen = !_sidebarLeaderOpen)"
+                                        title="Reisleiders tonen/verbergen" />
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">Reisleiders</MudText>
+                        </div>
+                  
+                        <div class="d-flex align-center gap-2">
+                            <MudIconButton Icon="@Icons.Material.Filled.Map"
+                                           Size="Size.Small"
+                                           Variant="Variant.Outlined"
+                                           Color="@(_sidebarJourneyOpen ? Color.Primary : Color.Default)"
+                                           OnClick="@(() => _sidebarJourneyOpen = !_sidebarJourneyOpen)"
+                                           title="Reizen tonen/verbergen" />
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">Reizen</MudText>
+                        </div>
                     </div>
+
                     <MudToggleGroup T="CalendarModes" @bind-Value="selectedMode" SelectionMode="SelectionMode.SingleSelection">
                         <MudToggleItem Value="@CalendarModes.JourneyMode">Reizen</MudToggleItem>
                         <MudToggleItem Value="@CalendarModes.AvailibilityPeriodMode">Beschikbaarheden</MudToggleItem>
@@ -106,7 +120,8 @@
                 <!-- Calendar + sidebar layout -->
                 <div class="pd-layout">
 
-                    @if (_sidebarOpen)
+                   <!-- Travel leaders sidebar -->
+                    @if (_sidebarLeaderOpen)
                     {
                         <aside class="pd-sidebar">
                             <p class="pd-sidebar-title">Reisleiders (@leaderRows.Count)</p>
@@ -186,6 +201,68 @@
                         </aside>
                     }
 
+                    <!-- Journeys sidebar -->
+                    @if (_sidebarJourneyOpen)
+                    {
+                        <aside class="pd-sidebar">
+                            <p class="pd-sidebar-title">Reizen (@journeyRows.Count)</p>
+                            @foreach (var row in journeyRows)
+                            {
+                                var hasLeaders = row.TravelLeaders.Count > 0;
+                                <div class="pd-sidebar-row @(hasLeaders ? "pd-sidebar-row--assigned" : "pd-sidebar-row--unassigned") position-relative">
+                                    <div class="pd-sidebar-avatar">@row.Name[0]</div>
+
+                                    <MudIconButton Icon="@Icons.Material.Filled.OpenInNew"
+                                                   Size="Size.Small"
+                                                   Variant="Variant.Outlined"
+                                                   class="position-absolute end-0 top-0"
+                                                   Style="z-index: 2;"
+                                                   title="Reisleider details"
+                                                   OnClick="@(() => GoToMonth(row))" />
+
+                                    <div class="pd-sidebar-info">
+                                        <span class="pd-sidebar-name">@row.Name</span>
+                                        <span class="pd-sidebar-journey-dates">@DateDisplay.FormatDateRange(row.Start, row.End)</span>
+                                        @if (hasLeaders)
+                                        {
+                                            <span class="pd-sidebar-count">@row.TravelLeaders.Count reisleider@(row.TravelLeaders.Count == 1 ? "" : "s")</span>
+                                            <div class="pd-sidebar-journeys">
+                                                @foreach (var item in row.TravelLeaders)
+                                                {
+                                                    <div class="pd-sidebar-journey">
+                                                        <span class="pd-sidebar-journey-name">@item.Name</span>
+                                                    </div>
+                                                }
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="pd-sidebar-count pd-sidebar-count--none">Geen reisleiders</span>
+                                            <span class="pd-sidebar-pref">@row.RequiredLeaders reisleider@(row.RequiredLeaders >= 1 ? "" : "s") nodig</span>
+                                        }
+
+                                        <AlertModal IsOpen="@_archiveDialogOpen"
+                                                    IsOpenChanged="HandleArchiveDialogChanged"
+                                                    Title="Nieuwe planningsperiode starten"
+                                                    Severity="Severity.Warning"
+                                                    Dismissible="true"
+                                                    CloseOnBackdropClick="true"
+                                                    Message="Weet je zeker dat je een nieuwe periode wilt starten? Alle beschikbaarheid wordt gearchiveerd en gereset.">
+                                            <Actions>
+                                                <MudButton Variant="Variant.Text" OnClick="CloseArchiveDialog">
+                                                    Annuleren
+                                                </MudButton>
+                                                <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="ConfirmArchiveAsync">
+                                                    Bevestigen
+                                                </MudButton>
+                                            </Actions>
+                                        </AlertModal>
+                                    </div>
+                                </div>
+                            }
+                        </aside>
+                    }
+
                     <div class="pd-main">
                         @if (_result.JourneyWarnings.Any())
                         {
@@ -208,8 +285,13 @@
                                 </MudStack>
                             </AlertModal>
                         }
-
-                        <CalendarView Mode="@selectedMode" Journeys="BuildCalendarJourneys()" AvailabilityPeriods="_availibilityPeriods" OnJourneyClick="HandleJourneyClick" />
+                      
+                        <CalendarView Mode="@selectedMode"
+                                      Journeys="BuildCalendarJourneys()"
+                                      JumpToDate="_jumpToDate"
+                                      AvailabilityPeriods="_availibilityPeriods"
+                                      OnJourneyClick="HandleJourneyClick" 
+                                      ShowNavigation="false"/>
 
                     </div>
                 </div>
