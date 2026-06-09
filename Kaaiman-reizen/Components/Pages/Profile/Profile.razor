@@ -4,6 +4,7 @@
 @using Microsoft.AspNetCore.Identity
 @using Kaaiman_reizen.Data.Identity
 @using System.ComponentModel.DataAnnotations
+@using Kaaiman_reizen.Components.Account.Shared
 @rendermode InteractiveServer
 
 <PageTitle>Profiel</PageTitle>
@@ -70,22 +71,26 @@
 
                     <div class="profile-field mb-3">
                         <label class="profile-label col-form-label">Huidig wachtwoord</label>
-                        <div class="profile-value">
-                            <InputText type="password" class="form-control" @bind-Value="passwordModel.CurrentPassword" />
+                        <div class="profile-value position-relative">
+                            <InputText type="password" class="form-control" @bind-Value="passwordModel.CurrentPassword" id="old-pw"/>
+                            <PasswordEye For="old-pw" />
                         </div>
                     </div>
+                    
 
                     <div class="profile-field mb-3">
                         <label class="profile-label col-form-label">Nieuw wachtwoord</label>
-                        <div class="profile-value">
-                            <InputText type="password" class="form-control" @bind-Value="passwordModel.NewPassword" />
+                        <div class="profile-value position-relative">
+                            <InputText type="password" class="form-control" @bind-Value="passwordModel.NewPassword" id="new-pw"/>
+                            <PasswordEye For="new-pw" />
                         </div>
                     </div>
 
                     <div class="profile-field mb-3">
                         <label class="profile-label col-form-label">Bevestig nieuw wachtwoord</label>
-                        <div class="profile-value">
-                            <InputText type="password" class="form-control" @bind-Value="passwordModel.ConfirmPassword" />
+                        <div class="profile-value position-relative">
+                            <InputText type="password" class="form-control" @bind-Value="passwordModel.ConfirmPassword" id="new-pw-confirm"/>
+                            <PasswordEye For="new-pw-confirm" />
                         </div>
                     </div>
 
