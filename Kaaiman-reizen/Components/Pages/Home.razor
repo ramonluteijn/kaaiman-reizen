@@ -6,11 +6,30 @@
 
 @if (_isPlanner)
 {
-    <h1 class="h4">Planning dashboard</h1>
+    <h1 class="h4 mb-3 d-flex align-items-center gap-2">Planning dashboard
+        <Tooltip>
+            <strong>Dashboard — hoe werkt dit?</strong>
+            <ul>
+                <li>Bekijk hier een overzicht van de huidige reisplanning, inclusief concepten en gepubliceerde reizen.</li>
+                <li>Gebruik de knoppen en links om concepten te beheren, nieuwe reizen aan te maken, en reisleiders te beheren.</li>
+                <li>Controleer de secties "Reizen zonder reisleiders" en "Reisleiders zonder reis" om eventuele hiaten in de planning te identificeren.</li>
+                <li>Bekijk notities van reisleiders om belangrijke informatie of opmerkingen te zien die van invloed kunnen zijn op de planning.</li>
+            </ul>
+        </Tooltip>
+    </h1>
 }
 else
 {
-    <h1 class="h4">Home</h1>
+    <h1 class="h4 mb-3 d-flex align-items-center gap-2">Home
+        <Tooltip>
+            <strong>Home — hoe werkt dit?</strong>
+            <ul>
+                <li>Bekijk hier een overzicht van uw huidige reisplanning, inclusief gepubliceerde reizen.</li>
+                <li>Gebruik de links om details van uw reizen te bekijken en eventuele opmerkingen van reisleiders te zien.</li>
+                <li>Controleer regelmatig deze pagina voor updates over uw reizen en eventuele nieuwe notities van reisleiders.</li>
+            </ul>
+        </Tooltip>
+    </h1>
 }
 
 @if (_loading)
