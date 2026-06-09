@@ -227,6 +227,11 @@ public class TravelLeaderService : ITravelLeaderService
         return historyEntries.Count;
     }
 
+    public async Task IncrementTravelLeadersExperience(int journeyId)
+    {
+        throw new NotImplementedException();
+    }
+
     public class OverlapData
     {
         public TravelLeader travelLeader { get; set; }

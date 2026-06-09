@@ -21,4 +21,5 @@ public interface ITravelLeaderService
     Task<IReadOnlyList<Journey>> GetJourneysOfTravelLeaderAsync(TravelLeader leader, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<TravelLeader>> GetJourneyAvailabilityForAllTravelLeadersAsync();
     Task<int> ArchiveAndResetPreferredDestinationsAsync(int? planningVersionId, CancellationToken cancellationToken = default);
+    Task IncrementTravelLeadersExperience(int journeyId);
 }

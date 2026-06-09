@@ -13,5 +13,5 @@ public interface IJourneyService
     Task<Entities.Journey?> GetJourneyByIdWithPublishedPlanningAsync(int id, CancellationToken cancellationToken = default);
     Task UpdateJourneyAsync(Entities.Journey journey, List<int> selectedLeaders, CancellationToken cancellationToken = default);
     Task<ImportResult> ImportJourneysAsync(Stream stream);
-
+    Task ChangeJourneyStatusToFinished(int id);
 }

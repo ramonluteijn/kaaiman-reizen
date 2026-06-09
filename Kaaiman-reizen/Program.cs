@@ -1,4 +1,6 @@
 using Azure.Identity;
+using Hangfire;
+using Hangfire.MySql;
 using Kaaiman_reizen.Components.Account;
 using Kaaiman_reizen.Data;
 using Kaaiman_reizen.Data.Identity;
@@ -12,6 +14,7 @@ using Microsoft.AspNetCore.Identity;
 using MudBlazor.Services;
 using QuestPDF.Infrastructure;
 using System.Globalization;
+using System.Transactions;
 
 QuestPDF.Settings.License = LicenseType.Community;
 
@@ -53,6 +56,23 @@ if (string.IsNullOrWhiteSpace(connectionString))
 builder.Services.AddMainContext(connectionString);
 builder.Services.AddDataServices();
 builder.Services.AddDevSeeder(builder.Environment);
+
+// ======================
+// HANGFIRE (scheduled jobs)
+// ======================
+builder.Services.AddHangfire(config => config
+    .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+    .UseSimpleAssemblyNameTypeSerializer()
+    .UseRecommendedSerializerSettings()
+    .UseStorage(new MySqlStorage(connectionString, new MySqlStorageOptions
+    {
+        TransactionIsolationLevel = IsolationLevel.ReadCommitted,
+        QueuePollInterval = TimeSpan.FromMinutes(15),
+        JobExpirationCheckInterval = TimeSpan.FromHours(1),
+        PrepareSchemaIfNecessary = true
+    })));
+
+builder.Services.AddHangfireServer();
 
 // ======================
 // UI
