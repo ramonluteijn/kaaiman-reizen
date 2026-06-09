@@ -50,9 +50,9 @@ public partial class Preferences : ComponentBase
         }
         else
         {
-            var email = authState.User.Identity?.Name;
-            if (!string.IsNullOrEmpty(email))
-                item = await LeaderService.GetTravelLeaderByEmailAsync(email);
+            var leaderId = user.FindFirst("TravelLeaderId")?.Value;
+            if (!string.IsNullOrEmpty(leaderId) && int.TryParse(leaderId, out int id))
+                item = await LeaderService.GetTravelLeaderByIdAsync(id);
         }
 
         if (item == null)

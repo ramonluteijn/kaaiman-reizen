@@ -36,7 +36,7 @@ public class PlannerDraftService : IPlannerDraftService
                 Name = l.Name,
                 Note = l.Note,
                 AmountOfTrips = l.AmountOfTrips ?? 0,
-                MinTrips = l.MinTrips ?? 0,
+                MinTrips = 0,
                 MaxTrips = l.MaxTrips ?? 0,
                 PreferredDestinations = l.PreferredDestinations
                     .Where(p => p.JourneyId.HasValue)
@@ -98,7 +98,7 @@ public class PlannerDraftService : IPlannerDraftService
                     Name = l.Name,
                     Note = l.Note,
                     AmountOfTrips = l.AmountOfTrips ?? 0,
-                    MinTrips = l.MinTrips ?? 0,
+                    MinTrips = 0,
                     MaxTrips = l.MaxTrips ?? 0,
                     PreferredDestinations = prefs.ToDictionary(x => x.JourneyId, x => x.Rank),
                     PreferredDestinationDetails = prefs
