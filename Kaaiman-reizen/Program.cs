@@ -88,6 +88,7 @@ builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 builder.Services.AddScoped<IPlannerDraftService, PlannerDraftService>();
 builder.Services.AddScoped<IUserTimezoneService, UserTimezoneService>();
 builder.Services.AddScoped<JourneyNotificationService>();
+builder.Services.AddScoped<IJobScheduler, JobScheduler>();
 builder.Services.AddHostedService<JourneyReminderHostedService>();
 
 // ======================

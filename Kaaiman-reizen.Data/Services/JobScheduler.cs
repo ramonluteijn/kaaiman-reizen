@@ -1,6 +1,7 @@
 ﻿using Hangfire;
 using Kaaiman_reizen.Data;
 using Kaaiman_reizen.Data.Entities;
+using Kaaiman_reizen.Data.Enum;
 using Kaaiman_reizen.Data.Services;
 
 namespace Kaaiman_reizen.Services
@@ -8,20 +9,18 @@ namespace Kaaiman_reizen.Services
     public class JobScheduler : IJobScheduler
     {
         private readonly MainContext _db;
-        private readonly IJourneyService _journeyService;
         private readonly ITravelLeaderService _travelLeaderService;
         private readonly IBackgroundJobClient _backgroundJobClient;
 
-        public JobScheduler(MainContext db, IJourneyService journeyService, ITravelLeaderService travelLeaderService, IBackgroundJobClient backgroundJobClient) {
+        public JobScheduler(MainContext db, ITravelLeaderService travelLeaderService, IBackgroundJobClient backgroundJobClient) {
             _db = db;
-            _journeyService = journeyService;
             _travelLeaderService = travelLeaderService;
             _backgroundJobClient = backgroundJobClient;
         }
 
         public async Task ScheduleJobsForJourney(int journeyId, CancellationToken cancellationToken)
         {
-            var journey = await _journeyService.GetJourneyByIdAsync(journeyId);
+            var journey = await _db.Journey.FindAsync(new [] { journeyId }, cancellationToken);
 
             if (journey is null)
                 return; 
@@ -46,7 +45,7 @@ namespace Kaaiman_reizen.Services
 
         public async Task RemoveJobsForJourney(int journeyId, CancellationToken cancellationToken)
         {
-            var journey = await _journeyService.GetJourneyByIdAsync(journeyId);
+            var journey = await _db.Journey.FindAsync(new [] { journeyId }, cancellationToken);
 
             if (journey is null || string.IsNullOrEmpty(journey.HangfireJobId))
                 return;
@@ -59,7 +58,13 @@ namespace Kaaiman_reizen.Services
 
         public async Task HandleJourneyConclusion(int journeyId, CancellationToken cancellationToken)
         {
-            await _journeyService.ChangeJourneyStatusToFinished(journeyId, cancellationToken);
+            var journey = await _db.Journey.FindAsync(journeyId);
+            if (journey is not null)
+            {
+                journey.BookingStatus = BookingStatus.Geweest;
+                await _db.SaveChangesAsync();
+            }
+
             await _travelLeaderService.IncrementTravelLeadersExperience(journeyId, cancellationToken);
         }
     }
