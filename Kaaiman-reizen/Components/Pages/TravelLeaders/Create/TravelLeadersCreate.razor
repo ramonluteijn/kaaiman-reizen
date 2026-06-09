@@ -7,7 +7,18 @@
 
 <PageTitle>Nieuwe reisleider</PageTitle>
 
-<h1 class="h4">Nieuwe reisleider</h1>
+<h1 class="h4 d-flex align-items-center gap-2">Nieuwe reisleider
+    <Tooltip>
+        <strong>Nieuwe reisleider — hoe werkt dit?</strong>
+        <ul>
+            <li>Vul naam, e-mailadres en telefoonnummer in.</li>
+            <li>Geef aan hoeveel reizen deze reisleider gemiddeld kan begeleiden.</li>
+            <li>Stel het minimum en maximum per jaar in.</li>
+            <li>Gebruik de notitie voor extra opmerkingen en zet de reisleider actief of inactief.</li>
+            <li>Klik op "Opslaan" om het profiel aan te maken.</li>
+        </ul>
+    </Tooltip>
+</h1>
 
 @if (!string.IsNullOrEmpty(_errorMessage))
 {
