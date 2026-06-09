@@ -10,7 +10,7 @@
                 <MudText Typo="Typo.h5">@(Mode == CalendarModes.JourneyMode ? "Reizen" : "Beschikbaarheden")</MudText>
                 <MudText Typo="Typo.h5" Class="mud-text-secondary">@_currentDate.ToString("MMMM yyyy")</MudText>
 
-                @if (Journeys.Any() || AvailabilityPeriods.Any())
+                @if ((Journeys.Any() || AvailabilityPeriods.Any()) && ShowNavigation)
                 {
                     <div class="cal-pills-bar">
                         @foreach (var group in Journeys
@@ -185,6 +185,7 @@
     [Parameter] public EventCallback<JourneyViewModel> OnJourneyDrop { get; set; }
     [Parameter] public EventCallback<JourneyViewModel> OnJourneyClick { get; set; }
     [Parameter] public DateOnly? JumpToDate { get; set; }
+    [Parameter] public bool ShowNavigation { get; set; } = true;
 
     private DateTime _currentDate = DateTime.Today;
     private List<CalendarDay> _days = new();
