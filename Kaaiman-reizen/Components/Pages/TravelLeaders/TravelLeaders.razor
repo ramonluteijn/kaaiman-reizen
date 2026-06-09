@@ -19,36 +19,47 @@
                 <i class="bi bi-plus"></i> Nieuwe reisleider
             </a>
         </div>
-            
-            <Table TItem="TravelLeaderViewModel" Items="FilteredLeaders" OnDelete="@OnDelete" Path="travelleaders" EditHrefSelector="@GetEditHref">
+
+        <Table TItem="TravelLeaderViewModel" Items="FilteredLeaders" OnDelete="@OnDelete" Path="travelleaders" EditHrefSelector="@GetEditHref">
             <HeaderContent>
-                <th @onclick='() => SortBy("Name")'>
-                    Naam @(GetSortIcon("Name"))
+                <th class="leader-name-column" @onclick='() => SortBy("Name")'>
+                    Reisleider @(GetSortIcon("Name"))
                 </th>
-                <th>E-mailadres</th>
-                <th>Telefoon</th>
-                <th @onclick='() => SortBy("Experience")'>
-                    Reizen Ervaring @(GetSortIcon("Experience"))
+                <th class="leader-contact-column">Contact</th>
+                <th class="leader-metric-column text-center" @onclick='() => SortBy("Experience")'>
+                    Ervaring @(GetSortIcon("Experience"))
                 </th>
-                <th @onclick='() => SortBy("Minimum")'>
-                    Minimaal Aantal Reizen @(GetSortIcon("Minimum"))
+                <th class="leader-metric-column text-center" @onclick='() => SortBy("Minimum")'>
+                    Min @(GetSortIcon("Minimum"))
                 </th>
-                <th @onclick='() => SortBy("Maximum")'>
-                    Maximaal Aantal Reizen @(GetSortIcon("Maximum"))
+                <th class="leader-metric-column text-center" @onclick='() => SortBy("Maximum")'>
+                    Max @(GetSortIcon("Maximum"))
                 </th>
-                <th>Voorkeuren</th>
-                <th @onclick='() => SortBy("Active")'>
-                    Actief @(GetSortIcon("Active"))
+                <th class="leader-preferences-column">Voorkeuren</th>
+                <th class="leader-status-column text-center" @onclick='() => SortBy("Active")'>
+                    Status @(GetSortIcon("Active"))
                 </th>
             </HeaderContent>
             <RowTemplate>
-                <td>@context.Name</td>
-                <td>@context.Email</td>
-                <td>@context.PhoneNumber</td>
-                <td>@context.AmountOfTrips</td>
-                <td>@context.MinTrips</td>
-                <td>@context.MaxTrips</td>
-                <td>
+                <td class="leader-name-cell">
+                    <span class="fw-semibold">@context.Name</span>
+                </td>
+                <td class="leader-contact-cell">
+                    <div class="d-flex flex-column gap-1">
+                        <span class="text-muted small">@context.Email</span>
+                        <span class="text-muted small">@context.PhoneNumber</span>
+                    </div>
+                </td>
+                <td class="leader-metric-cell text-center">
+                    <span class="leader-metric">@(context.AmountOfTrips?.ToString() ?? "—")</span>
+                </td>
+                <td class="leader-metric-cell text-center">
+                    <span class="leader-metric">@(context.MinTrips?.ToString() ?? "—")</span>
+                </td>
+                <td class="leader-metric-cell text-center">
+                    <span class="leader-metric">@(context.MaxTrips?.ToString() ?? "—")</span>
+                </td>
+                <td class="leader-preferences-cell">
                     @if (!context.AvailableForJourneys.Any())
                     {
                         <span class="text-muted">—</span>
@@ -56,17 +67,46 @@
                     else
                     {
                         <div class="d-flex flex-column gap-1">
-                            @foreach (var name in context.AvailableForJourneys)
+                            @{
+                                var allPrefs = context.AvailableForJourneys.ToList();
+                                var isExpanded = _expandedPreferences.Contains(context.Id);
+                                var prefsToShow = isExpanded ? allPrefs : allPrefs.Take(2).ToList();
+                            }
+                            @foreach (var name in prefsToShow)
                             {
-                                <span>@name</span>
+                                <span class="leader-preference">@name</span>
+                            }
+                            @if (allPrefs.Count > 2 && !isExpanded)
+                            {
+                                <button class="btn btn-link btn-sm p-0 text-start leader-pref-toggle leader-pref-expand" 
+                                        @onclick="@(() => TogglePreferences(context.Id))">
+                                    +@(allPrefs.Count - 2) meer
+                                </button>
+                            }
+                            @if (allPrefs.Count > 2 && isExpanded)
+                            {
+                                <button class="btn btn-link btn-sm p-0 text-start leader-pref-toggle leader-pref-collapse" 
+                                        @onclick="@(() => TogglePreferences(context.Id))">
+                                    − minder
+                                </button>
                             }
                         </div>
                     }
                 </td>
-                <td>
-                    <span class="badge @(context.IsActive ? "bg-success" : "bg-danger")">
-                        @(context.IsActive ? "Ja" : "Nee")
+                <td class="leader-status-cell text-center">
+                    <span class="badge rounded-pill @(context.IsActive ? "bg-success" : "bg-secondary")">
+                        @(context.IsActive ? "Actief" : "Inactief")
                     </span>
+                    <div class="mt-1">
+                        @if (_publishedLeaderIds.Contains(context.Id))
+                        {
+                            <span class="badge bg-primary small">In planning</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-light text-muted small">Niet gepland</span>
+                        }
+                    </div>
                 </td>
             </RowTemplate>
         </Table>
