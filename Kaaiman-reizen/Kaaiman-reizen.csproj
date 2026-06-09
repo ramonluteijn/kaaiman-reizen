@@ -41,6 +41,7 @@
       <PackageReference Include="MudBlazor" Version="9.2.0" />
     </ItemGroup>
     <ItemGroup>
+      <Folder Include="Components\Pages\Settings\" />
       <Folder Include="wwwroot\images\" />
     </ItemGroup>
 
