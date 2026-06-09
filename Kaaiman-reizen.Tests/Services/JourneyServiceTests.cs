@@ -5,6 +5,7 @@ using Kaaiman_reizen.Data;
 using Kaaiman_reizen.Data.Entities;
 using Kaaiman_reizen.Data.Enum;
 using Kaaiman_reizen.Data.Services;
+using Kaaiman_reizen.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kaaiman_reizen.Tests.Services
@@ -16,9 +17,21 @@ namespace Kaaiman_reizen.Tests.Services
             public object GetService(Type serviceType) => null;
         }
 
+        private class MockJobScheduler : IJobScheduler
+        {
+            public Task ScheduleJobsForJourney(int journeyId, CancellationToken cancellationToken) => Task.CompletedTask;
+            public Task RescheduleJobsForJourney(int journeyId, CancellationToken cancellationToken) => Task.CompletedTask;
+            public Task RemoveJobsForJourney(int journeyid, CancellationToken cancellationToken) => Task.CompletedTask;
+        }
+
         private IServiceProvider GetMockServiceProvider()
         {
             return new DummyServiceProvider();
+        }
+
+        private IJobScheduler GetMockJobScheduler()
+        {
+            return new MockJobScheduler();
         }
 
         public static MemoryStream CreateValidJourneyExcel()
@@ -84,7 +97,7 @@ namespace Kaaiman_reizen.Tests.Services
         {
             var db = GetInMemoryDb();
             var planningService = new PlanningService(db, GetMockServiceProvider());
-            var service = new JourneyService(db, planningService);
+            var service = new JourneyService(db, planningService, GetMockJobScheduler());
 
             var journey = new Journey
             {
@@ -107,7 +120,7 @@ namespace Kaaiman_reizen.Tests.Services
         {
             var db = GetInMemoryDb();
             var planningService = new PlanningService(db, GetMockServiceProvider());
-            var service = new JourneyService(db, planningService);
+            var service = new JourneyService(db, planningService, GetMockJobScheduler());
 
             var journey = new Journey
             {
@@ -133,7 +146,7 @@ namespace Kaaiman_reizen.Tests.Services
         {
             var db = GetInMemoryDb();
             var planningService = new PlanningService(db, GetMockServiceProvider());
-            var service = new JourneyService(db, planningService);
+            var service = new JourneyService(db, planningService, GetMockJobScheduler());
 
             var journey = new Journey
             {
@@ -158,7 +171,7 @@ namespace Kaaiman_reizen.Tests.Services
         {
             var db = GetInMemoryDb();
             var planningService = new PlanningService(db, GetMockServiceProvider());
-            var service = new JourneyService(db, planningService);
+            var service = new JourneyService(db, planningService, GetMockJobScheduler());
 
             var journey = new Journey
             {
@@ -202,7 +215,7 @@ namespace Kaaiman_reizen.Tests.Services
             var stream = CreateValidJourneyExcel();
             var db = GetInMemoryDb();
             var planningService = new PlanningService(db, GetMockServiceProvider());
-            var service = new JourneyService(db, planningService);
+            var service = new JourneyService(db, planningService, GetMockJobScheduler());
 
             var result = await service.ImportJourneysAsync(stream);
 
