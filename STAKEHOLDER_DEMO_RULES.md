@@ -18,6 +18,7 @@ Dit document bevat een korte demo-flow om de Rules-functionaliteit te presentere
 4. Genereer opnieuw een draft via `/planner/draft` en vergelijk met de nulmeting.
 
 **Resultaat**
+
 1. De toewijzingen in de tweede draft sluiten beter aan op de ingestelde voorkeuren; bij conflicten blijven andere actieve rules en beschikbaarheid bepalend voor de uiteindelijke planning.
 
 ## Instellingen
@@ -36,4 +37,5 @@ Dit document bevat een korte demo-flow om de Rules-functionaliteit te presentere
 4. Genereer opnieuw een draft via `/planner/draft` en vergelijk met de nulmeting.
 
 **Resultaat**
+
 1. Reisleiders met weinig ervaring worden minder of niet meer toegewezen, meer ervaren reisleiders krijgen relatief vaker toewijzingen of sommige reizen blijven (deels) onvervuld als er te weinig ervaren reisleiders beschikbaar zijn.
