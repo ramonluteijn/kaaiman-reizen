@@ -12,7 +12,8 @@ namespace Kaaiman_reizen.Services
         private readonly ITravelLeaderService _travelLeaderService;
         private readonly IBackgroundJobClient _backgroundJobClient;
 
-        public JobScheduler(MainContext db, ITravelLeaderService travelLeaderService, IBackgroundJobClient backgroundJobClient) {
+        public JobScheduler(MainContext db, ITravelLeaderService travelLeaderService, IBackgroundJobClient backgroundJobClient)
+        {
             _db = db;
             _travelLeaderService = travelLeaderService;
             _backgroundJobClient = backgroundJobClient;
@@ -23,7 +24,7 @@ namespace Kaaiman_reizen.Services
             var journey = await _db.Journey.FindAsync(new object[] { journeyId }, cancellationToken);
 
             if (journey is null)
-                return; 
+                return;
 
             var executionTime = journey.End.ToDateTime(new TimeOnly(23, 59), DateTimeKind.Utc);
 
