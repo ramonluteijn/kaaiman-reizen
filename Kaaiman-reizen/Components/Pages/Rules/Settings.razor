@@ -5,7 +5,17 @@
 
 <PageTitle>Instellingen</PageTitle>
 
-<h1 class="h4">Instellingen</h1>
+<h1 class="h4 d-flex align-items-center gap-2">Instellingen
+    <Tooltip>
+        <strong>Regels — hoe werkt dit?</strong>
+        <ul>
+            <li>Gebruik de zoekbalk om regels snel op key terug te vinden.</li>
+            <li>Pas de waarde of het gewicht direct in de tabel aan.</li>
+            <li>Klik op de badge bij "Actief" om een regel aan of uit te zetten.</li>
+            <li>Wees voorzichtig: regels kunnen de planner sterk beïnvloeden.</li>
+        </ul>
+    </Tooltip>
+</h1>
 
 @if (!string.IsNullOrWhiteSpace(_error))
 {
