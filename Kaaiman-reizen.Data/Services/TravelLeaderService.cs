@@ -248,10 +248,9 @@ public class TravelLeaderService : ITravelLeaderService
     }
 }
 
-    public class OverlapData
-    {
-        public TravelLeader travelLeader { get; set; }
-        public Journey subjectJourney { get; set; }
-        public Journey overlappingJourney { get; set; }
-    }
+public class OverlapData
+{
+    public TravelLeader travelLeader { get; set; }
+    public Journey subjectJourney { get; set; }
+    public Journey overlappingJourney { get; set; }
 }

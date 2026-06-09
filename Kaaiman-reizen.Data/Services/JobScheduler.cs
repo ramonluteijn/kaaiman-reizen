@@ -29,7 +29,7 @@ namespace Kaaiman_reizen.Services
             var executionTime = journey.End.ToDateTime(new TimeOnly(23, 59), DateTimeKind.Utc);
 
             var nieuwJobId = _backgroundJobClient.Schedule<JobScheduler>(
-                service => service.HandleJourneyConclusion(journey.Id),
+                service => service.HandleJourneyConclusion(journey.Id, cancellationToken),
                 executionTime
             );
 
