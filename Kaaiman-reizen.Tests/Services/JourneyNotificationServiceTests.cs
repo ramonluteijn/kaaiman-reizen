@@ -171,6 +171,12 @@ namespace Kaaiman_reizen.Tests.Services
             var today = DateOnly.FromDateTime(DateTime.UtcNow);
             var journeyStartDate = today.AddDays(7);
 
+            var applicationUser = new ApplicationUser
+            {
+                Id = "1",
+                Email = "test@example.com"
+            };
+
             var travelLeader = new TravelLeader
             {
                 Id = 1,
@@ -194,29 +200,32 @@ namespace Kaaiman_reizen.Tests.Services
                 TravelLeaders = new List<TravelLeader> { travelLeader }
             };
 
+            db.Users.Add(applicationUser);
             db.TravelLeader.Add(travelLeader);
             db.Journey.Add(journey);
 
-            // Add history to simulate already sent notification
-            var history = new JourneyNotificationHistory
+            db.JourneyNotificationHistory.Add(new JourneyNotificationHistory
             {
                 JourneyId = 1,
                 ApplicationUserId = "1",
                 DaysBeforeStart = 7,
                 SentAt = DateTime.UtcNow
-            };
-            db.JourneyNotificationHistory.Add(history);
+            });
+
             await db.SaveChangesAsync();
 
             var emailDispatcher = new DummyEmailDispatcher();
             var notificationService = new NotificationService(db);
-            var journeyNotificationService = new JourneyNotificationService(db, emailDispatcher, notificationService);
+            var journeyNotificationService =
+                new JourneyNotificationService(db, emailDispatcher, notificationService);
 
             // Act
             await journeyNotificationService.SendJourneyRemindersAsync();
 
-            // Assert - no email should be sent
+            // Assert
             Assert.Empty(emailDispatcher.SentEmails);
+
+            Assert.Single(await db.JourneyNotificationHistory.ToListAsync());
         }
 
         [Fact]
@@ -348,6 +357,12 @@ namespace Kaaiman_reizen.Tests.Services
             var db = GetInMemoryDb();
             var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
+            var applicationUser = new ApplicationUser
+            {
+                Id = "user-1",
+                Email = "test@example.com"
+            };
+
             var travelLeader = new TravelLeader
             {
                 Id = 1,
@@ -359,7 +374,6 @@ namespace Kaaiman_reizen.Tests.Services
                 MaxTrips = 1
             };
 
-            // Create a journey starting in 7 days
             var journey7Days = new Journey
             {
                 Id = 1,
@@ -372,7 +386,6 @@ namespace Kaaiman_reizen.Tests.Services
                 TravelLeaders = new List<TravelLeader> { travelLeader }
             };
 
-            // Create another journey starting in 3 days
             var journey3Days = new Journey
             {
                 Id = 2,
@@ -385,25 +398,31 @@ namespace Kaaiman_reizen.Tests.Services
                 TravelLeaders = new List<TravelLeader> { travelLeader }
             };
 
+            db.Users.Add(applicationUser);
             db.TravelLeader.Add(travelLeader);
             db.Journey.AddRange(journey7Days, journey3Days);
             await db.SaveChangesAsync();
 
             var emailDispatcher = new DummyEmailDispatcher();
             var notificationService = new NotificationService(db);
-            var journeyNotificationService = new JourneyNotificationService(db, emailDispatcher, notificationService);
+            var journeyNotificationService = new JourneyNotificationService(
+                db,
+                emailDispatcher,
+                notificationService);
 
             // Act
             await journeyNotificationService.SendJourneyRemindersAsync();
 
-            // Assert - two emails sent (one for 7 days, one for 3 days)
+            // Assert
             Assert.Equal(2, emailDispatcher.SentEmails.Count);
             Assert.Contains(emailDispatcher.SentEmails, e => e.message.Contains("7 dag"));
             Assert.Contains(emailDispatcher.SentEmails, e => e.message.Contains("3 dag"));
 
-            // Check notification history has both records
-            var historyCount = await db.JourneyNotificationHistory.CountAsync();
-            Assert.Equal(2, historyCount);
+            var history = await db.JourneyNotificationHistory.ToListAsync();
+
+            Assert.Equal(2, history.Count);
+            Assert.Contains(history, h => h.JourneyId == 1 && h.DaysBeforeStart == 7);
+            Assert.Contains(history, h => h.JourneyId == 2 && h.DaysBeforeStart == 3);
         }
 
         [Fact]
@@ -450,6 +469,12 @@ namespace Kaaiman_reizen.Tests.Services
             var today = DateOnly.FromDateTime(DateTime.UtcNow);
             var journeyStartDate = today.AddDays(7);
 
+            var applicationUser = new ApplicationUser
+            {
+                Id = "user-1",
+                Email = "test@example.com"
+            };
+
             var travelLeader = new TravelLeader
             {
                 Id = 1,
@@ -473,28 +498,29 @@ namespace Kaaiman_reizen.Tests.Services
                 TravelLeaders = new List<TravelLeader> { travelLeader }
             };
 
+            db.Users.Add(applicationUser);
             db.TravelLeader.Add(travelLeader);
             db.Journey.Add(journey);
             await db.SaveChangesAsync();
 
             var emailDispatcher = new DummyEmailDispatcher();
             var notificationService = new NotificationService(db);
-            var journeyNotificationService = new JourneyNotificationService(db, emailDispatcher, notificationService);
+            var journeyNotificationService = new JourneyNotificationService(
+                db,
+                emailDispatcher,
+                notificationService);
 
             // Act
             await journeyNotificationService.SendJourneyRemindersAsync();
 
             // Assert
             Assert.Single(emailDispatcher.SentEmails);
+
             var (email, subject, message) = emailDispatcher.SentEmails.First();
 
-            // Verify subject format
+            Assert.Equal("test@example.com", email);
             Assert.Equal("Herinnering: Uw reis naar Barcelona Expedition", subject);
-
-            // Verify message contains journey name
             Assert.Contains("Barcelona Expedition", message);
-
-            // Verify message contains days before start
             Assert.Contains("7 dag", message);
         }
 
@@ -502,6 +528,95 @@ namespace Kaaiman_reizen.Tests.Services
         public async Task SendJourneyRemindersAsync_SeparateLead3And7DayNotifications()
         {
             // Arrange
+            var db = GetInMemoryDb();
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+            var applicationUser = new ApplicationUser
+            {
+                Id = "user-1",
+                Email = "test@example.com"
+            };
+
+            var travelLeader = new TravelLeader
+            {
+                Id = 1,
+                Name = "Test Leader",
+                Email = "test@example.com",
+                PhoneNumber = "111111111",
+                AmountOfTrips = 1,
+                MinTrips = 1,
+                MaxTrips = 1
+            };
+
+            var journey = new Journey
+            {
+                Id = 1,
+                Name = "Test Trip",
+                Start = today.AddDays(7),
+                End = today.AddDays(8),
+                Busses = 1,
+                Travelers = 10,
+                RequiredLeaders = 1,
+                TravelLeaders = new List<TravelLeader> { travelLeader }
+            };
+
+            db.Users.Add(applicationUser);
+            db.TravelLeader.Add(travelLeader);
+            db.Journey.Add(journey);
+            await db.SaveChangesAsync();
+
+            var emailDispatcher = new DummyEmailDispatcher();
+            var notificationService = new NotificationService(db);
+            var journeyNotificationService = new JourneyNotificationService(
+                db,
+                emailDispatcher,
+                notificationService);
+
+            // First run (7-day reminder)
+            await journeyNotificationService.SendJourneyRemindersAsync();
+
+            Assert.Single(emailDispatcher.SentEmails);
+
+            var history7Days = await db.JourneyNotificationHistory
+                .CountAsync(h => h.DaysBeforeStart == 7);
+
+            Assert.Equal(1, history7Days);
+
+            emailDispatcher.SentEmails.Clear();
+
+            var journey3Days = new Journey
+            {
+                Id = 2,
+                Name = "3 Days Trip",
+                Start = today.AddDays(3),
+                End = today.AddDays(4),
+                Busses = 1,
+                Travelers = 10,
+                RequiredLeaders = 1,
+                TravelLeaders = new List<TravelLeader> { travelLeader }
+            };
+
+            db.Journey.Add(journey3Days);
+            await db.SaveChangesAsync();
+
+            // Second run (3-day reminder)
+            await journeyNotificationService.SendJourneyRemindersAsync();
+
+            Assert.Single(emailDispatcher.SentEmails);
+            Assert.Contains("3 dag", emailDispatcher.SentEmails.First().message);
+
+            var history3Days = await db.JourneyNotificationHistory
+                .CountAsync(h => h.DaysBeforeStart == 3);
+
+            Assert.Equal(1, history3Days);
+
+            var totalHistory = await db.JourneyNotificationHistory.CountAsync();
+            Assert.Equal(2, totalHistory);
+        }
+
+        [Fact]
+        public async Task SendJourneyRemindersAsync_WhenDisabledRuleExists_DoesNotSend()
+        {
             var db = GetInMemoryDb();
             var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
@@ -516,11 +631,10 @@ namespace Kaaiman_reizen.Tests.Services
                 MaxTrips = 1
             };
 
-            // Same journey but we're testing 7 and 3 day notifications are separate
             var journey = new Journey
             {
                 Id = 1,
-                Name = "Test Trip",
+                Name = "Disabled Notifications Trip",
                 Start = today.AddDays(7),
                 End = today.AddDays(8),
                 Busses = 1,
@@ -529,51 +643,101 @@ namespace Kaaiman_reizen.Tests.Services
                 TravelLeaders = new List<TravelLeader> { travelLeader }
             };
 
+            var disabledRule = new Rule
+            {
+                Id = 101,
+                Key = "JourneyReminderEnabled",
+                Description = "Toggle journey reminders",
+                Value = "false",
+                IsActive = true,
+                Weight = 1
+            };
+
             db.TravelLeader.Add(travelLeader);
             db.Journey.Add(journey);
+            db.Rule.Add(disabledRule);
             await db.SaveChangesAsync();
 
             var emailDispatcher = new DummyEmailDispatcher();
             var notificationService = new NotificationService(db);
             var journeyNotificationService = new JourneyNotificationService(db, emailDispatcher, notificationService);
 
-            // Act - First run for 7-day notification
             await journeyNotificationService.SendJourneyRemindersAsync();
-            Assert.Single(emailDispatcher.SentEmails);
-            var history7Days = await db.JourneyNotificationHistory
-                .Where(h => h.DaysBeforeStart == 7)
-                .CountAsync();
-            Assert.Equal(1, history7Days);
 
-            emailDispatcher.SentEmails.Clear();
+            Assert.Empty(emailDispatcher.SentEmails);
+            Assert.Empty(await db.JourneyNotificationHistory.ToListAsync());
+        }
 
-            // Simulate time passing - create a new journey for 3-day notification
-            var journey3Days = new Journey
+        [Fact]
+        public async Task SendJourneyRemindersAsync_UsesConfiguredReminderDays()
+        {
+            var db = GetInMemoryDb();
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+            var applicationUser = new ApplicationUser
             {
-                Id = 2,
-                Name = "3 Days Trip",
-                Start = today.AddDays(3),
-                End = today.AddDays(4),
+                Id = "user-1",
+                Email = "test@example.com"
+            };
+
+            var travelLeader = new TravelLeader
+            {
+                Id = 1,
+                Name = "Test Leader",
+                Email = "test@example.com",
+                PhoneNumber = "111111111",
+                AmountOfTrips = 1,
+                MinTrips = 1,
+                MaxTrips = 1
+            };
+
+            var journey = new Journey
+            {
+                Id = 1,
+                Name = "Custom Day Trip",
+                Start = today.AddDays(10),
+                End = today.AddDays(11),
                 Busses = 1,
                 Travelers = 10,
                 RequiredLeaders = 1,
                 TravelLeaders = new List<TravelLeader> { travelLeader }
             };
-            db.Journey.Add(journey3Days);
+
+            var reminderDaysRule = new Rule
+            {
+                Id = 102,
+                Key = "JourneyReminderDays",
+                Description = "Days before start",
+                Value = "10,5",
+                IsActive = true,
+                Weight = 1
+            };
+
+            db.Users.Add(applicationUser);
+            db.TravelLeader.Add(travelLeader);
+            db.Journey.Add(journey);
+            db.Rule.Add(reminderDaysRule);
             await db.SaveChangesAsync();
 
-            // Act - Run again for 3-day notification
+            var emailDispatcher = new DummyEmailDispatcher();
+            var notificationService = new NotificationService(db);
+            var journeyNotificationService = new JourneyNotificationService(
+                db,
+                emailDispatcher,
+                notificationService);
+
+            // Act
             await journeyNotificationService.SendJourneyRemindersAsync();
 
-            // Assert - 3-day notification should be sent
+            // Assert
             Assert.Single(emailDispatcher.SentEmails);
-            Assert.Contains("3 dag", emailDispatcher.SentEmails.First().message);
+            Assert.Contains("10 dag", emailDispatcher.SentEmails.First().message);
 
-            // Both 7-day and 3-day notifications should be in history
-            var history3Days = await db.JourneyNotificationHistory
-                .Where(h => h.DaysBeforeStart == 3)
-                .CountAsync();
-            Assert.Equal(1, history3Days);
+            var history = await db.JourneyNotificationHistory.ToListAsync();
+
+            Assert.Single(history);
+            Assert.Equal(10, history.First().DaysBeforeStart);
+            Assert.Equal("user-1", history.First().ApplicationUserId);
         }
     }
 }

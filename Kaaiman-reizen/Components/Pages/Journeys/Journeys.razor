@@ -73,51 +73,70 @@
         <Table TItem="Journey" Items="FilteredJourneys" OnDelete="@OnDelete" Path="journeys"
                EditHrefSelector="@GetEditHref">
             <HeaderContent>
-                <th @onclick='() => SortBy("Name")'>
+                <th class="journey-name-column" @onclick='() => SortBy("Name")'>
                     Reis @(GetSortIcon("Name"))
                 </th>
-                <th @onclick='() => SortBy("StartDate")'>
-                    Start Datum @(GetSortIcon("StartDate"))
+                <th class="journey-period-column" @onclick='() => SortBy("StartDate")'>
+                    Periode @(GetSortIcon("StartDate"))
                 </th>
-                <th @onclick='() => SortBy("EndDate")'>
-                    Eind Datum @(GetSortIcon("EndDate"))
+                <th class="journey-planning-column">
+                    Planning
                 </th>
-                <th>Reisleiders</th>
-                <th @onclick='() => SortBy("BookingStatus")'>
+                <th class="journey-leaders-column">
+                    Reisleiders
+                </th>
+                <th class="journey-booking-column" @onclick='() => SortBy("BookingStatus")'>
                     Boekingsstatus @(GetSortIcon("BookingStatus"))
                 </th>
-                <th @onclick='() => SortBy("Busses")'>
+                <th class="journey-metric-column text-center" @onclick='() => SortBy("Busses")'>
                     Busjes @(GetSortIcon("Busses"))
                 </th>
-                <th @onclick='() => SortBy("Travelers")'>
+                <th class="journey-metric-column text-center" @onclick='() => SortBy("Travelers")'>
                     Reizigers @(GetSortIcon("Travelers"))
                 </th>
             </HeaderContent>
             <RowTemplate>
-                <td>@context.Name</td>
-                <td>@DateDisplay.FormatDate(context.Start)</td>
-                <td>@DateDisplay.FormatDate(context.End)</td>
-                <td>
-                    @if (context.TravelLeaders != null && context.TravelLeaders.Any())
-                    {
-                        @FormatTravelLeaders(context)
-                    }
+                <td class="journey-name-cell">
+                    <span class="fw-semibold">@context.Name</span>
                 </td>
-                <td>
-                    <span class="badge @(context.BookingStatus switch
-                                       {
-                                           BookingStatus.Huidig      => "bg-success",
-                                           BookingStatus.Geweest    => "bg-secondary",
-                                           BookingStatus.Geanuleerd => "bg-danger",
-                                           _                        => "bg-secondary"
-                                       })">@context.BookingStatus</span>
+                <td class="journey-period-cell">
+                    <div class="d-flex flex-column">
+                        <span class="fw-semibold">@DateDisplay.FormatDate(context.Start)</span>
+                        <span class="text-muted small">t/m @DateDisplay.FormatDate(context.End)</span>
+                    </div>
                 </td>
-                <td>
-                    <span class="badge @(context.Busses > 0 ? "bg-warning" : "bg-secondary")">
-                        @(context.Busses > 0 ? context.Busses + " busje(s)" : "N.v.t.")
+                <td class="journey-planning-cell">
+                    <span class="badge rounded-pill @(context.TravelLeaders != null && context.TravelLeaders.Any() ? "bg-success" : "bg-secondary")">
+                        @(context.TravelLeaders != null && context.TravelLeaders.Any() ? "Gepubliceerd" : "Gepland")
                     </span>
                 </td>
-                <td>@context.Travelers</td>
+                <td class="journey-leaders-cell">
+                    @if (context.TravelLeaders != null && context.TravelLeaders.Any())
+                    {
+                        <div class="d-flex flex-column gap-1">
+                            @FormatTravelLeaders(context)
+                        </div>
+                    }
+                    else
+                    {
+                        <span class="text-muted">—</span>
+                    }
+                </td>
+                <td class="journey-booking-cell">
+                    <span class="badge rounded-pill @(context.BookingStatus switch
+                                       {
+                                           BookingStatus.Huidig => "bg-success",
+                                           BookingStatus.Geweest => "bg-secondary",
+                                           BookingStatus.Geanuleerd => "bg-danger",
+                                           _ => "bg-secondary"
+                                       })">@context.BookingStatus</span>
+                </td>
+                <td class="journey-metric-cell text-center">
+                    <span class="journey-metric">@(context.Busses?.ToString() ?? "—")</span>
+                </td>
+                <td class="journey-metric-cell text-center">
+                    <span class="journey-metric">@(context.Travelers?.ToString() ?? "—")</span>
+                </td>
             </RowTemplate>
         </Table>
 
@@ -210,6 +229,21 @@
     private void SetTab(int tab) => _activeTab = tab;
 
     private static string GetEditHref(Journey journey) => $"/journeys/edit/{journey.Id}";
+
+    private static bool HasPublishedPlanning(Journey journey)
+    {
+        return journey.TravelLeaders != null && journey.TravelLeaders.Any();
+    }
+
+    private static string GetPlanningStatusLabel(Journey journey)
+    {
+        return HasPublishedPlanning(journey) ? "Gepubliceerd" : "Gepland";
+    }
+
+    private static string GetPlanningStatusClass(Journey journey)
+    {
+        return HasPublishedPlanning(journey) ? "bg-success" : "bg-secondary";
+    }
 
     private string FormatTravelLeaders(Journey journey)
     {
