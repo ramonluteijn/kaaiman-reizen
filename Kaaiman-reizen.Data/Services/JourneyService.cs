@@ -216,9 +216,15 @@ public class JourneyService : IJourneyService
         return journeys;
     }
 
-    public async Task ChangeJourneyStatusToFinished(int id)
+    public async Task ChangeJourneyStatusToFinished(int id, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        var journey = await GetJourneyByIdAsync(id);
+
+        if (journey is null)
+            return;
+
+        journey.BookingStatus = BookingStatus.Geweest;
+        await _db.SaveChangesAsync(cancellationToken);
     }
 
     private BookingStatus GetBookingStatus(int status) => status switch

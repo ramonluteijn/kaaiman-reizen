@@ -57,10 +57,10 @@ namespace Kaaiman_reizen.Services
             await _db.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task HandleJourneyConclusion(int journeyId)
+        public async Task HandleJourneyConclusion(int journeyId, CancellationToken cancellationToken)
         {
-            await _journeyService.ChangeJourneyStatusToFinished(journeyId);
-            await _travelLeaderService.IncrementTravelLeadersExperience(journeyId);
+            await _journeyService.ChangeJourneyStatusToFinished(journeyId, cancellationToken);
+            await _travelLeaderService.IncrementTravelLeadersExperience(journeyId, cancellationToken);
         }
     }
 }
