@@ -71,6 +71,18 @@ h1:focus {
     border-color: #929292;
 }
 
+#journey-reminder-enabled.form-check-input:checked {
+    background-color: #00796b;
+    border-color: #00796b;
+}
+
+#journey-reminder-enabled.form-check-input:focus {
+    border-color: #00796b;
+    box-shadow:
+        0 0 0 0.1rem white,
+        0 0 0 0.25rem rgba(0, 121, 107, 0.35);
+}
+
 .form-floating > .form-control-plaintext::placeholder,
 .form-floating > .form-control::placeholder {
     color: var(--bs-secondary-color);

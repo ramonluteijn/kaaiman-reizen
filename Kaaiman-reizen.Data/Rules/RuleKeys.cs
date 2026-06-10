@@ -7,6 +7,8 @@ public static class RuleKeys
     public const string RequiredExperience = "RequiredExperience";
     public const string MinMaxJourneys = "MinMaxJourneys";
     public const string PreferencesEnabled = "PreferencesEnabled";
+    public const string JourneyReminderEnabled = "JourneyReminderEnabled";
+    public const string JourneyReminderDays = "JourneyReminderDays";
     public const string PreferenceWeight = "PreferenceWeight";
     public const string NoOverlapWeight = "NoOverlapWeight";
     public const string MinimumGapWeight = "MinimumGapWeight";
@@ -17,4 +19,6 @@ public static class RuleKeys
     public const int DefaultNoOverlapWeight = 200;
     public const int DefaultMinimumGapWeight = 100;
     public const int DefaultRequiredExperienceWeight = 100;
+    public const bool DefaultJourneyReminderEnabled = true;
+    public static readonly int[] DefaultJourneyReminderDays = [7, 3];
 }

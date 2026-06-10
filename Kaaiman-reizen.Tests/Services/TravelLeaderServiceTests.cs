@@ -2,12 +2,24 @@
 using Kaaiman_reizen.Data.Entities;
 using Kaaiman_reizen.Data.Enum;
 using Kaaiman_reizen.Data.Services;
+using Kaaiman_reizen.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kaaiman_reizen.Tests.Services
 {
     public class TravelLeaderServiceTests
     {
+        private class MockJobScheduler : IJobScheduler
+        {
+            public Task ScheduleJobsForJourney(int journeyId, CancellationToken cancellationToken) => Task.CompletedTask;
+            public Task RescheduleJobsForJourney(int journeyId, CancellationToken cancellationToken) => Task.CompletedTask;
+            public Task RemoveJobsForJourney(int journeyid, CancellationToken cancellationToken) => Task.CompletedTask;
+        }
+
+        private IJobScheduler GetMockJobScheduler()
+        {
+            return new MockJobScheduler();
+        }
         // Helper: create a fresh in-memory database for each test
         private MainContext GetInMemoryDb()
         {
@@ -129,7 +141,7 @@ namespace Kaaiman_reizen.Tests.Services
         {
             var db = GetInMemoryDb();
             var leaderService = new TravelLeaderService(db);
-            var journeyService = new JourneyService(db, null);
+            var journeyService = new JourneyService(db, null, GetMockJobScheduler());
 
             var leader1 = new TravelLeader { Id = 1, Name = "Leader 1", PhoneNumber = "123", AmountOfTrips = 3, MinTrips = 1, MaxTrips = 5, IsActive = true };
             var leader2 = new TravelLeader { Id = 2, Name = "Leader 2", PhoneNumber = "123", AmountOfTrips = 3, MinTrips = 1, MaxTrips = 5, IsActive = true };
