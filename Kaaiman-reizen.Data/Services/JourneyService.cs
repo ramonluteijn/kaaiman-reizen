@@ -1,8 +1,8 @@
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
-using DocumentFormat.OpenXml.Wordprocessing;
 using Kaaiman_reizen.Data.Entities;
 using Kaaiman_reizen.Data.Enum;
+using Kaaiman_reizen.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kaaiman_reizen.Data.Services;
@@ -11,11 +11,13 @@ public class JourneyService : IJourneyService
 {
     private readonly MainContext _db;
     private readonly IPlanningService _planningService;
+    private readonly IJobScheduler _jobScheduler;
 
-    public JourneyService(MainContext db, IPlanningService planningService)
+    public JourneyService(MainContext db, IPlanningService planningService, IJobScheduler jobScheduler)
     {
         _db = db;
         _planningService = planningService;
+        _jobScheduler = jobScheduler;
     }
 
     public async Task<IReadOnlyList<string>> GetLeaderNamesAsync(CancellationToken cancellationToken = default)
@@ -36,21 +38,18 @@ public class JourneyService : IJourneyService
 
     public async Task<IReadOnlyList<Journey>> GetJourneysWithPublishedPlanningAsync(int year, CancellationToken cancellationToken = default)
     {
-        // 1. Haal de reizen op filter on year.
         var allJourneys = await GetJourneysAsync(cancellationToken);
 
         var journeysForThisYear = allJourneys
             .Where(j => j.Start.Year == year)
             .ToList();
 
-        // 2. Haal de gepubliceerde planning van DIT jaar op
         var publishedPlanning = await _planningService.GetLatestPublishedAsync(year, cancellationToken);
 
-        // 3. Pas de planning toe op alleen de reizen van dit jaar
         return ApplyPlanningVersion(journeysForThisYear, publishedPlanning);
     }
 
-    public async Task AddJourneyAsync(Entities.Journey journey, List<int> selectedLeaders, CancellationToken cancellationToken = default)
+    public async Task AddJourneyAsync(Journey journey, List<int> selectedLeaders, CancellationToken cancellationToken = default)
     {
         var leaders = await _db.TravelLeader
             .Where(t => selectedLeaders.Contains(t.Id))
@@ -61,6 +60,8 @@ public class JourneyService : IJourneyService
         _db.Journey.Add(journey);
 
         await _db.SaveChangesAsync(cancellationToken);
+
+        await _jobScheduler.ScheduleJobsForJourney(journey.Id, cancellationToken);
     }
 
     public async Task DeleteJourneyAsync(int id, CancellationToken cancellationToken = default)
@@ -69,11 +70,13 @@ public class JourneyService : IJourneyService
         if (entity == null)
             return;
 
+        await _jobScheduler.RemoveJobsForJourney(entity.Id, cancellationToken);
+
         _db.Journey.Remove(entity);
         await _db.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<Entities.Journey?> GetJourneyByIdAsync(int id, CancellationToken cancellationToken = default)
+    public async Task<Journey?> GetJourneyByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         return await _db.Journey
             .Include(j => j.TravelLeaders)
@@ -124,6 +127,8 @@ public class JourneyService : IJourneyService
         }
 
         await _db.SaveChangesAsync(cancellationToken);
+
+        await _jobScheduler.RescheduleJobsForJourney(journey.Id, cancellationToken);
     }
 
     public async Task<ImportResult> ImportJourneysAsync(Stream stream)

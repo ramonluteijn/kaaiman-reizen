@@ -4,6 +4,7 @@ using Kaaiman_reizen.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Kaaiman_reizen.Data.Migrations
 {
     [DbContext(typeof(MainContext))]
-    partial class MainContextModelSnapshot : ModelSnapshot
+    [Migration("20260608174331_AddIsProcessedBooleanToJourneys")]
+    partial class AddIsProcessedBooleanToJourneys
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -62,9 +65,6 @@ namespace Kaaiman_reizen.Data.Migrations
 
                     b.Property<DateOnly>("End")
                         .HasColumnType("date");
-
-                    b.Property<string>("HangfireJobId")
-                        .HasColumnType("longtext");
 
                     b.Property<bool>("IsProcessed")
                         .HasColumnType("tinyint(1)");
@@ -189,95 +189,6 @@ namespace Kaaiman_reizen.Data.Migrations
                     b.ToTable("PlanningAssignments");
                 });
 
-            modelBuilder.Entity("Kaaiman_reizen.Data.Entities.PlanningRound", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateOnly>("EndDate")
-                        .HasColumnType("date");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime>("PreferenceDeadline")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<DateTime>("PublicationDeadline")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<DateOnly>("StartDate")
-                        .HasColumnType("date");
-
-                    b.Property<int>("Year")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("PlanningRounds");
-                });
-
-            modelBuilder.Entity("Kaaiman_reizen.Data.Entities.PlanningRoundParticipation", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("PlanningRoundId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("SubmittedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<int>("TravelLeaderId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TravelLeaderId");
-
-                    b.HasIndex("PlanningRoundId", "TravelLeaderId")
-                        .IsUnique();
-
-                    b.ToTable("PlanningRoundParticipations");
-                });
-
-            modelBuilder.Entity("Kaaiman_reizen.Data.Entities.PlanningRoundPreference", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("JourneyId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PlanningRoundParticipationId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Rank")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("JourneyId");
-
-                    b.HasIndex("PlanningRoundParticipationId", "JourneyId")
-                        .IsUnique();
-
-                    b.ToTable("PlanningRoundPreferences");
-                });
-
             modelBuilder.Entity("Kaaiman_reizen.Data.Entities.PlanningVersion", b =>
                 {
                     b.Property<int>("Id")
@@ -296,15 +207,10 @@ namespace Kaaiman_reizen.Data.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<int?>("PlanningRoundId")
-                        .HasColumnType("int");
-
                     b.Property<int?>("PlanningYear")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("PlanningRoundId");
 
                     b.ToTable("PlanningVersions");
                 });
@@ -408,24 +314,6 @@ namespace Kaaiman_reizen.Data.Migrations
                             Description = "Reisleider krijgt voorkeur voor reizen naar zijn favoriete bestemmingen.",
                             IsActive = true,
                             Key = "PreferencesEnabled",
-                            Weight = 1
-                        },
-                        new
-                        {
-                            Id = 6,
-                            Description = "Versturen van reisnotificaties voor aankomende reizen.",
-                            IsActive = true,
-                            Key = "JourneyReminderEnabled",
-                            Value = "true",
-                            Weight = 1
-                        },
-                        new
-                        {
-                            Id = 7,
-                            Description = "Aantal dagen voor vertrek waarop reisnotificaties worden verstuurd (komma-gescheiden).",
-                            IsActive = true,
-                            Key = "JourneyReminderDays",
-                            Value = "7,3",
                             Weight = 1
                         });
                 });
@@ -780,54 +668,6 @@ namespace Kaaiman_reizen.Data.Migrations
                     b.Navigation("TravelLeader");
                 });
 
-            modelBuilder.Entity("Kaaiman_reizen.Data.Entities.PlanningRoundParticipation", b =>
-                {
-                    b.HasOne("Kaaiman_reizen.Data.Entities.PlanningRound", "PlanningRound")
-                        .WithMany("Participations")
-                        .HasForeignKey("PlanningRoundId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Kaaiman_reizen.Data.Entities.TravelLeader", "TravelLeader")
-                        .WithMany()
-                        .HasForeignKey("TravelLeaderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("PlanningRound");
-
-                    b.Navigation("TravelLeader");
-                });
-
-            modelBuilder.Entity("Kaaiman_reizen.Data.Entities.PlanningRoundPreference", b =>
-                {
-                    b.HasOne("Kaaiman_reizen.Data.Entities.Journey", "Journey")
-                        .WithMany()
-                        .HasForeignKey("JourneyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Kaaiman_reizen.Data.Entities.PlanningRoundParticipation", "Participation")
-                        .WithMany("Preferences")
-                        .HasForeignKey("PlanningRoundParticipationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Journey");
-
-                    b.Navigation("Participation");
-                });
-
-            modelBuilder.Entity("Kaaiman_reizen.Data.Entities.PlanningVersion", b =>
-                {
-                    b.HasOne("Kaaiman_reizen.Data.Entities.PlanningRound", "PlanningRound")
-                        .WithMany("Versions")
-                        .HasForeignKey("PlanningRoundId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("PlanningRound");
-                });
-
             modelBuilder.Entity("Kaaiman_reizen.Data.Entities.PreferredDestination", b =>
                 {
                     b.HasOne("Kaaiman_reizen.Data.Entities.Journey", "Journey")
@@ -920,18 +760,6 @@ namespace Kaaiman_reizen.Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("Kaaiman_reizen.Data.Entities.PlanningRound", b =>
-                {
-                    b.Navigation("Participations");
-
-                    b.Navigation("Versions");
-                });
-
-            modelBuilder.Entity("Kaaiman_reizen.Data.Entities.PlanningRoundParticipation", b =>
-                {
-                    b.Navigation("Preferences");
                 });
 
             modelBuilder.Entity("Kaaiman_reizen.Data.Entities.PlanningVersion", b =>

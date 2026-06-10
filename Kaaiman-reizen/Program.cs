@@ -1,4 +1,6 @@
 using Azure.Identity;
+using Hangfire;
+using Hangfire.MySql;
 using Kaaiman_reizen.Components.Account;
 using Kaaiman_reizen.Data;
 using Kaaiman_reizen.Data.Identity;
@@ -12,6 +14,7 @@ using Microsoft.AspNetCore.Identity;
 using MudBlazor.Services;
 using QuestPDF.Infrastructure;
 using System.Globalization;
+using System.Transactions;
 
 QuestPDF.Settings.License = LicenseType.Community;
 
@@ -55,6 +58,24 @@ builder.Services.AddDataServices();
 builder.Services.AddDevSeeder(builder.Environment);
 
 // ======================
+// HANGFIRE (scheduled jobs)
+// ======================
+builder.Services.AddHangfire(config => config
+    .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+    .UseSimpleAssemblyNameTypeSerializer()
+    .UseRecommendedSerializerSettings()
+    .UseStorage(new MySqlStorage(connectionString, new MySqlStorageOptions
+    {
+        TransactionIsolationLevel = IsolationLevel.ReadCommitted,
+        // Aanpassen polling interval
+        QueuePollInterval = TimeSpan.FromSeconds(30),
+        JobExpirationCheckInterval = TimeSpan.FromHours(1),
+        PrepareSchemaIfNecessary = true
+    })));
+
+builder.Services.AddHangfireServer();
+
+// ======================
 // UI
 // ======================
 builder.Services.AddMudServices();
@@ -68,6 +89,7 @@ builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 builder.Services.AddScoped<IPlannerDraftService, PlannerDraftService>();
 builder.Services.AddScoped<IUserTimezoneService, UserTimezoneService>();
 builder.Services.AddScoped<JourneyNotificationService>();
+builder.Services.AddScoped<IJobScheduler, JobScheduler>();
 builder.Services.AddHostedService<JourneyReminderHostedService>();
 
 // ======================

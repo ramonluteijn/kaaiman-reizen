@@ -1,5 +1,6 @@
 using Kaaiman_reizen.Data.Entities;
 using Microsoft.EntityFrameworkCore;
+using System.Runtime.InteropServices;
 
 namespace Kaaiman_reizen.Data.Services;
 
@@ -240,10 +241,29 @@ public class TravelLeaderService : ITravelLeaderService
         return historyEntries.Count;
     }
 
-    public class OverlapData
+    public async Task<List<TravelLeader>> GetTravelLeadersByJourneyId(int journeyId)
     {
-        public TravelLeader travelLeader { get; set; }
-        public Journey subjectJourney { get; set; }
-        public Journey overlappingJourney { get; set; }
+        return await _db.JourneyTravelLeaders
+        .Where(jtl => jtl.JourneyId == journeyId)
+        .Select(jtl => jtl.TravelLeader)
+        .ToListAsync();
     }
+
+    public async Task IncrementTravelLeadersExperience(int journeyId, CancellationToken cancellationToken)
+    {
+        var travelLeaders = await GetTravelLeadersByJourneyId(journeyId);
+
+        if (travelLeaders == null || !travelLeaders.Any())
+            return;
+
+        travelLeaders.ForEach(travelLeader => travelLeader.AmountOfTrips += 1);
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+}
+
+public class OverlapData
+{
+    public TravelLeader travelLeader { get; set; }
+    public Journey subjectJourney { get; set; }
+    public Journey overlappingJourney { get; set; }
 }
