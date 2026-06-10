@@ -23,13 +23,17 @@ namespace Kaaiman_reizen.Services
             var journey = await _db.Journey.FindAsync(new object[] { journeyId }, cancellationToken);
 
             if (journey is null)
-                return; 
+                return;
 
-            var executionTime = journey.End.ToDateTime(new TimeOnly(23, 59), DateTimeKind.Utc);
+            var localDateTime = journey.End.ToDateTime(new TimeOnly(23, 59));
+
+            var timeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Amsterdam");
+
+            var executionTimeUtc = TimeZoneInfo.ConvertTimeToUtc(localDateTime, timeZone);
 
             var nieuwJobId = _backgroundJobClient.Schedule<JobScheduler>(
                 service => service.HandleJourneyConclusion(journey.Id, CancellationToken.None),
-                executionTime
+                executionTimeUtc
             );
 
             journey.HangfireJobId = nieuwJobId;
