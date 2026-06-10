@@ -59,6 +59,95 @@ else
             {
                 <section>
                     <MudGrid Class="mt-1">
+
+                        @* ── Planningsrondes statusoverzicht ── *@
+                        @{
+                            var activePublished = ActivePublishedRounds().ToList();
+                            var pendingPrefs    = RoundsWithPendingPrefs().ToList();
+                            var staleRounds     = RoundsWithStaleDraft().ToList();
+                        }
+                        @if (activePublished.Any() || pendingPrefs.Any() || staleRounds.Any())
+                        {
+                            <MudItem xs="12">
+                                <MudCard Elevation="2">
+                                    <MudCardContent>
+                                        <MudText Typo="Typo.h6" Class="mb-3">Planningsrondes</MudText>
+                                        <MudStack Spacing="2">
+
+                                            @foreach (var round in activePublished)
+                                            {
+                                                <MudPaper Class="pa-3 d-flex align-center justify-space-between flex-wrap gap-2" Outlined="true">
+                                                    <div class="d-flex align-center gap-2 flex-wrap">
+                                                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" />
+                                                        <div>
+                                                            <MudText Typo="Typo.body1"><b>@round.Name</b></MudText>
+                                                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                                                @round.StartDate.ToString("d MMM") – @round.EndDate.ToString("d MMM yyyy") · Gepubliceerd
+                                                            </MudText>
+                                                        </div>
+                                                    </div>
+                                                    <MudButton Href="@($"/planner/rounds/{round.Id}/draft")"
+                                                               Variant="Variant.Outlined"
+                                                               Color="Color.Primary"
+                                                               Size="Size.Small"
+                                                               EndIcon="@Icons.Material.Filled.ArrowForward">
+                                                        Bekijk
+                                                    </MudButton>
+                                                </MudPaper>
+                                            }
+
+                                            @foreach (var item in pendingPrefs)
+                                            {
+                                                var daysLeft = (int)(item.Round.PreferenceDeadline.Date - DateTime.UtcNow.Date).TotalDays;
+                                                <MudPaper Class="pa-3 d-flex align-center justify-space-between flex-wrap gap-2" Outlined="true">
+                                                    <div class="d-flex align-center gap-2 flex-wrap">
+                                                        <MudIcon Icon="@Icons.Material.Filled.HourglassBottom" Color="Color.Warning" Size="Size.Small" />
+                                                        <div>
+                                                            <MudText Typo="Typo.body1"><b>@item.Round.Name</b></MudText>
+                                                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                                                @item.Pending van @item.Total reisleiders nog niet ingediend ·
+                                                                deadline @(daysLeft == 0 ? "vandaag" : $"over {daysLeft} dag{(daysLeft == 1 ? "" : "en")}")
+                                                            </MudText>
+                                                        </div>
+                                                    </div>
+                                                    <MudButton Href="@($"/planner/rounds/{item.Round.Id}/draft")"
+                                                               Variant="Variant.Outlined"
+                                                               Color="Color.Warning"
+                                                               Size="Size.Small"
+                                                               EndIcon="@Icons.Material.Filled.ArrowForward">
+                                                        Bekijk
+                                                    </MudButton>
+                                                </MudPaper>
+                                            }
+
+                                            @foreach (var round in staleRounds)
+                                            {
+                                                <MudPaper Class="pa-3 d-flex align-center justify-space-between flex-wrap gap-2" Outlined="true">
+                                                    <div class="d-flex align-center gap-2 flex-wrap">
+                                                        <MudIcon Icon="@Icons.Material.Filled.Sync" Color="Color.Error" Size="Size.Small" />
+                                                        <div>
+                                                            <MudText Typo="Typo.body1"><b>@round.Name</b></MudText>
+                                                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                                                Voorkeuren gewijzigd na aanmaken concept — opnieuw genereren aanbevolen
+                                                            </MudText>
+                                                        </div>
+                                                    </div>
+                                                    <MudButton Href="@($"/planner/rounds/{round.Id}/draft")"
+                                                               Variant="Variant.Outlined"
+                                                               Color="Color.Error"
+                                                               Size="Size.Small"
+                                                               EndIcon="@Icons.Material.Filled.ArrowForward">
+                                                        Opnieuw genereren
+                                                    </MudButton>
+                                                </MudPaper>
+                                            }
+
+                                        </MudStack>
+                                    </MudCardContent>
+                                </MudCard>
+                            </MudItem>
+                        }
+
                         @if (_publishedPlanning)
                         {
                             <MudItem xs="12">
@@ -77,63 +166,14 @@ else
                         <MudItem xs="12">
                             <MudCard Elevation="2">
                                 <MudCardContent>
-                                    <MudText Typo="Typo.h6" Class="mb-3">Concept planning @(_drafts.Count > 0 ? $"({_drafts.Count})" : "")</MudText>
-                                    @if (_drafts.Count == 0)
-                                    {
-                                        @if (_anyLeaderHasPreferences)
-                                        {
-                                            <MudCardActions Class="pl-0">
-                                                <MudButton Href="./planner/draft"
-                                                           Variant="Variant.Filled"
-                                                           Color="Color.Primary"
-                                                           Size="Size.Small"
-                                                           EndIcon="@Icons.Material.Filled.ArrowForward">
-                                                    Concept aanmaken
-                                                </MudButton>
-                                            </MudCardActions>
-                                        }
-                                        else
-                                        {
-                                            <MudText Typo="Typo.body2" Class="mud-text-secondary mb-2">
-                                                Geen reisleiders hebben nog voorkeuren ingevuld.
-                                            </MudText>
-                                            <MudButton Href="/travelleaders"
-                                                       Variant="Variant.Outlined"
-                                                       Color="Color.Primary"
-                                                       Size="Size.Small"
-                                                       EndIcon="@Icons.Material.Filled.People">
-                                                Reisleiders beheren
-                                            </MudButton>
-                                        }
-                                    }
-                                    else
-                                    {
-                                        <div style="height: 85px; overflow-y: auto; overflow-x: hidden;" class="pr-2">
-                                            <MudList T="object" Clickable="true" DisablePadding="true">
-                                                @foreach (var draft in _drafts)
-                                                {
-                                                    <MudListItem Icon="@Icons.Material.Filled.HistoryEdu"
-                                                                 IconColor="Color.Primary"
-                                                                 Href="@($"/planner/draft?versionId={draft.Id}")"
-                                                                 Class="d-flex align-center py-2"
-                                                                 Style="min-height: 50px !important;">
-                                                        <div class="d-flex align-center justify-space-between w-100">
-                                                            <div class="d-flex flex-column">
-                                                                <MudText Typo="Typo.body1"><b>@draft.Name</b></MudText>
-                                                                <MudText Typo="Typo.caption" Class="mud-text-secondary">
-                                                                    Aangemaakt: @FormatCreatedAt(draft.CreatedAt)
-                                                                </MudText>
-                                                            </div>
-                                                            <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Text">
-                                                                @draft.Assignments.Count toewijzingen
-                                                            </MudChip>
-                                                        </div>
-                                                    </MudListItem>
-                                                    <MudDivider />
-                                                }
-                                            </MudList>
-                                        </div>
-                                    }
+                                    <MudText Typo="Typo.h6" Class="mb-3">Planning</MudText>
+                                    <MudButton Href="/planner/rounds"
+                                               Variant="Variant.Filled"
+                                               Color="Color.Primary"
+                                               Size="Size.Small"
+                                               EndIcon="@Icons.Material.Filled.ArrowForward">
+                                        Naar planningsrondes
+                                    </MudButton>
                                 </MudCardContent>
                             </MudCard>
                         </MudItem>

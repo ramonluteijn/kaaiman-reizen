@@ -1,4 +1,5 @@
 using Kaaiman_reizen.Data.Entities;
+using Kaaiman_reizen.Data.Enum;
 using Kaaiman_reizen.Data.Services;
 using Kaaiman_reizen.Exports;
 using Kaaiman_reizen.Helpers;
@@ -15,6 +16,7 @@ public partial class Home : ComponentBase
     [Inject] private IPlanningService PlanningService { get; set; } = default!;
     [Inject] private ITravelLeaderService TravelLeaderService { get; set; } = default!;
     [Inject] private IJourneyService JourneyService { get; set; } = default!;
+    [Inject] private IPlanningRoundService RoundService { get; set; } = default!;
     [Inject] private AuthenticationStateProvider AuthenticationStateProvider { get; set; } = default!;
     [Inject] private Microsoft.AspNetCore.Identity.UserManager<Kaaiman_reizen.Data.Identity.ApplicationUser> UserManager { get; set; } = default!;
     [Inject] private INotificationService NotificationService { get; set; } = default!;
@@ -24,7 +26,6 @@ public partial class Home : ComponentBase
     private bool _loading = true;
     private bool _isPlanner;
     private bool _isReisleider;
-    private List<PlanningVersion> _drafts = [];
     private List<Journey> _publishedJourneys = [];
     private int _selectedYear = DateTime.UtcNow.Year;
     private bool _publishedPlanning;
@@ -36,8 +37,7 @@ public partial class Home : ComponentBase
     private List<Notification> _notifications = [];
     private string _currentUserId = string.Empty;
 
-    private List<TravelLeader> _travelLeadersWithoutPreferences = [];
-    private bool _anyLeaderHasPreferences;
+    private IReadOnlyList<PlanningRound> _rounds = [];
     private List<TravelLeader> _travelLeadersWithoutJourneys = [];
     private List<TravelLeader> _travelLeadersWithNotes = [];
     private List<Journey> _journeysWithoutTravelLeaders = [];
@@ -66,14 +66,7 @@ public partial class Home : ComponentBase
 
         if (_isPlanner)
         {
-            var drafts = await PlanningService.GetDraftsAsync(_selectedYear);
-            _drafts = drafts.ToList();
-
-            var allLeaders = await TravelLeaderService.GetTravelLeadersAsync();
-            _anyLeaderHasPreferences = allLeaders.Any(l => l.IsActive && l.PreferredDestinations.Any());
-            _travelLeadersWithoutPreferences = allLeaders
-                .Where(l => !l.PreferredDestinations.Any() && !l.AvailabilityPeriods.Any())
-                .ToList();
+            _rounds = await RoundService.GetAllAsync();
             _travelLeadersWithoutJourneys = await TravelLeaderService.GetTravelLeadersWithoutJourneysAsync(_selectedYear);
             _travelLeadersWithNotes = await TravelLeaderService.GetTravelLeadersWithNotesAsync();
             _journeysWithoutTravelLeaders = await TravelLeaderService.GetJourneysWithoutTravelLeadersAsync(_selectedYear);
@@ -92,6 +85,40 @@ public partial class Home : ComponentBase
         }
 
         _loading = false;
+    }
+
+    private IEnumerable<PlanningRound> ActivePublishedRounds()
+    {
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        return _rounds.Where(r =>
+            r.EndDate >= today &&
+            r.Versions.Any(v => v.IsPublished));
+    }
+
+    private record RoundPrefsStatus(PlanningRound Round, int Pending, int Total);
+    private IEnumerable<RoundPrefsStatus> RoundsWithPendingPrefs()
+    {
+        return _rounds
+            .Where(r => r.PreferenceDeadline > DateTime.UtcNow)
+            .Select(r => new RoundPrefsStatus(
+                r,
+                r.Participations.Count(p => p.Status == ParticipationStatus.Pending),
+                r.Participations.Count))
+            .Where(x => x.Pending > 0);
+    }
+
+    private IEnumerable<PlanningRound> RoundsWithStaleDraft()
+    {
+        return _rounds.Where(r =>
+        {
+            var draft = r.Versions
+                .Where(v => !v.IsPublished)
+                .OrderByDescending(v => v.CreatedAt)
+                .FirstOrDefault();
+            if (draft is null) return false;
+            return r.Participations.Any(p =>
+                p.SubmittedAt.HasValue && p.SubmittedAt > draft.CreatedAt);
+        });
     }
 
     private async Task MarkNotificationAsRead(Notification notification)

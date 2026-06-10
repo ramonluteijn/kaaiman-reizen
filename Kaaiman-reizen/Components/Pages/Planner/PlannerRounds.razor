@@ -1,0 +1,120 @@
+@page "/planner/rounds"
+
+@using Microsoft.AspNetCore.Authorization
+
+@rendermode InteractiveServer
+
+@attribute [Authorize(Roles = "Planner")]
+
+<PageTitle>Planningsrondes</PageTitle>
+
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <h1 class="h4 mb-0">Planningsrondes</h1>
+    <a href="/journeys" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-plus me-1"></i> Nieuwe ronde aanmaken
+    </a>
+</div>
+
+@if (_loading)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+}
+else if (!_rounds.Any())
+{
+    <div class="card">
+        <div class="card-body text-muted">
+            Nog geen planningsrondes aangemaakt. Ga naar <a href="/journeys">Reizen</a> om een ronde aan te maken.
+        </div>
+    </div>
+}
+else
+{
+    <div class="row g-3">
+        @foreach (var round in _rounds)
+        {
+            var status = GetStatus(round);
+            var submitted = SubmittedCount(round);
+            var total = round.Participations.Count;
+            var journeyCount = JourneyCount(round);
+
+            <div class="col-12 col-md-6 col-xl-4">
+                <div class="card h-100">
+                    <div class="card-body d-flex flex-column gap-2">
+
+                        <div class="d-flex justify-content-between align-items-start">
+                            <h5 class="card-title mb-0">@round.Name</h5>
+                            <span class="badge @StatusBadgeClass(status)">@StatusLabel(status)</span>
+                        </div>
+
+                        <div class="text-muted small">
+                            @round.StartDate.ToString("d MMM") – @round.EndDate.ToString("d MMM yyyy")
+                        </div>
+
+                        <div class="d-flex gap-3 small">
+                            <span>
+                                <i class="bi bi-compass me-1"></i>
+                                @journeyCount rei@(journeyCount == 1 ? "s" : "zen")
+                            </span>
+                            <span>
+                                <i class="bi bi-people me-1"></i>
+                                @submitted / @total ingediend
+                            </span>
+                        </div>
+
+                        @if (status != RoundStatus.Gepubliceerd)
+                        {
+                            <div class="small text-muted">
+                                Voorkeur deadline: @round.PreferenceDeadline.ToString("d MMM") (@DeadlineLabel(round.PreferenceDeadline))
+                            </div>
+                        }
+
+                        <div class="mt-auto pt-2 d-flex justify-content-between align-items-center">
+                            <div class="d-flex gap-2">
+                                @if (status == RoundStatus.Gepubliceerd)
+                                {
+                                    <a href="/planner/rounds/@round.Id/draft" class="btn btn-outline-primary btn-sm">
+                                        Bekijk / aanpassen
+                                    </a>
+                                }
+                                else
+                                {
+                                    <a href="/planner/rounds/@round.Id/draft" class="btn btn-primary btn-sm">
+                                        Open draft <i class="bi bi-arrow-right ms-1"></i>
+                                    </a>
+                                }
+                            </div>
+
+                            <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline"
+                                           Size="Size.Small"
+                                           Color="Color.Error"
+                                           Title="Ronde verwijderen"
+                                           OnClick="() => OpenDeleteModal(round)" />
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<AlertModal IsOpen="@_isDeleteModalOpen"
+            IsOpenChanged="@(v => { if (!v) CloseDeleteModal(); })"
+            Title="Ronde verwijderen"
+            Severity="Severity.Warning"
+            Dismissible="true"
+            CloseOnBackdropClick="true"
+            Message="@DeleteModalMessage">
+    <Actions>
+        <MudButton Variant="Variant.Text" OnClick="CloseDeleteModal" Disabled="_isDeleting">
+            Annuleren
+        </MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="ConfirmDeleteAsync" Disabled="_isDeleting">
+            @if (_isDeleting)
+            {
+                <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" />
+            }
+            Verwijderen
+        </MudButton>
+    </Actions>
+</AlertModal>

@@ -8,6 +8,8 @@ public class PlanningVersion
     public bool IsPublished { get; set; }
 
     public int? PlanningYear { get; set; }
+    public int? PlanningRoundId { get; set; }
 
+    public PlanningRound? PlanningRound { get; set; }
     public List<PlanningAssignment> Assignments { get; set; } = [];
 }

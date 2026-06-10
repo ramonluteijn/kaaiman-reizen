@@ -64,9 +64,25 @@ public static class DatabaseSeedingExtensions
 
         var defaultUsers = new[]
         {
-            new { Email = "planner@kaaiman.nl",    Role = "Planner",    TravelLeaderName = (string?)null },
-            new { Email = "reisleider@kaaiman.nl", Role = "Reisleider", TravelLeaderName = (string?)"Jan de Vries" },
-            new { Email = "maria@kaaiman.nl",      Role = "Reisleider", TravelLeaderName = (string?)"Maria Jansen" }
+            new { Email = "planner@kaaiman.nl",      Role = "Planner",    TravelLeaderName = (string?)null },
+            new { Email = "jan@kaaiman.nl",          Role = "Reisleider", TravelLeaderName = (string?)"Jan de Vries" },
+            new { Email = "maria@kaaiman.nl",        Role = "Reisleider", TravelLeaderName = (string?)"Maria Jansen" },
+            new { Email = "thomas@kaaiman.nl",       Role = "Reisleider", TravelLeaderName = (string?)"Thomas de Groot" },
+            new { Email = "daan@kaaiman.nl",         Role = "Reisleider", TravelLeaderName = (string?)"Daan Peters" },
+            new { Email = "fleur@kaaiman.nl",        Role = "Reisleider", TravelLeaderName = (string?)"Fleur Visser" },
+            new { Email = "anna@kaaiman.nl",         Role = "Reisleider", TravelLeaderName = (string?)"Anna Smits" },
+            new { Email = "clara@kaaiman.nl",        Role = "Reisleider", TravelLeaderName = (string?)"Clara Kuijpers" },
+            new { Email = "david@kaaiman.nl",        Role = "Reisleider", TravelLeaderName = (string?)"David Mulder" },
+            new { Email = "frank@kaaiman.nl",        Role = "Reisleider", TravelLeaderName = (string?)"Frank Willems" },
+            new { Email = "gerda@kaaiman.nl",        Role = "Reisleider", TravelLeaderName = (string?)"Gerda van Dijk" },
+            new { Email = "hans@kaaiman.nl",         Role = "Reisleider", TravelLeaderName = (string?)"Hans Bosman" },
+            new { Email = "karel@kaaiman.nl",        Role = "Reisleider", TravelLeaderName = (string?)"Karel Linden" },
+            new { Email = "laura@kaaiman.nl",        Role = "Reisleider", TravelLeaderName = (string?)"Laura Straten" },
+            new { Email = "omar@kaaiman.nl",         Role = "Reisleider", TravelLeaderName = (string?)"Omar Hassan" },
+            new { Email = "priya@kaaiman.nl",        Role = "Reisleider", TravelLeaderName = (string?)"Priya Singh" },
+            new { Email = "quinten@kaaiman.nl",      Role = "Reisleider", TravelLeaderName = (string?)"Quinten Vos" },
+            new { Email = "sebastiaan@kaaiman.nl",   Role = "Reisleider", TravelLeaderName = (string?)"Sebastiaan van Ooijen" },
+            new { Email = "vera@kaaiman.nl",         Role = "Reisleider", TravelLeaderName = (string?)"Vera Molenkamp" },
         };
 
         foreach (var config in defaultUsers)

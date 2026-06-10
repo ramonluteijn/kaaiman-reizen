@@ -100,6 +100,19 @@ public class TravelLeaderService : ITravelLeaderService
         await _db.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task UpdateProfileAsync(int leaderId, int? amountOfTrips, int? minTrips, int? maxTrips, string note, bool isActive, CancellationToken cancellationToken = default)
+    {
+        await _db.TravelLeader
+            .Where(t => t.Id == leaderId)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(t => t.AmountOfTrips, amountOfTrips)
+                .SetProperty(t => t.MinTrips, minTrips)
+                .SetProperty(t => t.MaxTrips, maxTrips)
+                .SetProperty(t => t.Note, note)
+                .SetProperty(t => t.IsActive, isActive),
+                cancellationToken);
+    }
+
     public async Task<List<TravelLeader>> GetTravelLeadersWithoutPreferencesAsync()
     {
         return await _db.TravelLeader

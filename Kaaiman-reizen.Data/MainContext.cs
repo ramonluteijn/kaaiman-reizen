@@ -21,6 +21,9 @@ public class MainContext : IdentityDbContext<ApplicationUser>
     public DbSet<Rule> Rule { get; set; }
     public DbSet<PlanningVersion> PlanningVersions { get; set; }
     public DbSet<PlanningAssignment> PlanningAssignments { get; set; }
+    public DbSet<PlanningRound> PlanningRounds { get; set; }
+    public DbSet<PlanningRoundParticipation> PlanningRoundParticipations { get; set; }
+    public DbSet<PlanningRoundPreference> PlanningRoundPreferences { get; set; }
     public DbSet<Notification> Notifications { get; set; }
     public DbSet<JourneyNotificationHistory> JourneyNotificationHistory { get; set; }
 
@@ -110,5 +113,43 @@ public class MainContext : IdentityDbContext<ApplicationUser>
             .WithMany()
             .HasForeignKey(assignment => assignment.TravelLeaderId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<PlanningVersion>()
+            .HasOne(v => v.PlanningRound)
+            .WithMany(r => r.Versions)
+            .HasForeignKey(v => v.PlanningRoundId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.Entity<PlanningRoundParticipation>()
+            .HasOne(p => p.PlanningRound)
+            .WithMany(r => r.Participations)
+            .HasForeignKey(p => p.PlanningRoundId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<PlanningRoundParticipation>()
+            .HasOne(p => p.TravelLeader)
+            .WithMany()
+            .HasForeignKey(p => p.TravelLeaderId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<PlanningRoundParticipation>()
+            .HasIndex(p => new { p.PlanningRoundId, p.TravelLeaderId })
+            .IsUnique();
+
+        builder.Entity<PlanningRoundPreference>()
+            .HasOne(p => p.Participation)
+            .WithMany(par => par.Preferences)
+            .HasForeignKey(p => p.PlanningRoundParticipationId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<PlanningRoundPreference>()
+            .HasOne(p => p.Journey)
+            .WithMany()
+            .HasForeignKey(p => p.JourneyId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<PlanningRoundPreference>()
+            .HasIndex(p => new { p.PlanningRoundParticipationId, p.JourneyId })
+            .IsUnique();
     }
 }
