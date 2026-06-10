@@ -37,13 +37,15 @@ public partial class PlannerDraft : ComponentBase
     private bool _drawerOpen = false;
     private JourneyViewModel? _selectedJourney;
     private List<LeaderCandidate> _selectedCandidates = [];
-    private bool _sidebarOpen = true;
+    private bool _sidebarLeaderOpen = true;
+    private bool _sidebarJourneyOpen = false;
     private bool _noteModalOpen;
     private LeaderPlanningRow? _selectedLeaderRow;
     private bool _preferenceChangesDetected = false;
     public CalendarModes selectedMode = CalendarModes.JourneyMode;
     private IReadOnlyList<TravelLeader> _availibilityPeriods = [];
     private bool _archiveDialogOpen;
+    private DateOnly? _jumpToDate;
 
     private bool CanPublish =>
         _request is not null && _result is not null && _result.IsSuccess &&
@@ -242,6 +244,11 @@ public partial class PlannerDraft : ComponentBase
         _selectedLeaderRow = null;
     }
 
+    private void GoToMonth(JourneyViewModel journey)
+    {
+        _jumpToDate = journey.Start;
+    }
+
     private List<NoteModal.JourneyDetail> GetSelectedLeaderJourneys()
     {
         if (_selectedLeaderRow is null) return [];
@@ -275,7 +282,7 @@ public partial class PlannerDraft : ComponentBase
                 RequiredLeaders = j.RequiredLeaders,
                 TravelLeaders = leaders
             };
-        }).ToList();
+        }).OrderBy(j => j.Start).ToList();
     }
 
     private async Task<IReadOnlyList<TravelLeader>> BuildCalendarAvailibilityPeriods()
