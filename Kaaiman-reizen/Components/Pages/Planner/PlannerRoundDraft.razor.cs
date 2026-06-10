@@ -10,24 +10,25 @@ using MudBlazor;
 
 namespace Kaaiman_reizen.Components.Pages.Planner;
 
-public partial class PlannerDraft : ComponentBase
+public partial class PlannerRoundDraft : ComponentBase
 {
     private const int SaveMessageDisplayMs = 5000;
 
-    [SupplyParameterFromQuery(Name = "versionId")]
-    public int? VersionId { get; set; }
+    [Parameter] public int RoundId { get; set; }
 
+    [Inject] private IPlanningRoundService _roundService { get; set; } = default!;
     [Inject] private IPlannerDraftService _draftService { get; set; } = default!;
     [Inject] private IPlanningService _planningService { get; set; } = default!;
     [Inject] private IRuleService _ruleService { get; set; } = default!;
-    [Inject] private ITravelLeaderService _travelLeaderService { get; set; } = default!;
     [Inject] private ISnackbar _snackbar { get; set; } = default!;
+    [Inject] private NavigationManager _nav { get; set; } = default!;
     [Inject] private IUserTimezoneService UserTimezoneService { get; set; } = default!;
 
-    private int _selectedYear = DateTime.UtcNow.Year;
+    private PlanningRound? _round;
     private PlannerDraftRequest? _request;
     private PlannerDraftResult? _result;
     private bool _loading = true;
+    private bool _roundNotFound = false;
     private bool _isGenerating = false;
     private bool _isSaving = false;
     private string? _saveMessage;
@@ -39,13 +40,12 @@ public partial class PlannerDraft : ComponentBase
     private List<LeaderCandidate> _selectedCandidates = [];
     private bool _sidebarLeaderOpen = true;
     private bool _sidebarJourneyOpen = false;
+    private DateOnly? _jumpToDate;
     private bool _noteModalOpen;
     private LeaderPlanningRow? _selectedLeaderRow;
     private bool _preferenceChangesDetected = false;
     public CalendarModes selectedMode = CalendarModes.JourneyMode;
     private IReadOnlyList<TravelLeader> _availibilityPeriods = [];
-    private bool _archiveDialogOpen;
-    private DateOnly? _jumpToDate;
 
     private bool CanPublish =>
         _request is not null && _result is not null && _result.IsSuccess &&
@@ -53,16 +53,45 @@ public partial class PlannerDraft : ComponentBase
             _result.JourneyAssignments.TryGetValue(j.Id, out var asgns) &&
             asgns.Count >= j.RequiredLeaders);
 
+    private int SubmittedCount => _round?.Participations.Count(p => p.Status == ParticipationStatus.Submitted) ?? 0;
+    private int TotalCount => _round?.Participations.Count ?? 0;
+
+    private int DaysUntilPreferenceDeadline =>
+        (int)(_round!.PreferenceDeadline.Date - DateTime.UtcNow.Date).TotalDays;
+
+    private Color PreferenceDeadlineColor
+    {
+        get
+        {
+            if (_round is null) return Color.Default;
+            var days = DaysUntilPreferenceDeadline;
+            if (days < 0) return Color.Error;
+            if (days <= 7) return Color.Warning;
+            return Color.Default;
+        }
+    }
+
+    private Color ParticipationColor
+    {
+        get
+        {
+            if (_round is null || TotalCount == 0) return Color.Default;
+            var ratio = (double)SubmittedCount / TotalCount;
+            if (ratio >= 1.0) return Color.Success;
+            if (ratio >= 0.5) return Color.Warning;
+            return Color.Error;
+        }
+    }
+
     protected override async Task OnInitializedAsync()
     {
-        await LoadDataForYearAsync(_selectedYear);
-        _availibilityPeriods = await BuildCalendarAvailibilityPeriods();
+        await LoadDataForRoundAsync();
+        _availibilityPeriods = BuildAvailabilityFromRound();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender) return;
-
         await UserTimezoneService.EnsureLoadedAsync();
     }
 
@@ -72,45 +101,61 @@ public partial class PlannerDraft : ComponentBase
         return UserTimezoneService.ToUserLocal(DateTime.UtcNow);
     }
 
-    private async Task LoadDataForYearAsync(int year)
+    private async Task LoadDataForRoundAsync()
     {
         _loading = true;
         _result = null;
-        _request = await _draftService.BuildRequestAsync(year);
+
+        _round = await _roundService.GetByIdAsync(RoundId);
+        if (_round is null)
+        {
+            _roundNotFound = true;
+            _loading = false;
+            return;
+        }
+
+        _request = await _draftService.BuildRequestAsync(_round);
         var rules = await _ruleService.GetRulesAsync();
         _ruleSettings = Data.Rules.CheckRules.FromRules(rules);
-        var drafts = await _planningService.GetDraftsAsync(year);
-        var draftToLoad = VersionId is not null
-            ? drafts.FirstOrDefault(d => d.Id == VersionId.Value)
-            : drafts.FirstOrDefault();
+
+        var drafts = await _planningService.GetDraftsByRoundAsync(RoundId);
+        var draftToLoad = drafts.FirstOrDefault();
         _loading = false;
         StateHasChanged();
 
         if (draftToLoad is not null)
         {
-            bool isStale = await LoadDraftByIdAsync(draftToLoad.Id);
+            bool isStale = await LoadVersionByIdAsync(draftToLoad.Id, expectPublished: false);
             if (isStale)
                 await RegeneratePlanningAsync(autoUpdated: true);
         }
         else
         {
-            await RegeneratePlanningAsync(autoUpdated: false);
+            var published = await _planningService.GetPublishedByRoundAsync(RoundId);
+            if (published is not null)
+            {
+                var (mapped, _) = MapToDraftResult(published);
+                _result = mapped;
+            }
+            else
+            {
+                await RegeneratePlanningAsync(autoUpdated: false);
+            }
         }
     }
 
-    private async Task<bool> LoadDraftByIdAsync(int planningVersionId)
+    private async Task<bool> LoadVersionByIdAsync(int planningVersionId, bool expectPublished)
     {
         if (_request is null) return false;
 
-        var selectedDraft = await _planningService.GetPlanningVersionByIdAsync(planningVersionId);
-        if (selectedDraft is null || selectedDraft.IsPublished)
+        var version = await _planningService.GetPlanningVersionByIdAsync(planningVersionId);
+        if (version is null)
         {
-            SetSaveMessage($"Concept met id {planningVersionId} is niet gevonden.", Severity.Warning);
-            _snackbar.Add(_saveMessage, _saveMessageSeverity);
+            SetSaveMessage($"Versie met id {planningVersionId} is niet gevonden.", Severity.Warning);
             return false;
         }
 
-        var (mapped, isStale) = MapToDraftResult(selectedDraft);
+        var (mapped, isStale) = MapToDraftResult(version);
         _result = mapped;
         _preferenceChangesDetected = !isStale && DetectPreferenceChanges();
         return isStale;
@@ -144,7 +189,7 @@ public partial class PlannerDraft : ComponentBase
             var journey = _request!.Journeys.FirstOrDefault(j => j.Id == journeyGroup.Key);
             if (journey is null)
             {
-                result.JourneyWarnings[journeyGroup.Key] = "Deze reis is geannuleerd of verplaatst naar een ander jaar.";
+                result.JourneyWarnings[journeyGroup.Key] = "Deze reis valt buiten de datumreeks van deze ronde.";
                 isStale = true;
                 continue;
             }
@@ -186,8 +231,6 @@ public partial class PlannerDraft : ComponentBase
         public List<PreferredDestinationDisplayInput> Preferences => Leader.PreferredDestinationDetails;
     }
 
-
-
     private List<LeaderPlanningRow> BuildLeaderRows()
     {
         if (_request is null || _result is null) return [];
@@ -213,11 +256,9 @@ public partial class PlannerDraft : ComponentBase
             .Select(a => a.LeaderId)
             .ToHashSet();
 
-        // Leaders who now have preferences but weren't in the draft at all
         if (_request.Leaders.Any(l => !draftLeaderIds.Contains(l.Id)))
             return true;
 
-        // Assigned leaders whose preference for their journey was removed
         foreach (var (journeyId, assignments) in _result.JourneyAssignments)
         {
             foreach (var assignment in assignments)
@@ -232,6 +273,11 @@ public partial class PlannerDraft : ComponentBase
         return false;
     }
 
+    private void GoToMonth(JourneyViewModel journey)
+    {
+        _jumpToDate = journey.Start;
+    }
+
     private void OpenLeaderDetails(LeaderPlanningRow row)
     {
         _selectedLeaderRow = row;
@@ -242,11 +288,6 @@ public partial class PlannerDraft : ComponentBase
     {
         _noteModalOpen = false;
         _selectedLeaderRow = null;
-    }
-
-    private void GoToMonth(JourneyViewModel journey)
-    {
-        _jumpToDate = journey.Start;
     }
 
     private List<NoteModal.JourneyDetail> GetSelectedLeaderJourneys()
@@ -282,44 +323,32 @@ public partial class PlannerDraft : ComponentBase
                 RequiredLeaders = j.RequiredLeaders,
                 TravelLeaders = leaders
             };
-        }).OrderBy(j => j.Start).ToList();
+        }).ToList();
     }
 
-    private async Task<IReadOnlyList<TravelLeader>> BuildCalendarAvailibilityPeriods()
+    private IReadOnlyList<TravelLeader> BuildAvailabilityFromRound()
     {
-        if (_request is null || _result is null) return [];
+        if (_round is null || _request is null) return [];
 
-        return await _travelLeaderService.GetJourneyAvailabilityForAllTravelLeadersAsync();
-    }
-    private void OpenArchiveAvailabilityDialog() => _archiveDialogOpen = true;
+        var leaderNames = _request.AllActiveLeaders.ToDictionary(l => l.Id, l => l.Name);
 
-    private void CloseArchiveDialog() => _archiveDialogOpen = false;
-
-    private void HandleArchiveDialogChanged(bool isOpen) => _archiveDialogOpen = isOpen;
-
-    private async Task ConfirmArchiveAsync()
-    {
-        if (_archiveDialogOpen is false)
-            return;
-
-        _archiveDialogOpen = false;
-        _isSaving = true;
-
-        try
-        {
-            var planningVersionId = await _planningService.GetLatestPublishedPlanningVersionIdAsync();
-            var archivedCount = await _travelLeaderService.ArchiveAndResetPreferredDestinationsAsync(planningVersionId);
-
-            _snackbar.Add($"Beschikbaarheid gearchiveerd en gereset ({archivedCount} items).", Severity.Success);
-            await LoadDataForYearAsync(_selectedYear);
-        }
-        catch (Exception)
-        {
-            _snackbar.Add("Archiveren en resetten van beschikbaarheid is mislukt.", Severity.Error);
-        }
-        finally
-        {
-            _isSaving = false;
-        }
+        return _round.Participations
+            .Where(p => p.Preferences.Any())
+            .Select(p =>
+            {
+                leaderNames.TryGetValue(p.TravelLeaderId, out var name);
+                return new TravelLeader
+                {
+                    Id = p.TravelLeaderId,
+                    Name = name ?? string.Empty,
+                    PreferredDestinations = p.Preferences
+                        .Select(pref => new PreferredDestination
+                        {
+                            JourneyId = pref.JourneyId,
+                            Journey = pref.Journey,
+                            Rank = pref.Rank
+                        }).ToList()
+                };
+            }).ToList();
     }
 }

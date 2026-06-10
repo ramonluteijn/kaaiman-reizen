@@ -3,24 +3,22 @@ using Kaaiman_reizen.Helpers;
 
 namespace Kaaiman_reizen.Components.Pages.Planner;
 
-public partial class PlannerDraft
+public partial class PlannerRoundDraft
 {
     private async Task SaveDraftAsync()
     {
-        await SavePlanningAsync(isPublished: false);
+        await SaveAsync(isPublished: false);
     }
 
     private async Task PublishPlanningAsync()
     {
-        await SavePlanningAsync(isPublished: true);
+        await SaveAsync(isPublished: true);
     }
 
-    private async Task SavePlanningAsync(bool isPublished)
+    private async Task SaveAsync(bool isPublished)
     {
-        if (_request is null || _result is null || !_result.IsSuccess)
-        {
+        if (_round is null || _request is null || _result is null || !_result.IsSuccess)
             return;
-        }
 
         if (isPublished && !CanPublish)
         {
@@ -41,7 +39,7 @@ public partial class PlannerDraft
                 ? $"Published planning {DateDisplay.FormatDateTime(userLocalNow)}"
                 : $"Draft planning {DateDisplay.FormatDateTime(userLocalNow)}";
 
-            await _planningService.SavePlanningAsync(_selectedYear, planningName, isPublished, assignments);
+            await _planningService.SavePlanningForRoundAsync(RoundId, _round.Year, planningName, isPublished, assignments);
 
             var message = isPublished
                 ? "Planning is gepubliceerd. Andere gebruikers zien nu deze versie."
@@ -53,10 +51,7 @@ public partial class PlannerDraft
         }
         catch (Exception)
         {
-            var message = isPublished
-                ? "Publiceren is mislukt."
-                : "Opslaan van het concept is mislukt.";
-
+            var message = isPublished ? "Publiceren is mislukt." : "Opslaan van het concept is mislukt.";
             SetSaveMessage(message, Severity.Error);
             _snackbar.Add(message, Severity.Error);
         }
