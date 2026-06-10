@@ -12,4 +12,5 @@ public interface IPlanningRoundService
     Task<IReadOnlyList<PlanningRoundParticipation>> GetParticipationsForLeaderAsync(int leaderId, CancellationToken ct = default);
     Task SavePreferencesAsync(int participationId, IReadOnlyList<(int JourneyId, int Rank)> preferences, CancellationToken ct = default);
     Task DeleteAsync(int id, CancellationToken ct = default);
+    Task VerifyLeadersAsync(int roundId, CancellationToken ct = default);
 }

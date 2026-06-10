@@ -52,6 +52,7 @@ public class PlanningRoundService : IPlanningRoundService
     {
         return await _db.PlanningRounds
             .Include(r => r.Participations)
+                .ThenInclude(p => p.Preferences)
             .Include(r => r.Versions)
             .OrderByDescending(r => r.Year)
             .ThenBy(r => r.StartDate)
@@ -108,5 +109,12 @@ public class PlanningRoundService : IPlanningRoundService
 
         _db.PlanningRounds.Remove(round);
         await _db.SaveChangesAsync(ct);
+    }
+
+    public async Task VerifyLeadersAsync(int roundId, CancellationToken ct = default)
+    {
+        await _db.PlanningRounds
+            .Where(r => r.Id == roundId)
+            .ExecuteUpdateAsync(s => s.SetProperty(r => r.LeadersVerifiedAt, DateTime.UtcNow), ct);
     }
 }
