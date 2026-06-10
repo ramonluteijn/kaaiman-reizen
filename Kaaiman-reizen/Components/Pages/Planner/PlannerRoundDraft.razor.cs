@@ -38,7 +38,9 @@ public partial class PlannerRoundDraft : ComponentBase
     private bool _drawerOpen = false;
     private JourneyViewModel? _selectedJourney;
     private List<LeaderCandidate> _selectedCandidates = [];
-    private bool _sidebarOpen = true;
+    private bool _sidebarLeaderOpen = true;
+    private bool _sidebarJourneyOpen = false;
+    private DateOnly? _jumpToDate;
     private bool _noteModalOpen;
     private LeaderPlanningRow? _selectedLeaderRow;
     private bool _preferenceChangesDetected = false;
@@ -269,6 +271,11 @@ public partial class PlannerRoundDraft : ComponentBase
         }
 
         return false;
+    }
+
+    private void GoToMonth(JourneyViewModel journey)
+    {
+        _jumpToDate = journey.Start;
     }
 
     private void OpenLeaderDetails(LeaderPlanningRow row)

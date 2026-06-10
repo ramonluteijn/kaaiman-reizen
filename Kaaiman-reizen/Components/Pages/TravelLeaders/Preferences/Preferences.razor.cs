@@ -3,6 +3,7 @@ using Kaaiman_reizen.Data.Enum;
 using Kaaiman_reizen.Data.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
+using MudBlazor;
 
 namespace Kaaiman_reizen.Components.Pages.TravelLeaders.Preferences;
 
@@ -13,6 +14,7 @@ public partial class Preferences : ComponentBase
     [Inject] private IPlanningRoundService RoundService { get; set; } = default!;
     [Inject] private NavigationManager Navigation { get; set; } = default!;
     [Inject] private AuthenticationStateProvider _authProvider { get; set; } = default!;
+    [Inject] private ISnackbar _snackbar { get; set; } = default!;
 
     [Parameter] public int? Id { get; set; }
 
@@ -20,6 +22,7 @@ public partial class Preferences : ComponentBase
     private TravelLeader _model = new();
     private bool _loading = true;
     private bool _notFound = false;
+    private bool _isSaving = false;
     private List<Journey> _journeys = new();
 
     // Round participation state
@@ -162,11 +165,38 @@ public partial class Preferences : ComponentBase
 
     // ── Global profile form ──────────────────────────────────────────
 
-    private async Task HandleValidSubmit()
+    private async Task HandleSubmit()
     {
-        _model.AvailabilityPeriods = [];
-        _model.Journeys = [];
-        await LeaderService.UpdateTravelLeaderAsync(_model);
-        Navigation.NavigateTo("/");
+        if (_model.AmountOfTrips is null || _model.MinTrips is null || _model.MaxTrips is null)
+        {
+            _snackbar.Add("Vul alle verplichte velden in.", Severity.Warning);
+            return;
+        }
+        if (_model.MinTrips > _model.MaxTrips)
+        {
+            _snackbar.Add("Minimaal aantal reizen mag niet groter zijn dan maximaal.", Severity.Warning);
+            return;
+        }
+
+        _isSaving = true;
+        try
+        {
+            await LeaderService.UpdateProfileAsync(
+                _model.Id,
+                _model.AmountOfTrips,
+                _model.MinTrips,
+                _model.MaxTrips,
+                _model.Note ?? string.Empty,
+                _model.IsActive);
+            _snackbar.Add("Profiel opgeslagen.", Severity.Success);
+        }
+        catch
+        {
+            _snackbar.Add("Opslaan mislukt. Probeer het opnieuw.", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
     }
 }

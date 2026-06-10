@@ -198,25 +198,21 @@ else
     @* ── Profiel & globale voorkeuren ── *@
     <div class="card">
         <div class="card-body">
-            <EditForm Model="_model" OnValidSubmit="HandleValidSubmit" FormName="PreferencesForm">
-                <DataAnnotationsValidator />
+            <EditForm Model="_model" OnSubmit="HandleSubmit" FormName="PreferencesForm">
 
                 <div class="mb-3">
                     <label class="form-label">Aantal reizen gereisd</label>
                     <InputNumber class="form-control" @bind-Value="_model.AmountOfTrips" />
-                    <ValidationMessage For="() => _model.AmountOfTrips" />
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">Minimaal aantal reizen per jaar</label>
                     <InputNumber class="form-control" @bind-Value="_model.MinTrips" />
-                    <ValidationMessage For="() => _model.MinTrips" />
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">Maximaal aantal reizen per jaar</label>
                     <InputNumber class="form-control" @bind-Value="_model.MaxTrips" />
-                    <ValidationMessage For="() => _model.MaxTrips" />
                 </div>
 
                 <div class="mb-3">
@@ -233,8 +229,17 @@ else
                     <MudButton ButtonType="ButtonType.Submit"
                                Variant="Variant.Filled"
                                Color="Color.Primary"
-                               StartIcon="@Icons.Material.Filled.Save">
-                        Opslaan
+                               StartIcon="@Icons.Material.Filled.Save"
+                               Disabled="_isSaving">
+                        @if (_isSaving)
+                        {
+                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                            <MudText Class="ms-2">Bezig met opslaan...</MudText>
+                        }
+                        else
+                        {
+                            <MudText>Opslaan</MudText>
+                        }
                     </MudButton>
                 </div>
             </EditForm>
