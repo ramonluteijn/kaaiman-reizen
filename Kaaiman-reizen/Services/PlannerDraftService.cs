@@ -19,60 +19,6 @@ public class PlannerDraftService : IPlannerDraftService
         _ruleService = ruleService;
     }
 
-    // 1. Voeg 'int year' toe als eerste parameter
-    public async Task<PlannerDraftRequest> BuildRequestAsync(int year, CancellationToken ct = default)
-    {
-        var leaders = await _leaderService.GetTravelLeadersAsync(ct);
-        var journeys = await _journeyService.GetJourneysAsync(ct);
-
-        var rules = await _ruleService.GetRulesAsync(ct);
-        var settings = Data.Rules.CheckRules.FromRules(rules);
-
-        var activeLeaderInputs = leaders
-            .Where(l => l.IsActive)
-            .Select(l => new PlannerLeaderInput
-            {
-                Id = l.Id,
-                Name = l.Name,
-                Note = l.Note,
-                AmountOfTrips = l.AmountOfTrips ?? 0,
-                MinTrips = 0,
-                MaxTrips = l.MaxTrips ?? 0,
-                PreferredDestinations = l.PreferredDestinations
-                    .Where(p => p.JourneyId.HasValue)
-                    .ToDictionary(p => p.JourneyId!.Value, p => p.Rank),
-                PreferredDestinationDetails = l.PreferredDestinations
-                    .Where(p => p.JourneyId.HasValue && p.Rank >= 1 && p.Rank <= 3)
-                    .OrderBy(p => p.Rank)
-                    .Select(p => new PreferredDestinationDisplayInput
-                    {
-                        JourneyId = p.JourneyId!.Value,
-                        JourneyTitle = p.Journey?.Name ?? $"Reis {p.JourneyId!.Value}",
-                        Rank = p.Rank
-                    })
-                    .ToList()
-            }).ToList();
-
-        return new PlannerDraftRequest
-        {
-            Leaders = activeLeaderInputs.Where(l => l.PreferredDestinations.Count > 0).ToList(),
-            AllActiveLeaders = activeLeaderInputs,
-            Journeys = journeys
-                // 2. Filter hier direct op het meegegeven jaar!
-                .Where(j => j.BookingStatus == BookingStatus.Huidig && j.Start.Year == year)
-                .Select(j => new PlannerJourneyInput
-                {
-                    Id = j.Id,
-                    Name = j.Name,
-                    Start = j.Start,
-                    End = j.End,
-                    RequiredLeaders = j.RequiredLeaders
-                })
-                .ToList(),
-            RuleSettings = settings
-        };
-    }
-
     public async Task<PlannerDraftRequest> BuildRequestAsync(PlanningRound round, CancellationToken ct = default)
     {
         var leaders = await _leaderService.GetTravelLeadersAsync(ct);

@@ -24,7 +24,6 @@ public partial class Home : ComponentBase
     private bool _loading = true;
     private bool _isPlanner;
     private bool _isReisleider;
-    private List<PlanningVersion> _drafts = [];
     private List<Journey> _publishedJourneys = [];
     private int _selectedYear = DateTime.UtcNow.Year;
     private bool _publishedPlanning;
@@ -36,8 +35,6 @@ public partial class Home : ComponentBase
     private List<Notification> _notifications = [];
     private string _currentUserId = string.Empty;
 
-    private List<TravelLeader> _travelLeadersWithoutPreferences = [];
-    private bool _anyLeaderHasPreferences;
     private List<TravelLeader> _travelLeadersWithoutJourneys = [];
     private List<TravelLeader> _travelLeadersWithNotes = [];
     private List<Journey> _journeysWithoutTravelLeaders = [];
@@ -66,14 +63,6 @@ public partial class Home : ComponentBase
 
         if (_isPlanner)
         {
-            var drafts = await PlanningService.GetDraftsAsync(_selectedYear);
-            _drafts = drafts.ToList();
-
-            var allLeaders = await TravelLeaderService.GetTravelLeadersAsync();
-            _anyLeaderHasPreferences = allLeaders.Any(l => l.IsActive && l.PreferredDestinations.Any());
-            _travelLeadersWithoutPreferences = allLeaders
-                .Where(l => !l.PreferredDestinations.Any() && !l.AvailabilityPeriods.Any())
-                .ToList();
             _travelLeadersWithoutJourneys = await TravelLeaderService.GetTravelLeadersWithoutJourneysAsync(_selectedYear);
             _travelLeadersWithNotes = await TravelLeaderService.GetTravelLeadersWithNotesAsync();
             _journeysWithoutTravelLeaders = await TravelLeaderService.GetJourneysWithoutTravelLeadersAsync(_selectedYear);

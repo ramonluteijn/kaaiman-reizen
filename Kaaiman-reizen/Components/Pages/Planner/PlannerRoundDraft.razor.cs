@@ -20,7 +20,6 @@ public partial class PlannerRoundDraft : ComponentBase
     [Inject] private IPlannerDraftService _draftService { get; set; } = default!;
     [Inject] private IPlanningService _planningService { get; set; } = default!;
     [Inject] private IRuleService _ruleService { get; set; } = default!;
-    [Inject] private ITravelLeaderService _travelLeaderService { get; set; } = default!;
     [Inject] private ISnackbar _snackbar { get; set; } = default!;
     [Inject] private NavigationManager _nav { get; set; } = default!;
     [Inject] private IUserTimezoneService UserTimezoneService { get; set; } = default!;
@@ -85,7 +84,7 @@ public partial class PlannerRoundDraft : ComponentBase
     protected override async Task OnInitializedAsync()
     {
         await LoadDataForRoundAsync();
-        _availibilityPeriods = await _travelLeaderService.GetJourneyAvailabilityForAllTravelLeadersAsync();
+        _availibilityPeriods = BuildAvailabilityFromRound();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -318,5 +317,31 @@ public partial class PlannerRoundDraft : ComponentBase
                 TravelLeaders = leaders
             };
         }).ToList();
+    }
+
+    private IReadOnlyList<TravelLeader> BuildAvailabilityFromRound()
+    {
+        if (_round is null || _request is null) return [];
+
+        var leaderNames = _request.AllActiveLeaders.ToDictionary(l => l.Id, l => l.Name);
+
+        return _round.Participations
+            .Where(p => p.Preferences.Any())
+            .Select(p =>
+            {
+                leaderNames.TryGetValue(p.TravelLeaderId, out var name);
+                return new TravelLeader
+                {
+                    Id = p.TravelLeaderId,
+                    Name = name ?? string.Empty,
+                    PreferredDestinations = p.Preferences
+                        .Select(pref => new PreferredDestination
+                        {
+                            JourneyId = pref.JourneyId,
+                            Journey = pref.Journey,
+                            Rank = pref.Rank
+                        }).ToList()
+                };
+            }).ToList();
     }
 }

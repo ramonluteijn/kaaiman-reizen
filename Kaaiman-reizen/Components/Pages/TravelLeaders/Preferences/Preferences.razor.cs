@@ -20,8 +20,6 @@ public partial class Preferences : ComponentBase
     private TravelLeader _model = new();
     private bool _loading = true;
     private bool _notFound = false;
-    private int?[] _preferredJourneyIds = new int?[3];
-    private HashSet<int> _availableJourneyIds = new();
     private List<Journey> _journeys = new();
 
     // Round participation state
@@ -66,19 +64,9 @@ public partial class Preferences : ComponentBase
 
         var allJourneys = await JourneyService.GetJourneysAsync();
         _journeys = allJourneys
-            .Where(j => j.BookingStatus == BookingStatus.Huidig && j.Start.Year == DateTime.UtcNow.Year)
+            .Where(j => j.BookingStatus == BookingStatus.Huidig)
             .OrderBy(j => j.Start)
             .ToList();
-
-        _preferredJourneyIds = new int?[3];
-        _availableJourneyIds = new HashSet<int>();
-        foreach (var dest in _model.PreferredDestinations)
-        {
-            if (dest.Rank >= 1 && dest.Rank <= 3 && dest.JourneyId.HasValue)
-                _preferredJourneyIds[dest.Rank - 1] = dest.JourneyId;
-            else if (dest.Rank == 0 && dest.JourneyId.HasValue)
-                _availableJourneyIds.Add(dest.JourneyId.Value);
-        }
 
         _participations = (await RoundService.GetParticipationsForLeaderAsync(_model.Id)).ToList();
 
@@ -176,32 +164,9 @@ public partial class Preferences : ComponentBase
 
     private async Task HandleValidSubmit()
     {
-        _model.PreferredDestinations = new List<PreferredDestination>();
-
-        for (int i = 0; i < 3; i++)
-        {
-            if (_preferredJourneyIds[i].HasValue)
-                _model.PreferredDestinations.Add(new PreferredDestination
-                { Rank = i + 1, JourneyId = _preferredJourneyIds[i] });
-        }
-
-        var top3Ids = _preferredJourneyIds.Where(id => id.HasValue).Select(id => id!.Value).ToHashSet();
-        foreach (var jid in _availableJourneyIds)
-        {
-            if (!top3Ids.Contains(jid))
-                _model.PreferredDestinations.Add(new PreferredDestination { Rank = 0, JourneyId = jid });
-        }
-
         _model.AvailabilityPeriods = [];
         _model.Journeys = [];
         await LeaderService.UpdateTravelLeaderAsync(_model);
-
         Navigation.NavigateTo("/");
-    }
-
-    private void ToggleAvailable(int journeyId, bool isChecked)
-    {
-        if (isChecked) _availableJourneyIds.Add(journeyId);
-        else _availableJourneyIds.Remove(journeyId);
     }
 }
