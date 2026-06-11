@@ -30,6 +30,7 @@ public partial class Preferences : ComponentBase
     private int? _expandedParticipationId;
     private int?[] _roundPreferredJourneyIds = new int?[3];
     private HashSet<int> _roundAvailableJourneyIds = new();
+    private bool _roundFullyUnavailable;
     private List<Journey> _journeysForRound = [];
     private bool _submittingRound;
     private string? _roundSuccessMessage;
@@ -82,6 +83,7 @@ public partial class Preferences : ComponentBase
     {
         _expandedParticipationId = participation.Id;
         _roundSuccessMessage = null;
+        _roundFullyUnavailable = participation.Status == ParticipationStatus.Unavailable;
 
         var round = participation.PlanningRound;
         _journeysForRound = allJourneys
@@ -140,26 +142,33 @@ public partial class Preferences : ComponentBase
     {
         _submittingRound = true;
 
-        var preferences = new List<(int JourneyId, int Rank)>();
-
-        for (int i = 0; i < 3; i++)
+        if (_roundFullyUnavailable)
         {
-            if (_roundPreferredJourneyIds[i].HasValue)
-                preferences.Add((_roundPreferredJourneyIds[i]!.Value, i + 1));
+            await RoundService.MarkUnavailableAsync(participationId);
         }
-
-        var top3Ids = _roundPreferredJourneyIds.Where(id => id.HasValue).Select(id => id!.Value).ToHashSet();
-        foreach (var jid in _roundAvailableJourneyIds)
+        else
         {
-            if (!top3Ids.Contains(jid))
-                preferences.Add((jid, 0));
-        }
+            var preferences = new List<(int JourneyId, int Rank)>();
 
-        await RoundService.SavePreferencesAsync(participationId, preferences);
+            for (int i = 0; i < 3; i++)
+            {
+                if (_roundPreferredJourneyIds[i].HasValue)
+                    preferences.Add((_roundPreferredJourneyIds[i]!.Value, i + 1));
+            }
+
+            var top3Ids = _roundPreferredJourneyIds.Where(id => id.HasValue).Select(id => id!.Value).ToHashSet();
+            foreach (var jid in _roundAvailableJourneyIds)
+            {
+                if (!top3Ids.Contains(jid))
+                    preferences.Add((jid, 0));
+            }
+
+            await RoundService.SavePreferencesAsync(participationId, preferences);
+        }
 
         _participations = (await RoundService.GetParticipationsForLeaderAsync(_model.Id)).ToList();
         _expandedParticipationId = null;
-        _roundSuccessMessage = "Voorkeuren ingediend!";
+        _roundSuccessMessage = _roundFullyUnavailable ? "Afgemeld voor deze ronde." : "Voorkeuren ingediend!";
         _submittingRound = false;
     }
 

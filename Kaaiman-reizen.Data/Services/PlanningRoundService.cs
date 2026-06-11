@@ -101,6 +101,31 @@ public class PlanningRoundService : IPlanningRoundService
         await _db.SaveChangesAsync(ct);
     }
 
+    public async Task MarkUnavailableAsync(int participationId, CancellationToken ct = default)
+    {
+        var participation = await _db.PlanningRoundParticipations
+            .Include(p => p.Preferences)
+            .FirstOrDefaultAsync(p => p.Id == participationId, ct);
+
+        if (participation is null) return;
+
+        _db.RemoveRange(participation.Preferences);
+        participation.Preferences = [];
+        participation.Status = ParticipationStatus.Unavailable;
+        participation.SubmittedAt = DateTime.UtcNow;
+
+        // Remove leader from any unsaved draft planning versions for this round
+        var draftAssignments = await _db.PlanningAssignments
+            .Where(a => a.TravelLeaderId == participation.TravelLeaderId
+                     && a.PlanningVersion.PlanningRoundId == participation.PlanningRoundId
+                     && !a.PlanningVersion.IsPublished)
+            .ToListAsync(ct);
+
+        _db.RemoveRange(draftAssignments);
+
+        await _db.SaveChangesAsync(ct);
+    }
+
     public async Task DeleteAsync(int id, CancellationToken ct = default)
     {
         var round = await _db.PlanningRounds.FindAsync(new object[] { id }, ct);
