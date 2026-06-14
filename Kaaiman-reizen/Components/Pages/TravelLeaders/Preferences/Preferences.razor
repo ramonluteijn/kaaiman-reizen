@@ -253,6 +253,15 @@ else
                     <label class="form-check-label">Actief</label>
                 </div>
 
+                @if (!string.IsNullOrEmpty(_profileSuccessMessage))
+                {
+                    <div class="alert alert-success py-2 mb-3">@_profileSuccessMessage</div>
+                }
+                @if (!string.IsNullOrEmpty(_profileErrorMessage))
+                {
+                    <div class="alert alert-danger py-2 mb-3">@_profileErrorMessage</div>
+                }
+
                 <div class="app-form-actions">
                     <MudButton ButtonType="ButtonType.Submit"
                                Variant="Variant.Filled"

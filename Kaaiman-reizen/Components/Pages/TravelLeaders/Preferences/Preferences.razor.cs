@@ -3,7 +3,6 @@ using Kaaiman_reizen.Data.Enum;
 using Kaaiman_reizen.Data.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
-using MudBlazor;
 
 namespace Kaaiman_reizen.Components.Pages.TravelLeaders.Preferences;
 
@@ -14,7 +13,6 @@ public partial class Preferences : ComponentBase
     [Inject] private IPlanningRoundService RoundService { get; set; } = default!;
     [Inject] private NavigationManager Navigation { get; set; } = default!;
     [Inject] private AuthenticationStateProvider _authProvider { get; set; } = default!;
-    [Inject] private ISnackbar _snackbar { get; set; } = default!;
 
     [Parameter] public int? Id { get; set; }
 
@@ -34,6 +32,8 @@ public partial class Preferences : ComponentBase
     private List<Journey> _journeysForRound = [];
     private bool _submittingRound;
     private string? _roundSuccessMessage;
+    private string? _profileSuccessMessage;
+    private string? _profileErrorMessage;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -176,14 +176,17 @@ public partial class Preferences : ComponentBase
 
     private async Task HandleSubmit()
     {
+        _profileSuccessMessage = null;
+        _profileErrorMessage = null;
+
         if (_model.AmountOfTrips is null || _model.MinTrips is null || _model.MaxTrips is null)
         {
-            _snackbar.Add("Vul alle verplichte velden in.", Severity.Warning);
+            _profileErrorMessage = "Vul alle verplichte velden in.";
             return;
         }
         if (_model.MinTrips > _model.MaxTrips)
         {
-            _snackbar.Add("Minimaal aantal reizen mag niet groter zijn dan maximaal.", Severity.Warning);
+            _profileErrorMessage = "Minimaal aantal reizen mag niet groter zijn dan maximaal.";
             return;
         }
 
@@ -197,11 +200,11 @@ public partial class Preferences : ComponentBase
                 _model.MaxTrips,
                 _model.Note ?? string.Empty,
                 _model.IsActive);
-            _snackbar.Add("Profiel opgeslagen.", Severity.Success);
+            _profileSuccessMessage = "Profiel opgeslagen.";
         }
         catch
         {
-            _snackbar.Add("Opslaan mislukt. Probeer het opnieuw.", Severity.Error);
+            _profileErrorMessage = "Opslaan mislukt. Probeer het opnieuw.";
         }
         finally
         {
