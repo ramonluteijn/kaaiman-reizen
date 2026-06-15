@@ -10,7 +10,7 @@ public class TravelLeader : IValidatableObject
     public string Name { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "E-mailadres is verplicht.")]
-    [EmailAddress(ErrorMessage = "Vul een geldig e-mailadres in.")]
+    [RegularExpression(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", ErrorMessage = "Vul een geldig e-mailadres in.")]
     public string Email { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Telefoon is verplicht.")]
