@@ -1,5 +1,6 @@
 using Kaaiman_reizen.Data.Entities;
 using Microsoft.EntityFrameworkCore;
+using System.Runtime.InteropServices;
 
 namespace Kaaiman_reizen.Data.Services;
 
@@ -98,6 +99,19 @@ public class TravelLeaderService : ITravelLeaderService
 
         _db.TravelLeader.Update(leader);
         await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task UpdateProfileAsync(int leaderId, int? amountOfTrips, int? minTrips, int? maxTrips, string note, bool isActive, CancellationToken cancellationToken = default)
+    {
+        await _db.TravelLeader
+            .Where(t => t.Id == leaderId)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(t => t.AmountOfTrips, amountOfTrips)
+                .SetProperty(t => t.MinTrips, minTrips)
+                .SetProperty(t => t.MaxTrips, maxTrips)
+                .SetProperty(t => t.Note, note)
+                .SetProperty(t => t.IsActive, isActive),
+                cancellationToken);
     }
 
     public async Task<List<TravelLeader>> GetTravelLeadersWithoutPreferencesAsync()
@@ -227,10 +241,29 @@ public class TravelLeaderService : ITravelLeaderService
         return historyEntries.Count;
     }
 
-    public class OverlapData
+    public async Task<List<TravelLeader>> GetTravelLeadersByJourneyId(int journeyId)
     {
-        public TravelLeader travelLeader { get; set; }
-        public Journey subjectJourney { get; set; }
-        public Journey overlappingJourney { get; set; }
+        return await _db.JourneyTravelLeaders
+        .Where(jtl => jtl.JourneyId == journeyId)
+        .Select(jtl => jtl.TravelLeader)
+        .ToListAsync();
     }
+
+    public async Task IncrementTravelLeadersExperience(int journeyId, CancellationToken cancellationToken)
+    {
+        var travelLeaders = await GetTravelLeadersByJourneyId(journeyId);
+
+        if (travelLeaders == null || !travelLeaders.Any())
+            return;
+
+        travelLeaders.ForEach(travelLeader => travelLeader.AmountOfTrips += 1);
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+}
+
+public class OverlapData
+{
+    public TravelLeader travelLeader { get; set; }
+    public Journey subjectJourney { get; set; }
+    public Journey overlappingJourney { get; set; }
 }

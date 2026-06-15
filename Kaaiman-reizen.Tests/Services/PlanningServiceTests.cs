@@ -1,4 +1,5 @@
 using Kaaiman_reizen.Data;
+using Kaaiman_reizen.Data.Entities;
 using Kaaiman_reizen.Data.Identity;
 using Kaaiman_reizen.Data.Services;
 using Microsoft.EntityFrameworkCore;
@@ -60,13 +61,25 @@ namespace Kaaiman_reizen.Tests.Services
             return new MainContext(options);
         }
 
+        private static PlanningRound CreateRound(int year = 2026) => new()
+        {
+            Name = "Ronde 2026",
+            Year = year,
+            StartDate = new DateOnly(year, 1, 1),
+            EndDate = new DateOnly(year, 12, 31),
+            PreferenceDeadline = new DateTime(year, 6, 1, 0, 0, 0, DateTimeKind.Utc),
+            PublicationDeadline = new DateTime(year, 9, 1, 0, 0, 0, DateTimeKind.Utc)
+        };
+
         [Fact]
-        public async Task SavePlanningAsync_WhenPublished_ShouldCreateNotificationsForAllUsers()
+        public async Task SavePlanningForRoundAsync_WhenPublished_ShouldCreateNotificationsForAllUsers()
         {
             // Arrange
             var db = GetInMemoryDb();
 
-            // Setup some users
+            var round = CreateRound();
+            db.PlanningRounds.Add(round);
+
             var user1 = new ApplicationUser { Id = "user1", Email = "test1@example.com" };
             var user2 = new ApplicationUser { Id = "user2", Email = "test2@example.com" };
             var user3 = new ApplicationUser { Id = "user3", Email = null }; // no email
@@ -76,12 +89,11 @@ namespace Kaaiman_reizen.Tests.Services
 
             var dispatcher = new DummyEmailDispatcher();
             var serviceProvider = new DummyServiceProvider(dispatcher);
-
             var planningService = new PlanningService(db, serviceProvider);
 
             // Act
             var assignments = new Dictionary<int, IReadOnlyCollection<int>>();
-            var result = await planningService.SavePlanningAsync(2026, "Definitieve planning", true, assignments);
+            await planningService.SavePlanningForRoundAsync(round.Id, round.Year, "Definitieve planning", true, assignments);
 
             // Give the fire-and-forget task a moment to execute (since it runs on a thread pool)
             await Task.Delay(100);
@@ -94,58 +106,113 @@ namespace Kaaiman_reizen.Tests.Services
             Assert.Contains(notifications, n => n.ApplicationUserId == "user2" && !n.IsRead);
             Assert.Contains(notifications, n => n.ApplicationUserId == "user3");
 
-            // Verify emails were sent to the users with emails
             Assert.Equal(2, dispatcher.SentEmails.Count);
             Assert.Contains("test1@example.com", dispatcher.SentEmails);
             Assert.Contains("test2@example.com", dispatcher.SentEmails);
         }
 
         [Fact]
-        public async Task SavePlanningAsync_WhenPublished_ShouldBeVisibleInArchive()
+        public async Task SavePlanningForRoundAsync_WhenPublished_ShouldBeVisibleInArchive()
         {
             // Arrange
             var db = GetInMemoryDb();
 
-            // Setup some users
-            var user1 = new ApplicationUser { Id = "user1", Email = "test1@example.com" };
-            var user2 = new ApplicationUser { Id = "user2", Email = "test2@example.com" };
+            var round = CreateRound();
+            db.PlanningRounds.Add(round);
 
-            db.Users.AddRange(user1, user2);
+            db.Users.AddRange(
+                new ApplicationUser { Id = "user1", Email = "test1@example.com" },
+                new ApplicationUser { Id = "user2", Email = "test2@example.com" });
             await db.SaveChangesAsync();
 
             var dispatcher = new DummyEmailDispatcher();
             var serviceProvider = new DummyServiceProvider(dispatcher);
-
             var planningService = new PlanningService(db, serviceProvider);
 
             // Act
             var assignments = new Dictionary<int, IReadOnlyCollection<int>>();
-            var result = await planningService.SavePlanningAsync(2026, "Definitieve planning", true, assignments);
-
-            // Give the fire-and-forget task a moment to execute (since it runs on a thread pool)
+            await planningService.SavePlanningForRoundAsync(round.Id, round.Year, "Definitieve planning", true, assignments);
             await Task.Delay(100);
 
             // Assert
             var archivedPlans = await planningService.GetPublishedPlansAsync();
-
             Assert.Single(archivedPlans);
         }
 
         [Fact]
-        public async Task SavePlanningAsync_ShouldStoreCreatedAtAsUtc_InDatabase()
+        public async Task SavePlanningForRoundAsync_WhenPublished_ShouldUnpublishPreviousVersionForSameRound()
         {
             // Arrange
             var db = GetInMemoryDb();
+
+            var round = CreateRound();
+            db.PlanningRounds.Add(round);
+            await db.SaveChangesAsync();
+
+            var dispatcher = new DummyEmailDispatcher();
+            var serviceProvider = new DummyServiceProvider(dispatcher);
+            var planningService = new PlanningService(db, serviceProvider);
+
+            var assignments = new Dictionary<int, IReadOnlyCollection<int>>();
+
+            // Act: publish twice for the same round
+            await planningService.SavePlanningForRoundAsync(round.Id, round.Year, "Planning v1", true, assignments);
+            await planningService.SavePlanningForRoundAsync(round.Id, round.Year, "Planning v2", true, assignments);
+            await Task.Delay(100);
+
+            // Assert: only the latest is published
+            var allVersions = await db.PlanningVersions.ToListAsync();
+            Assert.Equal(2, allVersions.Count);
+            Assert.Single(allVersions, v => v.IsPublished);
+            Assert.Equal("Planning v2", allVersions.Single(v => v.IsPublished).Name);
+        }
+
+        [Fact]
+        public async Task SavePlanningForRoundAsync_Draft_ShouldStoreCreatedAtAsUtc()
+        {
+            // Arrange
+            var db = GetInMemoryDb();
+
+            var round = CreateRound();
+            db.PlanningRounds.Add(round);
+            await db.SaveChangesAsync();
+
             var dispatcher = new DummyEmailDispatcher();
             var serviceProvider = new DummyServiceProvider(dispatcher);
             var planningService = new PlanningService(db, serviceProvider);
 
             // Act
-            await planningService.SavePlanningAsync(2026, "Draft planning", false, new Dictionary<int, IReadOnlyCollection<int>>());
+            await planningService.SavePlanningForRoundAsync(round.Id, round.Year, "Draft planning", false, new Dictionary<int, IReadOnlyCollection<int>>());
 
             // Assert
             var planningVersion = await db.PlanningVersions.SingleAsync();
             Assert.Equal(DateTimeKind.Utc, planningVersion.CreatedAt.Kind);
+        }
+
+        [Fact]
+        public async Task SavePlanningForRoundAsync_Draft_ShouldUpsertExistingDraft()
+        {
+            // Arrange
+            var db = GetInMemoryDb();
+
+            var round = CreateRound();
+            db.PlanningRounds.Add(round);
+            await db.SaveChangesAsync();
+
+            var dispatcher = new DummyEmailDispatcher();
+            var serviceProvider = new DummyServiceProvider(dispatcher);
+            var planningService = new PlanningService(db, serviceProvider);
+
+            var assignments = new Dictionary<int, IReadOnlyCollection<int>>();
+
+            // Act: save draft twice
+            await planningService.SavePlanningForRoundAsync(round.Id, round.Year, "Draft v1", false, assignments);
+            await planningService.SavePlanningForRoundAsync(round.Id, round.Year, "Draft v2", false, assignments);
+
+            // Assert: still only one draft, with updated name
+            var drafts = await db.PlanningVersions.Where(v => !v.IsPublished).ToListAsync();
+            Assert.Single(drafts);
+            Assert.Equal("Draft v2", drafts[0].Name);
         }
     }
 }

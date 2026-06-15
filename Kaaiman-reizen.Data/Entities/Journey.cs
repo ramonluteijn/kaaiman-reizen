@@ -29,6 +29,10 @@ public class Journey : IValidatableObject
     [Range(1, int.MaxValue, ErrorMessage = "RequiredLeaders moet minimaal 1 zijn.")]
     public int RequiredLeaders { get; set; } = 1;
 
+    public string? HangfireJobId { get; set; }
+
+    public bool IsProcessed { get; set; } = false;
+
     public List<TravelLeader> TravelLeaders { get; set; } = new();
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)

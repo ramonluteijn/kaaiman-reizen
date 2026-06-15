@@ -5,7 +5,7 @@ using Kaaiman_reizen.Models.ViewModels;
 
 namespace Kaaiman_reizen.Components.Pages.Planner;
 
-public partial class PlannerDraft
+public partial class PlannerRoundDraft
 {
     private void HandleJourneyClick(JourneyViewModel journey)
     {

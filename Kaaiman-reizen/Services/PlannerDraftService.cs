@@ -1,4 +1,5 @@
 using Google.OrTools.Sat;
+using Kaaiman_reizen.Data.Entities;
 using Kaaiman_reizen.Data.Enum;
 using Kaaiman_reizen.Data.Services;
 using Kaaiman_reizen.Models.Planner;
@@ -18,38 +19,45 @@ public class PlannerDraftService : IPlannerDraftService
         _ruleService = ruleService;
     }
 
-    // 1. Voeg 'int year' toe als eerste parameter
-    public async Task<PlannerDraftRequest> BuildRequestAsync(int year, CancellationToken ct = default)
+    public async Task<PlannerDraftRequest> BuildRequestAsync(PlanningRound round, CancellationToken ct = default)
     {
         var leaders = await _leaderService.GetTravelLeadersAsync(ct);
         var journeys = await _journeyService.GetJourneysAsync(ct);
-
         var rules = await _ruleService.GetRulesAsync(ct);
         var settings = Data.Rules.CheckRules.FromRules(rules);
 
+        // Gebruik ronde-specifieke voorkeuren (PlanningRoundPreference) i.p.v. globale PreferredDestinations
+        var prefsByLeader = round.Participations
+            .ToDictionary(p => p.TravelLeaderId, p => p.Preferences);
+
         var activeLeaderInputs = leaders
             .Where(l => l.IsActive)
-            .Select(l => new PlannerLeaderInput
+            .Select(l =>
             {
-                Id = l.Id,
-                Name = l.Name,
-                Note = l.Note,
-                AmountOfTrips = l.AmountOfTrips ?? 0,
-                MinTrips = l.MinTrips ?? 0,
-                MaxTrips = l.MaxTrips ?? 0,
-                PreferredDestinations = l.PreferredDestinations
-                    .Where(p => p.JourneyId.HasValue)
-                    .ToDictionary(p => p.JourneyId!.Value, p => p.Rank),
-                PreferredDestinationDetails = l.PreferredDestinations
-                    .Where(p => p.JourneyId.HasValue && p.Rank >= 1 && p.Rank <= 3)
-                    .OrderBy(p => p.Rank)
-                    .Select(p => new PreferredDestinationDisplayInput
-                    {
-                        JourneyId = p.JourneyId!.Value,
-                        JourneyTitle = p.Journey?.Name ?? $"Reis {p.JourneyId!.Value}",
-                        Rank = p.Rank
-                    })
-                    .ToList()
+                var prefs = prefsByLeader.TryGetValue(l.Id, out var p)
+                    ? p
+                    : (IEnumerable<PlanningRoundPreference>)[];
+
+                return new PlannerLeaderInput
+                {
+                    Id = l.Id,
+                    Name = l.Name,
+                    Note = l.Note,
+                    AmountOfTrips = l.AmountOfTrips ?? 0,
+                    MinTrips = 0,
+                    MaxTrips = l.MaxTrips ?? 0,
+                    PreferredDestinations = prefs.ToDictionary(x => x.JourneyId, x => x.Rank),
+                    PreferredDestinationDetails = prefs
+                        .Where(x => x.Rank >= 1 && x.Rank <= 3)
+                        .OrderBy(x => x.Rank)
+                        .Select(x => new PreferredDestinationDisplayInput
+                        {
+                            JourneyId = x.JourneyId,
+                            JourneyTitle = x.Journey?.Name ?? $"Reis {x.JourneyId}",
+                            Rank = x.Rank
+                        })
+                        .ToList()
+                };
             }).ToList();
 
         return new PlannerDraftRequest
@@ -57,8 +65,9 @@ public class PlannerDraftService : IPlannerDraftService
             Leaders = activeLeaderInputs.Where(l => l.PreferredDestinations.Count > 0).ToList(),
             AllActiveLeaders = activeLeaderInputs,
             Journeys = journeys
-                // 2. Filter hier direct op het meegegeven jaar!
-                .Where(j => j.BookingStatus == BookingStatus.Huidig && j.Start.Year == year)
+                .Where(j => j.BookingStatus == BookingStatus.Huidig
+                         && j.Start >= round.StartDate
+                         && j.Start <= round.EndDate)
                 .Select(j => new PlannerJourneyInput
                 {
                     Id = j.Id,

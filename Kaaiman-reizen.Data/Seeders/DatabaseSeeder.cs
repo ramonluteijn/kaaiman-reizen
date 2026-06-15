@@ -8,9 +8,9 @@ namespace Kaaiman_reizen.Data.Seeders;
 
 /// <summary>
 /// Genereert realistische, deterministische testdata voor de ontwikkelomgeving.
-/// Bevat 18 reisleiders met bewuste edge cases voor het planningsalgoritme,
-/// historische reizen (2024–2025) voor de history-feature, en een breed scala
-/// aan 2026-reizen om alle planningsregels te kunnen demonstreren en testen.
+/// Bevat 16 actieve reisleiders met bewuste edge cases voor het planningsalgoritme,
+/// historische reizen (2024–2025), 2026-reizen, en één planningsronde (Periode 1 2026)
+/// met volledig ingediende voorkeuren — klaar om een draft te genereren en te publiceren.
 /// </summary>
 public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
 {
@@ -27,7 +27,6 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
             return;
         }
 
-        // Vaste seed = deterministische output in alle testomgevingen
         Randomizer.Seed = new Random(1337);
         var faker = new Faker("nl");
 
@@ -48,8 +47,10 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
         context.Journey.AddRange(journeys2026);
         await context.SaveChangesAsync();
 
+        await SeedPlanningRoundAsync(leaders);
+
         logger.LogInformation(
-            "Dev seed voltooid — {Leaders} reisleiders, {Hist} historische reizen, {Current} reizen 2026.",
+            "Dev seed voltooid — {Leaders} reisleiders, {Hist} historische reizen, {Current} reizen 2026, 1 planningsronde.",
             leaders.Count,
             journeys2024.Count + journeys2025.Count,
             journeys2026.Count);
@@ -67,7 +68,7 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
             // ═══════════════════════════════════════════════════════════════════
             // GROEP 1 — KERNGROEP (5)
             // Breed beschikbaar heel 2026, ervaren, vormen de ruggengraat van
-            // de planning. Jan en Maria behouden originele contactgegevens.
+            // de planning.
             // ═══════════════════════════════════════════════════════════════════
 
             ["jan"] = new()
@@ -100,8 +101,7 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
                 MinTrips = 4,
                 MaxTrips = 18,
                 IsActive = true,
-                Note = Mark("Kernlid — meest ervaren, op maximum"),
-                // AmountOfTrips == MaxTrips → algoritme moet hem overslaan
+                Note = Mark("Kernlid — meest ervaren, op historisch maximum"),
                 AvailabilityPeriods = [new() { Start = new(2026, 2, 1), End = new(2026, 12, 31) }]
             },
             ["daan"] = new()
@@ -124,14 +124,13 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
                 MaxTrips = 8,
                 IsActive = true,
                 Note = Mark("Kernlid — niet in winter beschikbaar"),
-                // Winter (dec-feb) buiten bereik → test seizoensgrens kerngroep
                 AvailabilityPeriods = [new() { Start = new(2026, 3, 1), End = new(2026, 11, 30) }]
             },
 
             // ═══════════════════════════════════════════════════════════════════
             // GROEP 2 — LENTEGASTEN (3)
-            // Alleen beschikbaar maart–juni. Kunnen NIET worden ingepland voor
-            // zomer- of herstreizen → edge case voor het algoritme.
+            // Alleen beschikbaar maart–juni. Kunnen niet voor zomer-/herstreizen
+            // worden ingepland.
             // ═══════════════════════════════════════════════════════════════════
 
             ["anna"] = new()
@@ -154,7 +153,6 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
                 MaxTrips = 4,
                 IsActive = true,
                 Note = Mark("Lentegast — beschikbaar mrt-mei"),
-                // Smalst van de lentegasten: loopt af eind mei → juni-reizen buiten bereik
                 AvailabilityPeriods = [new() { Start = new(2026, 3, 1), End = new(2026, 5, 31) }]
             },
             ["david"] = new()
@@ -165,15 +163,13 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
                 MinTrips = 2,
                 MaxTrips = 8,
                 IsActive = true,
-                Note = Mark("Lentegast — op maximum (AmountOfTrips == MaxTrips)"),
-                // Edge case MinMaxJourneys: zit al op zijn maximum → algoritme moet hem overslaan
+                Note = Mark("Lentegast — historisch op maximum (AmountOfTrips == MaxTrips)"),
                 AvailabilityPeriods = [new() { Start = new(2026, 3, 1), End = new(2026, 6, 30) }]
             },
 
             // ═══════════════════════════════════════════════════════════════════
             // GROEP 3 — ZOMERSPECIALISTEN (3)
-            // Alleen beschikbaar juni–september. Kunnen NIET voor lentereizen
-            // worden ingepland → algoritme-edge case.
+            // Alleen beschikbaar juni–september.
             // ═══════════════════════════════════════════════════════════════════
 
             ["frank"] = new()
@@ -196,7 +192,6 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
                 MaxTrips = 8,
                 IsActive = true,
                 Note = Mark("Zomers — beschikbaar jul-sep"),
-                // Start pas in juli → kan niet voor Turkije-reis in juni
                 AvailabilityPeriods = [new() { Start = new(2026, 7, 1), End = new(2026, 9, 30) }]
             },
             ["hans"] = new()
@@ -207,15 +202,12 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
                 MinTrips = 3,
                 MaxTrips = 12,
                 IsActive = true,
-                Note = Mark("Zomers — op maximum (AmountOfTrips == MaxTrips)"),
-                // Edge case: zit op zijn maximum, algoritme slaat hem over
+                Note = Mark("Zomers — historisch op maximum (AmountOfTrips == MaxTrips)"),
                 AvailabilityPeriods = [new() { Start = new(2026, 6, 1), End = new(2026, 9, 30) }]
             },
 
             // ═══════════════════════════════════════════════════════════════════
             // GROEP 4 — SMALLE BESCHIKBAARHEID (2)
-            // Zeer korte beschikbaarheidsvensters. Elke reisleider past op
-            // precies 1 specifieke reis.
             // ═══════════════════════════════════════════════════════════════════
 
             ["karel"] = new()
@@ -227,7 +219,6 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
                 MaxTrips = 4,
                 IsActive = true,
                 Note = Mark("Smal venster — alleen beschikbaar 5-25 apr"),
-                // Past exact op de Marokko-reis (apr 5-15) en nergens anders
                 AvailabilityPeriods = [new() { Start = new(2026, 4, 5), End = new(2026, 4, 25) }]
             },
             ["laura"] = new()
@@ -239,14 +230,11 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
                 MaxTrips = 6,
                 IsActive = true,
                 Note = Mark("Smal venster — alleen beschikbaar 1-21 jul"),
-                // Past exact op Italië Zomer (jul 5-18) — net buiten bereik van Griekenland Zomer
                 AvailabilityPeriods = [new() { Start = new(2026, 7, 1), End = new(2026, 7, 21) }]
             },
 
             // ═══════════════════════════════════════════════════════════════════
             // GROEP 5 — INACTIEF (2)
-            // IsActive = false → algoritme slaat ze altijd over, ook als
-            // ze een geldige beschikbaarheidsperiode hebben.
             // ═══════════════════════════════════════════════════════════════════
 
             ["omar"] = new()
@@ -258,7 +246,6 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
                 MaxTrips = 12,
                 IsActive = false,
                 Note = Mark("INACTIEF — heeft beschikbaarheid maar mag niet worden ingepland"),
-                // Heeft geldige beschikbaarheid maar IsActive=false → algoritme-edge case
                 AvailabilityPeriods = [new() { Start = new(2026, 1, 1), End = new(2026, 12, 31) }]
             },
             ["priya"] = new()
@@ -270,13 +257,11 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
                 MaxTrips = 8,
                 IsActive = false,
                 Note = Mark("INACTIEF — ook geen beschikbaarheidsperiodes opgegeven"),
-                // Dubbele edge case: inactief + geen beschikbaarheid
             },
 
             // ═══════════════════════════════════════════════════════════════════
             // GROEP 6 — GEEN BESCHIKBAARHEID (1)
-            // Actief maar heeft geen AvailabilityPeriods ingevoerd.
-            // Algoritme kan hem NOOIT inplannen — UI moet dit zichtbaar maken.
+            // Actief maar heeft geen AvailabilityPeriods — nooit inplanbaar.
             // ═══════════════════════════════════════════════════════════════════
 
             ["quinten"] = new()
@@ -288,12 +273,10 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
                 MaxTrips = 6,
                 IsActive = true,
                 Note = Mark("Geen beschikbaarheid — actief maar nooit inplanbaar"),
-                // Geen AvailabilityPeriods → algoritme markeert elke reis als onbereikbaar
             },
 
             // ═══════════════════════════════════════════════════════════════════
             // GROEP 7 — BIJZONDERE CONSTRAINTS (2)
-            // Demonstreert edge cases van de MinMaxJourneys-regel.
             // ═══════════════════════════════════════════════════════════════════
 
             ["sebastiaan"] = new()
@@ -305,7 +288,6 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
                 MaxTrips = 1,
                 IsActive = true,
                 Note = Mark("Beginner — MaxTrips=1, kan maar 1 reis doen"),
-                // Nieuwe reisleider die slechts 1 reis per jaar wil doen
                 AvailabilityPeriods = [new() { Start = new(2026, 1, 1), End = new(2026, 12, 31) }]
             },
             ["vera"] = new()
@@ -317,7 +299,6 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
                 MaxTrips = 4,
                 IsActive = true,
                 Note = Mark("AmountOfTrips=0 maar MinTrips=2 — ruim onder minimum"),
-                // UI-edge case: onder minimum → zichtbaar als aandachtspunt voor de planner
                 AvailabilityPeriods = [new() { Start = new(2026, 1, 1), End = new(2026, 12, 31) }]
             },
         };
@@ -375,25 +356,22 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
         Dictionary<string, Journey> j2024,
         Dictionary<string, Journey> j2025)
     {
-        // 2024 — Directe reiskoppelingen (geen PlanningVersion voor dit jaar)
-        // Consistentie: optelsom van toegewezen reizen past bij AmountOfTrips per reisleider
         var jtl2024 = new List<JourneyTravelLeader>
         {
-            new() { JourneyId = j2024["ital"].Id,  TravelLeaderId = l["jan"].Id },
+            new() { JourneyId = j2024["ital"].Id,  TravelLeaderId = l["jan"].Id    },
             new() { JourneyId = j2024["ital"].Id,  TravelLeaderId = l["thomas"].Id },
-            new() { JourneyId = j2024["griek"].Id, TravelLeaderId = l["maria"].Id },
-            new() { JourneyId = j2024["span"].Id,  TravelLeaderId = l["fleur"].Id },
-            new() { JourneyId = j2024["kro"].Id,   TravelLeaderId = l["frank"].Id },
-            new() { JourneyId = j2024["port"].Id,  TravelLeaderId = l["maria"].Id },
-            new() { JourneyId = j2024["norw"].Id,  TravelLeaderId = l["daan"].Id },
-            new() { JourneyId = j2024["norw"].Id,  TravelLeaderId = l["fleur"].Id },
+            new() { JourneyId = j2024["griek"].Id, TravelLeaderId = l["maria"].Id  },
+            new() { JourneyId = j2024["span"].Id,  TravelLeaderId = l["fleur"].Id  },
+            new() { JourneyId = j2024["kro"].Id,   TravelLeaderId = l["frank"].Id  },
+            new() { JourneyId = j2024["port"].Id,  TravelLeaderId = l["maria"].Id  },
+            new() { JourneyId = j2024["norw"].Id,  TravelLeaderId = l["daan"].Id   },
+            new() { JourneyId = j2024["norw"].Id,  TravelLeaderId = l["fleur"].Id  },
             new() { JourneyId = j2024["turk"].Id,  TravelLeaderId = l["thomas"].Id },
-            new() { JourneyId = j2024["oost"].Id,  TravelLeaderId = l["clara"].Id },
+            new() { JourneyId = j2024["oost"].Id,  TravelLeaderId = l["clara"].Id  },
         };
         context.JourneyTravelLeaders.AddRange(jtl2024);
         await context.SaveChangesAsync();
 
-        // 2025 — Gepubliceerde planning + reiskoppelingen voor history-feature
         var version2025 = new PlanningVersion
         {
             Name = "Gepubliceerde Planning 2025",
@@ -404,16 +382,15 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
         context.PlanningVersions.Add(version2025);
         await context.SaveChangesAsync();
 
-        // Definieer welke leider(s) op welke 2025-reis gaan
         var assignments2025 = new (string journey, string[] leaders)[]
         {
-            ("ital",  ["jan", "frank"]),
+            ("ital",  ["jan",   "frank"]),
             ("span",  ["maria"]),
-            ("griek", ["thomas", "anna"]),
+            ("griek", ["thomas","anna"]),
             ("port",  ["fleur"]),
             ("kro",   ["anna"]),
             ("turk",  ["thomas"]),
-            ("norw",  ["daan", "jan"]),
+            ("norw",  ["daan",  "jan"]),
             ("ijsl",  ["daan"]),
             ("zwit",  ["fleur"]),
             ("mar",   ["anna"]),
@@ -424,12 +401,15 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
 
         foreach (var (journeyKey, leaderKeys) in assignments2025)
         {
-            var journey = j2025[journeyKey];
             foreach (var leaderKey in leaderKeys)
             {
-                var leader = l[leaderKey];
-                planningAssignments.Add(new() { PlanningVersionId = version2025.Id, JourneyId = journey.Id, TravelLeaderId = leader.Id });
-                jtl2025.Add(new() { JourneyId = journey.Id, TravelLeaderId = leader.Id });
+                planningAssignments.Add(new()
+                {
+                    PlanningVersionId = version2025.Id,
+                    JourneyId = j2025[journeyKey].Id,
+                    TravelLeaderId = l[leaderKey].Id
+                });
+                jtl2025.Add(new() { JourneyId = j2025[journeyKey].Id, TravelLeaderId = l[leaderKey].Id });
             }
         }
 
@@ -438,47 +418,211 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
         await context.SaveChangesAsync();
     }
 
-    // ─── REIZEN 2026 (HUIDIG PLANNINGSEIZOEN) ────────────────────────────────────
+    // ─── REIZEN 2026 ─────────────────────────────────────────────────────────────
 
     private List<Journey> BuildCurrentJourneys() =>
     [
-        // ── Voorjaar ─────────────────────────────────────────────────────────────
-        // Spanje keert terug in zomer → recurring-patroon zichtbaar in data
-        new() { Name = "Spanje Voorjaar",        Start = new(2026, 3,  8), End = new(2026, 3, 18), Busses = 1, Travelers = 12, RequiredLeaders = 1, BookingStatus = BookingStatus.Huidig },
-        new() { Name = "Portugal",               Start = new(2026, 3, 22), End = new(2026, 4,  1), Busses = 1, Travelers = 10, RequiredLeaders = 1, BookingStatus = BookingStatus.Huidig },
-        new() { Name = "Marokko",                Start = new(2026, 4,  5), End = new(2026, 4, 15), Busses = 1, Travelers = 13, RequiredLeaders = 1, BookingStatus = BookingStatus.Huidig },
-        // Vereist 2 leiders → test voor voldoende aanbod bij lentegasten
-        new() { Name = "Italië Voorjaar",        Start = new(2026, 4, 19), End = new(2026, 4, 29), Busses = 2, Travelers = 18, RequiredLeaders = 2, BookingStatus = BookingStatus.Huidig },
-        new() { Name = "Griekenland Lente",      Start = new(2026, 5,  4), End = new(2026, 5, 14), Busses = 1, Travelers = 11, RequiredLeaders = 1, BookingStatus = BookingStatus.Huidig },
-        new() { Name = "Kroatië Lente",          Start = new(2026, 5, 18), End = new(2026, 5, 28), Busses = 1, Travelers = 9,  RequiredLeaders = 1, BookingStatus = BookingStatus.Huidig },
+        // ── Voorjaar / lente (Periode 1) ─────────────────────────────────────
+        new() { Name = "Spanje Voorjaar",   Start = new(2026, 3,  8), End = new(2026, 3, 18), Busses = 1, Travelers = 12, RequiredLeaders = 1, BookingStatus = BookingStatus.Huidig },
+        new() { Name = "Portugal",          Start = new(2026, 3, 22), End = new(2026, 4,  1), Busses = 1, Travelers = 10, RequiredLeaders = 1, BookingStatus = BookingStatus.Huidig },
+        new() { Name = "Marokko",           Start = new(2026, 4,  5), End = new(2026, 4, 15), Busses = 1, Travelers = 13, RequiredLeaders = 1, BookingStatus = BookingStatus.Huidig },
+        new() { Name = "Italië Voorjaar",   Start = new(2026, 4, 19), End = new(2026, 4, 29), Busses = 2, Travelers = 18, RequiredLeaders = 2, BookingStatus = BookingStatus.Huidig },
+        new() { Name = "Griekenland Lente", Start = new(2026, 5,  4), End = new(2026, 5, 14), Busses = 1, Travelers = 11, RequiredLeaders = 1, BookingStatus = BookingStatus.Huidig },
+        new() { Name = "Kroatië Lente",     Start = new(2026, 5, 18), End = new(2026, 5, 28), Busses = 1, Travelers =  9, RequiredLeaders = 1, BookingStatus = BookingStatus.Huidig },
+        new() { Name = "Turkije",           Start = new(2026, 6,  7), End = new(2026, 6, 17), Busses = 1, Travelers =  9, RequiredLeaders = 1, BookingStatus = BookingStatus.Huidig },
+        new() { Name = "Spanje Zomer",      Start = new(2026, 6, 21), End = new(2026, 7,  1), Busses = 2, Travelers = 20, RequiredLeaders = 2, BookingStatus = BookingStatus.Huidig },
 
-        // ── Zomer ─────────────────────────────────────────────────────────────
-        // Italië / Spanje / Griekenland komen terug (recurring) → history toont eerdere eds.
-        new() { Name = "Turkije",                Start = new(2026, 6,  7), End = new(2026, 6, 17), Busses = 1, Travelers = 9,  RequiredLeaders = 1, BookingStatus = BookingStatus.Huidig },
-        new() { Name = "Spanje Zomer",           Start = new(2026, 6, 21), End = new(2026, 7,  1), Busses = 2, Travelers = 20, RequiredLeaders = 2, BookingStatus = BookingStatus.Huidig },
-        new() { Name = "Italië Zomer",           Start = new(2026, 7,  5), End = new(2026, 7, 18), Busses = 2, Travelers = 20, RequiredLeaders = 2, BookingStatus = BookingStatus.Huidig },
-        new() { Name = "Griekenland Zomer",      Start = new(2026, 7, 20), End = new(2026, 7, 30), Busses = 2, Travelers = 22, RequiredLeaders = 2, BookingStatus = BookingStatus.Huidig },
-        new() { Name = "Kroatië Zomer",          Start = new(2026, 8,  3), End = new(2026, 8, 13), Busses = 1, Travelers = 10, RequiredLeaders = 1, BookingStatus = BookingStatus.Huidig },
-        new() { Name = "Montenegro",             Start = new(2026, 8, 17), End = new(2026, 8, 27), Busses = 1, Travelers = 8,  RequiredLeaders = 1, BookingStatus = BookingStatus.Huidig },
+        // ── Zomer / herfst (Periode 2) ────────────────────────────────────────
+        new() { Name = "Italië Zomer",      Start = new(2026, 7,  5), End = new(2026, 7, 18), Busses = 2, Travelers = 20, RequiredLeaders = 2, BookingStatus = BookingStatus.Huidig },
+        new() { Name = "Griekenland Zomer", Start = new(2026, 7, 20), End = new(2026, 7, 30), Busses = 2, Travelers = 22, RequiredLeaders = 2, BookingStatus = BookingStatus.Huidig },
+        new() { Name = "Kroatië Zomer",     Start = new(2026, 8,  3), End = new(2026, 8, 13), Busses = 1, Travelers = 10, RequiredLeaders = 1, BookingStatus = BookingStatus.Huidig },
+        new() { Name = "Montenegro",        Start = new(2026, 8, 17), End = new(2026, 8, 27), Busses = 1, Travelers =  8, RequiredLeaders = 1, BookingStatus = BookingStatus.Huidig },
+        new() { Name = "Zwitserland",       Start = new(2026, 9,  6), End = new(2026, 9, 16), Busses = 1, Travelers = 10, RequiredLeaders = 1, BookingStatus = BookingStatus.Huidig },
+        new() { Name = "Albanië",           Start = new(2026, 9, 20), End = new(2026, 9, 30), Busses = 1, Travelers =  8, RequiredLeaders = 1, BookingStatus = BookingStatus.Huidig },
+        new() { Name = "Noorwegen",         Start = new(2026,10,  4), End = new(2026,10, 14), Busses = 2, Travelers = 16, RequiredLeaders = 2, BookingStatus = BookingStatus.Huidig },
+        new() { Name = "IJsland",           Start = new(2026,10, 18), End = new(2026,10, 28), Busses = 1, Travelers =  8, RequiredLeaders = 1, BookingStatus = BookingStatus.Huidig },
+        new() { Name = "Schotland",         Start = new(2026,11,  1), End = new(2026,11, 11), Busses = 1, Travelers =  9, RequiredLeaders = 1, BookingStatus = BookingStatus.Huidig },
+        new() { Name = "Finland",           Start = new(2026,11, 15), End = new(2026,11, 25), Busses = 1, Travelers =  8, RequiredLeaders = 1, BookingStatus = BookingStatus.Huidig },
 
-        // ── Herfst ─────────────────────────────────────────────────────────────
-        new() { Name = "Zwitserland",            Start = new(2026, 9,  6), End = new(2026, 9, 16), Busses = 1, Travelers = 10, RequiredLeaders = 1, BookingStatus = BookingStatus.Huidig },
-        new() { Name = "Albanië",                Start = new(2026, 9, 20), End = new(2026, 9, 30), Busses = 1, Travelers = 8,  RequiredLeaders = 1, BookingStatus = BookingStatus.Huidig },
-        new() { Name = "Noorwegen",              Start = new(2026,10,  4), End = new(2026,10, 14), Busses = 2, Travelers = 16, RequiredLeaders = 2, BookingStatus = BookingStatus.Huidig },
-        new() { Name = "IJsland",                Start = new(2026,10, 18), End = new(2026,10, 28), Busses = 1, Travelers = 8,  RequiredLeaders = 1, BookingStatus = BookingStatus.Huidig },
-        new() { Name = "Schotland",              Start = new(2026,11,  1), End = new(2026,11, 11), Busses = 1, Travelers = 9,  RequiredLeaders = 1, BookingStatus = BookingStatus.Huidig },
-        new() { Name = "Finland",                Start = new(2026,11, 15), End = new(2026,11, 25), Busses = 1, Travelers = 8,  RequiredLeaders = 1, BookingStatus = BookingStatus.Huidig },
-
-        // ── Edge Cases ─────────────────────────────────────────────────────────
-
-        // Egypte Peak: loopt parallel aan Italië Zomer en Griekenland Zomer.
-        // Vereist 3 leiders → zwaar te staffelen, test capaciteitsplafond.
-        new() { Name = "Egypte Peak",            Start = new(2026, 7,  1), End = new(2026, 7, 28), Busses = 3, Travelers = 30, RequiredLeaders = 3, BookingStatus = BookingStatus.Huidig },
-
-        // Noorwegen Kerst: eindigt op 2 januari 2027.
-        // GEEN enkele actieve reisleider heeft een beschikbaarheidsperiode die
-        // tot 2 jan 2027 reikt → algoritme geeft 'insufficient leaders' waarschuwing.
-        // Toont de edge case "reis is onplanbaar" duidelijk aan de planner.
-        new() { Name = "Noorwegen Kerst",        Start = new(2026,12, 22), End = new(2027, 1,  2), Busses = 2, Travelers = 14, RequiredLeaders = 2, BookingStatus = BookingStatus.Huidig },
+        // ── Edge cases ────────────────────────────────────────────────────────
+        // Loopt parallel aan Italië Zomer + Griekenland Zomer, vereist 3 leiders.
+        new() { Name = "Egypte Peak",       Start = new(2026, 7,  1), End = new(2026, 7, 28), Busses = 3, Travelers = 30, RequiredLeaders = 3, BookingStatus = BookingStatus.Huidig },
+        // Eindigt 2 jan 2027 — geen leider heeft beschikbaarheid t/m die datum.
+        new() { Name = "Noorwegen Kerst",   Start = new(2026,12, 22), End = new(2027, 1,  2), Busses = 2, Travelers = 14, RequiredLeaders = 2, BookingStatus = BookingStatus.Huidig },
     ];
+
+    // ─── PLANNINGSRONDE PERIODE 1 2026 ───────────────────────────────────────────
+
+    private async Task SeedPlanningRoundAsync(Dictionary<string, TravelLeader> leaders)
+    {
+        // De 8 reizen die binnen Periode 1 (1 jan – 30 jun 2026) vallen.
+        var journeyIds = await context.Journey
+            .Where(j => j.Start.Year == 2026 && j.Start <= new DateOnly(2026, 6, 30))
+            .ToDictionaryAsync(j => j.Name, j => j.Id);
+
+        // Shorthand: bouw een preference-lijst op basis van een naam→rank map.
+        List<PlanningRoundPreference> Prefs(Dictionary<string, int> map) =>
+            map
+                .Where(kvp => journeyIds.ContainsKey(kvp.Key))
+                .Select(kvp => new PlanningRoundPreference { JourneyId = journeyIds[kvp.Key], Rank = kvp.Value })
+                .ToList();
+
+        // Shorthand: bouw een participation aan.
+        // Leaders zonder reizen in het datumvenster krijgen Status=Pending.
+        PlanningRoundParticipation Part(string key, Dictionary<string, int> prefMap)
+        {
+            var prefs = Prefs(prefMap);
+            return new PlanningRoundParticipation
+            {
+                TravelLeaderId = leaders[key].Id,
+                Status = prefs.Count > 0 ? ParticipationStatus.Submitted : ParticipationStatus.Pending,
+                SubmittedAt = prefs.Count > 0 ? new DateTime(2026, 2, 10, 10, 0, 0) : null,
+                Preferences = prefs
+            };
+        }
+
+        // ── Voorkeuren per reisleider ────────────────────────────────────────
+        // Rank 1–3 = voorkeur (hoogste prioriteit), Rank 0 = beschikbaar zonder voorkeur.
+        // Alleen reizen binnen het beschikbaarheidsvenster van de leider worden opgegeven.
+        // Leaders die geen reizen hebben in Periode 1 (Gerda jul-sep, Laura jul, Quinten)
+        // leveren een lege map in en krijgen automatisch Status=Pending.
+
+        var participations = new List<PlanningRoundParticipation>
+        {
+            // ── Kerngroep — breed beschikbaar ───────────────────────────────────
+            Part("jan", new()
+            {
+                ["Italië Voorjaar"]   = 1,
+                ["Griekenland Lente"] = 2,
+                ["Spanje Voorjaar"]   = 3,
+                ["Portugal"]          = 0,
+                ["Marokko"]           = 0,
+                ["Kroatië Lente"]     = 0,
+                ["Turkije"]           = 0,
+                ["Spanje Zomer"]      = 0,
+            }),
+            Part("maria", new()
+            {
+                ["Italië Voorjaar"]   = 1,
+                ["Portugal"]          = 2,
+                ["Griekenland Lente"] = 3,
+                ["Spanje Voorjaar"]   = 0,
+                ["Marokko"]           = 0,
+                ["Kroatië Lente"]     = 0,
+                ["Spanje Zomer"]      = 0,
+            }),
+            Part("thomas", new()
+            {
+                ["Marokko"]           = 1,
+                ["Italië Voorjaar"]   = 2,
+                ["Turkije"]           = 3,
+                ["Spanje Voorjaar"]   = 0,
+                ["Portugal"]          = 0,
+                ["Spanje Zomer"]      = 0,
+            }),
+            Part("daan", new()
+            {
+                ["Spanje Voorjaar"]   = 1,
+                ["Kroatië Lente"]     = 2,
+                ["Portugal"]          = 3,
+                ["Marokko"]           = 0,
+                ["Griekenland Lente"] = 0,
+                ["Turkije"]           = 0,
+                ["Spanje Zomer"]      = 0,
+            }),
+            Part("fleur", new()
+            {
+                ["Griekenland Lente"] = 1,
+                ["Italië Voorjaar"]   = 2,
+                ["Kroatië Lente"]     = 3,
+                ["Spanje Voorjaar"]   = 0,
+                ["Portugal"]          = 0,
+                ["Marokko"]           = 0,
+                ["Turkije"]           = 0,
+            }),
+
+            // ── Lentegasten ─────────────────────────────────────────────────────
+            Part("anna", new()       // mrt–jun
+            {
+                ["Spanje Voorjaar"]   = 1,
+                ["Portugal"]          = 2,
+                ["Marokko"]           = 3,
+                ["Italië Voorjaar"]   = 0,
+                ["Turkije"]           = 0,
+            }),
+            Part("clara", new()      // mrt–mei
+            {
+                ["Portugal"]          = 1,
+                ["Marokko"]           = 2,
+                ["Spanje Voorjaar"]   = 3,
+                ["Italië Voorjaar"]   = 0,
+                ["Griekenland Lente"] = 0,
+                ["Kroatië Lente"]     = 0,
+            }),
+            Part("david", new()      // mrt–jun, historisch op max
+            {
+                ["Marokko"]           = 1,
+                ["Griekenland Lente"] = 2,
+                ["Spanje Voorjaar"]   = 3,
+                ["Portugal"]          = 0,
+                ["Italië Voorjaar"]   = 0,
+            }),
+
+            // ── Zomerspecialisten ────────────────────────────────────────────────
+            Part("frank", new()      // jun–sep
+            {
+                ["Turkije"]           = 1,
+                ["Spanje Zomer"]      = 2,
+            }),
+            Part("gerda", new() {}), // jul–sep → geen reizen in Periode 1 → Pending
+            Part("hans", new()       // jun–sep
+            {
+                ["Turkije"]           = 1,
+                ["Spanje Zomer"]      = 2,
+            }),
+
+            // ── Smal venster ─────────────────────────────────────────────────────
+            Part("karel", new()      // 5–25 apr → alleen Marokko (5-15 apr)
+            {
+                ["Marokko"]           = 1,
+            }),
+            Part("laura", new() {}), // 1–21 jul → geen reizen in Periode 1 → Pending
+
+            // ── Bijzondere constraints ────────────────────────────────────────────
+            Part("sebastiaan", new() // MaxTrips=1 → wil precies 1 reis
+            {
+                ["Italië Voorjaar"]   = 1,
+            }),
+            Part("vera", new()       // MinTrips=2, AmountOfTrips=0
+            {
+                ["Portugal"]          = 1,
+                ["Griekenland Lente"] = 2,
+                ["Spanje Voorjaar"]   = 3,
+                ["Marokko"]           = 0,
+                ["Italië Voorjaar"]   = 0,
+            }),
+
+            // ── Geen beschikbaarheid ─────────────────────────────────────────────
+            Part("quinten", new() {}), // Actief maar geen AvailabilityPeriods → Pending
+        };
+
+        var round = new PlanningRound
+        {
+            Name = "Periode 1 2026",
+            Year = 2026,
+            StartDate = new DateOnly(2026, 1, 1),
+            EndDate = new DateOnly(2026, 6, 30),
+            PreferenceDeadline = new DateTime(2026, 2, 15, 23, 59, 59),
+            PublicationDeadline = new DateTime(2026, 3, 1, 23, 59, 59),
+            Participations = participations
+        };
+
+        context.PlanningRounds.Add(round);
+        await context.SaveChangesAsync();
+
+        var submitted = participations.Count(p => p.Status == ParticipationStatus.Submitted);
+        logger.LogInformation(
+            "Planningsronde '{Name}' aangemaakt — {Submitted}/{Total} voorkeuren ingediend, {Journeys} reizen.",
+            round.Name, submitted, participations.Count, journeyIds.Count);
+    }
 }

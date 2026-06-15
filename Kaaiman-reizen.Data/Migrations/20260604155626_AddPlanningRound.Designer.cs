@@ -4,6 +4,7 @@ using Kaaiman_reizen.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Kaaiman_reizen.Data.Migrations
 {
     [DbContext(typeof(MainContext))]
-    partial class MainContextModelSnapshot : ModelSnapshot
+    [Migration("20260604155626_AddPlanningRound")]
+    partial class AddPlanningRound
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -62,12 +65,6 @@ namespace Kaaiman_reizen.Data.Migrations
 
                     b.Property<DateOnly>("End")
                         .HasColumnType("date");
-
-                    b.Property<string>("HangfireJobId")
-                        .HasColumnType("longtext");
-
-                    b.Property<bool>("IsProcessed")
-                        .HasColumnType("tinyint(1)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -409,24 +406,6 @@ namespace Kaaiman_reizen.Data.Migrations
                             IsActive = true,
                             Key = "PreferencesEnabled",
                             Weight = 1
-                        },
-                        new
-                        {
-                            Id = 6,
-                            Description = "Versturen van reisnotificaties voor aankomende reizen.",
-                            IsActive = true,
-                            Key = "JourneyReminderEnabled",
-                            Value = "true",
-                            Weight = 1
-                        },
-                        new
-                        {
-                            Id = 7,
-                            Description = "Aantal dagen voor vertrek waarop reisnotificaties worden verstuurd (komma-gescheiden).",
-                            IsActive = true,
-                            Key = "JourneyReminderDays",
-                            Value = "7,3",
-                            Weight = 1
                         });
                 });
 
@@ -438,7 +417,7 @@ namespace Kaaiman_reizen.Data.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("AmountOfTrips")
+                    b.Property<int>("AmountOfTrips")
                         .HasColumnType("int");
 
                     b.Property<string>("Email")
@@ -448,10 +427,10 @@ namespace Kaaiman_reizen.Data.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("tinyint(1)");
 
-                    b.Property<int?>("MaxTrips")
+                    b.Property<int>("MaxTrips")
                         .HasColumnType("int");
 
-                    b.Property<int?>("MinTrips")
+                    b.Property<int>("MinTrips")
                         .HasColumnType("int");
 
                     b.Property<string>("Name")

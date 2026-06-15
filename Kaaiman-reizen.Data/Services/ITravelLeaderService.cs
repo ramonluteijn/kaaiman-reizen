@@ -12,6 +12,7 @@ public interface ITravelLeaderService
     Task<TravelLeader?> GetTravelLeaderByIdAsync(int id, CancellationToken cancellationToken = default);
     Task<TravelLeader?> GetTravelLeaderByEmailAsync(string email, CancellationToken cancellationToken = default);
     Task UpdateTravelLeaderAsync(TravelLeader leader, CancellationToken cancellationToken = default);
+    Task UpdateProfileAsync(int leaderId, int? amountOfTrips, int? minTrips, int? maxTrips, string note, bool isActive, CancellationToken cancellationToken = default);
 
     Task<List<TravelLeader>> GetTravelLeadersWithoutPreferencesAsync();
     Task<List<TravelLeader>> GetTravelLeadersWithoutJourneysAsync(int year);
@@ -21,4 +22,5 @@ public interface ITravelLeaderService
     Task<IReadOnlyList<Journey>> GetJourneysOfTravelLeaderAsync(TravelLeader leader, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<TravelLeader>> GetJourneyAvailabilityForAllTravelLeadersAsync();
     Task<int> ArchiveAndResetPreferredDestinationsAsync(int? planningVersionId, CancellationToken cancellationToken = default);
+    Task IncrementTravelLeadersExperience(int journeyId, CancellationToken cancellationToken);
 }
