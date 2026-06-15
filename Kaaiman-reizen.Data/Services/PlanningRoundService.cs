@@ -14,15 +14,6 @@ public class PlanningRoundService : IPlanningRoundService
     public async Task<PlanningRound> CreateAsync(string name, int year, DateOnly startDate, DateOnly endDate,
         DateTime preferenceDeadline, DateTime publicationDeadline, CancellationToken ct = default)
     {
-        var overlapping = await _db.PlanningRounds
-            .Where(r => r.StartDate <= endDate && startDate <= r.EndDate)
-            .FirstOrDefaultAsync(ct);
-
-        if (overlapping is not null)
-            throw new InvalidOperationException(
-                $"De datumreeks overlapt met bestaande ronde \"{overlapping.Name}\" " +
-                $"({overlapping.StartDate:d MMM} – {overlapping.EndDate:d MMM yyyy}). Kies een andere periode.");
-
         var activeLeaders = await _db.TravelLeader
             .Where(l => l.IsActive)
             .Select(l => new { l.Id, l.MinTrips, l.MaxTrips, l.Note })
