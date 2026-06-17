@@ -3,6 +3,8 @@ using Kaaiman_reizen.Data.Enum;
 using Kaaiman_reizen.Data.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
+using MudBlazor;
+using System.ComponentModel.DataAnnotations;
 
 namespace Kaaiman_reizen.Components.Pages.TravelLeaders.Preferences;
 
@@ -18,6 +20,7 @@ public partial class Preferences : ComponentBase
 
     // Profile form state
     private TravelLeader _model = new();
+    private ProfileFormModel _profileForm = new();
     private bool _loading = true;
     private bool _notFound = false;
     private bool _isSaving = false;
@@ -65,6 +68,7 @@ public partial class Preferences : ComponentBase
         }
 
         _model = item;
+        _profileForm = ProfileFormModel.FromTravelLeader(item);
 
         var allJourneys = await JourneyService.GetJourneysAsync();
         _journeys = allJourneys
@@ -178,29 +182,24 @@ public partial class Preferences : ComponentBase
     {
         _profileSuccessMessage = null;
         _profileErrorMessage = null;
-
-        if (_model.AmountOfTrips is null || _model.MinTrips is null || _model.MaxTrips is null)
-        {
-            _profileErrorMessage = "Vul alle verplichte velden in.";
-            return;
-        }
-        if (_model.MinTrips > _model.MaxTrips)
-        {
-            _profileErrorMessage = "Minimaal aantal reizen mag niet groter zijn dan maximaal.";
-            return;
-        }
-
         _isSaving = true;
         try
         {
             await LeaderService.UpdateProfileAsync(
                 _model.Id,
-                _model.AmountOfTrips,
-                _model.MinTrips,
-                _model.MaxTrips,
-                _model.Note ?? string.Empty,
-                _model.IsActive);
-            _profileSuccessMessage = "Profiel opgeslagen.";
+                _profileForm.AmountOfTrips,
+                _profileForm.MinTrips,
+                _profileForm.MaxTrips,
+                _profileForm.Note,
+                _profileForm.IsActive);
+
+            _model.AmountOfTrips = _profileForm.AmountOfTrips;
+            _model.MinTrips = _profileForm.MinTrips;
+            _model.MaxTrips = _profileForm.MaxTrips;
+            _model.Note = _profileForm.Note;
+            _model.IsActive = _profileForm.IsActive;
+
+            _profileErrorMessage = "Profiel opgeslagen.";
         }
         catch
         {
@@ -210,5 +209,43 @@ public partial class Preferences : ComponentBase
         {
             _isSaving = false;
         }
+    }
+
+    private sealed class ProfileFormModel : IValidatableObject
+    {
+        [Required(ErrorMessage = "Aantal reizen gereisd is verplicht.")]
+        [Range(0, int.MaxValue, ErrorMessage = "Aantal reizen moet groter of gelijk aan 0 zijn.")]
+        public int? AmountOfTrips { get; set; }
+
+        [Required(ErrorMessage = "Minimaal aantal reizen per jaar is verplicht.")]
+        [Range(0, int.MaxValue, ErrorMessage = "Minimaal aantal reizen moet groter of gelijk aan 0 zijn.")]
+        public int? MinTrips { get; set; }
+
+        [Required(ErrorMessage = "Maximaal aantal reizen per jaar is verplicht.")]
+        [Range(0, int.MaxValue, ErrorMessage = "Maximaal aantal reizen moet groter of gelijk aan 0 zijn.")]
+        public int? MaxTrips { get; set; }
+
+        public string Note { get; set; } = string.Empty;
+
+        public bool IsActive { get; set; } = true;
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (MinTrips.HasValue && MaxTrips.HasValue && MinTrips > MaxTrips)
+            {
+                yield return new ValidationResult(
+                    "Minimaal aantal reizen mag niet groter zijn dan maximaal aantal reizen.",
+                    [nameof(MinTrips), nameof(MaxTrips)]);
+            }
+        }
+
+        public static ProfileFormModel FromTravelLeader(TravelLeader leader) => new()
+        {
+            AmountOfTrips = leader.AmountOfTrips,
+            MinTrips = leader.MinTrips,
+            MaxTrips = leader.MaxTrips,
+            Note = leader.Note,
+            IsActive = leader.IsActive,
+        };
     }
 }
