@@ -4,6 +4,7 @@ using Kaaiman_reizen.Data.Enum;
 using Kaaiman_reizen.Data.Services;
 using Kaaiman_reizen.Services;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 
 namespace Kaaiman_reizen.Tests.Services
 {
@@ -134,6 +135,48 @@ namespace Kaaiman_reizen.Tests.Services
             var results = leader.Validate(new System.ComponentModel.DataAnnotations.ValidationContext(leader)).ToList();
             Assert.Single(results);
             Assert.Contains("Minimaal aantal reizen mag niet groter zijn dan maximaal aantal reizen", results[0].ErrorMessage);
+        }
+
+        [Fact]
+        public void DataAnnotations_Should_Return_Error_When_Email_Misses_DomainExtension()
+        {
+            var leader = new TravelLeader
+            {
+                Name = "Email Test",
+                Email = "jantje@jantje",
+                PhoneNumber = "0612345678",
+                AmountOfTrips = 1,
+                MinTrips = 0,
+                MaxTrips = 2
+            };
+
+            var validationContext = new ValidationContext(leader);
+            var results = new List<ValidationResult>();
+            var isValid = Validator.TryValidateObject(leader, validationContext, results, validateAllProperties: true);
+
+            Assert.False(isValid);
+            Assert.Contains(results, r => r.MemberNames.Contains(nameof(TravelLeader.Email)));
+        }
+
+        [Fact]
+        public void DataAnnotations_Should_Accept_Email_With_DomainExtension()
+        {
+            var leader = new TravelLeader
+            {
+                Name = "Email Test",
+                Email = "jantje@jantje.nl",
+                PhoneNumber = "0612345678",
+                AmountOfTrips = 1,
+                MinTrips = 0,
+                MaxTrips = 2
+            };
+
+            var validationContext = new ValidationContext(leader);
+            var results = new List<ValidationResult>();
+            var isValid = Validator.TryValidateObject(leader, validationContext, results, validateAllProperties: true);
+
+            Assert.True(isValid);
+            Assert.DoesNotContain(results, r => r.MemberNames.Contains(nameof(TravelLeader.Email)));
         }
 
         [Fact]
