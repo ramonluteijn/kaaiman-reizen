@@ -3,7 +3,6 @@ using Kaaiman_reizen.Data.Enum;
 using Kaaiman_reizen.Data.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
-using MudBlazor;
 using System.ComponentModel.DataAnnotations;
 
 namespace Kaaiman_reizen.Components.Pages.TravelLeaders.Preferences;
@@ -199,7 +198,7 @@ public partial class Preferences : ComponentBase
             _model.Note = _profileForm.Note;
             _model.IsActive = _profileForm.IsActive;
 
-            _profileErrorMessage = "Profiel opgeslagen.";
+            _profileSuccessMessage = "Profiel opgeslagen.";
         }
         catch
         {
