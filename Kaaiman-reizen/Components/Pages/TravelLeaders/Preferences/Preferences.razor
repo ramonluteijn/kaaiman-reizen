@@ -47,6 +47,7 @@ else
                 var round = participation.PlanningRound;
                 var isExpanded = _expandedParticipationId == participation.Id;
                 var isSubmitted = participation.Status == ParticipationStatus.Submitted;
+                var canEdit = CanEditRoundPreferences(round);
 
                 <div class="card mb-2">
                     <div class="card-body py-3">
@@ -66,18 +67,28 @@ else
                                 @if (isSubmitted && !isExpanded)
                                 {
                                     <span class="badge bg-success">Ingediend ✓</span>
-                                    <MudButton Size="Size.Small" Variant="Variant.Text"
-                                               OnClick="@(() => ExpandRound(participation, _journeys))">
-                                        Aanpassen
-                                    </MudButton>
+                                    @if (canEdit)
+                                    {
+                                        <MudButton Size="Size.Small" Variant="Variant.Text"
+                                                   OnClick="@(() => ExpandRound(participation, _journeys))">
+                                            Aanpassen
+                                        </MudButton>
+                                    }
                                 }
                                 else if (!isExpanded)
                                 {
-                                    <span class="badge bg-warning text-dark">Nog niet ingediend</span>
-                                    <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary"
-                                               OnClick="@(() => ExpandRound(participation, _journeys))">
-                                        Voorkeuren invullen
-                                    </MudButton>
+                                    @if (canEdit)
+                                    {
+                                        <span class="badge bg-warning text-dark">Nog niet ingediend</span>
+                                        <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary"
+                                                   OnClick="@(() => ExpandRound(participation, _journeys))">
+                                            Voorkeuren invullen
+                                        </MudButton>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Deadline verlopen</span>
+                                    }
                                 }
                                 else
                                 {

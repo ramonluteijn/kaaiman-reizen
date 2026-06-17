@@ -35,6 +35,7 @@ public partial class Preferences : ComponentBase
     private List<Journey> _journeysForRound = [];
     private bool _submittingRound;
     private string? _roundSuccessMessage;
+    private bool _isPlanner;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -45,9 +46,9 @@ public partial class Preferences : ComponentBase
 
         var authState = await _authProvider.GetAuthenticationStateAsync();
         var user = authState.User;
-        bool isPlanner = user.IsInRole("Planner");
+        _isPlanner = user.IsInRole("Planner");
 
-        if (isPlanner && Id.HasValue && Id.Value > 0)
+        if (_isPlanner && Id.HasValue && Id.Value > 0)
         {
             item = await LeaderService.GetTravelLeaderByIdAsync(Id.Value);
         }
@@ -80,6 +81,9 @@ public partial class Preferences : ComponentBase
     }
 
     // ── Round preferences ────────────────────────────────────────────
+
+    private bool CanEditRoundPreferences(PlanningRound round) =>
+        _isPlanner || !round.IsPreferenceDeadlinePassed();
 
     private void ExpandRound(PlanningRoundParticipation participation, List<Journey> allJourneys)
     {
@@ -142,28 +146,43 @@ public partial class Preferences : ComponentBase
     private async Task HandleRoundSubmit(int participationId)
     {
         _submittingRound = true;
+        _roundSuccessMessage = null;
 
-        var preferences = new List<(int JourneyId, int Rank)>();
-
-        for (int i = 0; i < 3; i++)
+        try
         {
-            if (_roundPreferredJourneyIds[i].HasValue)
-                preferences.Add((_roundPreferredJourneyIds[i]!.Value, i + 1));
-        }
+            var preferences = new List<(int JourneyId, int Rank)>();
 
-        var top3Ids = _roundPreferredJourneyIds.Where(id => id.HasValue).Select(id => id!.Value).ToHashSet();
-        foreach (var jid in _roundAvailableJourneyIds)
+            for (int i = 0; i < 3; i++)
+            {
+                if (_roundPreferredJourneyIds[i].HasValue)
+                    preferences.Add((_roundPreferredJourneyIds[i]!.Value, i + 1));
+            }
+
+            var top3Ids = _roundPreferredJourneyIds.Where(id => id.HasValue).Select(id => id!.Value).ToHashSet();
+            foreach (var jid in _roundAvailableJourneyIds)
+            {
+                if (!top3Ids.Contains(jid))
+                    preferences.Add((jid, 0));
+            }
+
+            await RoundService.SavePreferencesAsync(participationId, preferences, allowAfterDeadline: _isPlanner);
+
+            _participations = (await RoundService.GetParticipationsForLeaderAsync(_model.Id)).ToList();
+            _expandedParticipationId = null;
+            _roundSuccessMessage = "Voorkeuren ingediend!";
+        }
+        catch (InvalidOperationException ex)
         {
-            if (!top3Ids.Contains(jid))
-                preferences.Add((jid, 0));
+            _snackbar.Add(ex.Message, Severity.Warning);
         }
-
-        await RoundService.SavePreferencesAsync(participationId, preferences);
-
-        _participations = (await RoundService.GetParticipationsForLeaderAsync(_model.Id)).ToList();
-        _expandedParticipationId = null;
-        _roundSuccessMessage = "Voorkeuren ingediend!";
-        _submittingRound = false;
+        catch
+        {
+            _snackbar.Add("Opslaan mislukt. Probeer het opnieuw.", Severity.Error);
+        }
+        finally
+        {
+            _submittingRound = false;
+        }
     }
 
     // ── Global profile form ──────────────────────────────────────────

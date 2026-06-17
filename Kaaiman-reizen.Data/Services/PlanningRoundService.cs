@@ -79,13 +79,17 @@ public class PlanningRoundService : IPlanningRoundService
             .ToListAsync(ct);
     }
 
-    public async Task SavePreferencesAsync(int participationId, IReadOnlyList<(int JourneyId, int Rank)> preferences, CancellationToken ct = default)
+    public async Task SavePreferencesAsync(int participationId, IReadOnlyList<(int JourneyId, int Rank)> preferences, bool allowAfterDeadline = false, CancellationToken ct = default)
     {
         var participation = await _db.PlanningRoundParticipations
             .Include(p => p.Preferences)
+            .Include(p => p.PlanningRound)
             .FirstOrDefaultAsync(p => p.Id == participationId, ct);
 
         if (participation is null) return;
+
+        if (!allowAfterDeadline && participation.PlanningRound.IsPreferenceDeadlinePassed())
+            throw new InvalidOperationException("De deadline voor het indienen van voorkeuren is verlopen.");
 
         _db.RemoveRange(participation.Preferences);
         participation.Preferences = preferences.Select(p => new PlanningRoundPreference

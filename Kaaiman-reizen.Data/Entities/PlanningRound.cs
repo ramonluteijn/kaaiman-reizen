@@ -12,4 +12,7 @@ public class PlanningRound
 
     public List<PlanningRoundParticipation> Participations { get; set; } = [];
     public List<PlanningVersion> Versions { get; set; } = [];
+
+    public bool IsPreferenceDeadlinePassed(DateTime? utcNow = null) =>
+        (utcNow ?? DateTime.UtcNow).Date > PreferenceDeadline.Date;
 }
