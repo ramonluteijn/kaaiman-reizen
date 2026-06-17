@@ -17,15 +17,12 @@ public class TravelLeader : IValidatableObject
     [ValidPhoneNumber]
     public string PhoneNumber { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Aantal reizen is verplicht.")]
     [Range(0, int.MaxValue, ErrorMessage = "Aantal reizen moet groter of gelijk aan 0 zijn.")]
     public int? AmountOfTrips { get; set; }
 
-    [Required(ErrorMessage = "Minimaal aantal reizen is verplicht.")]
     [Range(0, int.MaxValue, ErrorMessage = "Minimaal aantal reizen moet groter of gelijk aan 0 zijn.")]
     public int? MinTrips { get; set; }
 
-    [Required(ErrorMessage = "Maximaal aantal reizen is verplicht.")]
     [Range(0, int.MaxValue, ErrorMessage = "Maximaal aantal reizen moet groter of gelijk aan 0 zijn.")]
     public int? MaxTrips { get; set; }
 
