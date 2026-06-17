@@ -13,9 +13,9 @@
     <Tooltip>
         <strong>Reisvoorkeuren — hoe werkt dit?</strong>
         <ul>
-            <li>Stel hier uw profiel in: aantal reizen, min/max per jaar en een notitie.</li>
+            <li>Stel hier uw profiel in: aantal reizen gereisd en actief/inactief.</li>
             <li>Vul per planningsronde uw voorkeuren in via de kaarten bovenaan.</li>
-            <li>Klik op "Opslaan" om uw profiel te bewaren.</li>
+            <li>Per ronde kun je ook je min/max en notitie invullen.</li>
         </ul>
     </Tooltip>
 </h1>
@@ -181,6 +181,24 @@ else
                                     }
                                 </div>
 
+                                <h6 class="mt-4">Voorkeuren voor deze ronde</h6>
+                                <p class="text-muted small">Deze waarden gelden alleen voor deze planningsronde.</p>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Minimaal aantal reizen</label>
+                                    <InputNumber class="form-control" @bind-Value="_roundMinTrips" />
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Maximaal aantal reizen</label>
+                                    <InputNumber class="form-control" @bind-Value="_roundMaxTrips" />
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Notitie voor planner</label>
+                                    <InputTextArea class="form-control" @bind-Value="_roundNote" />
+                                </div>
+
                                 <div class="d-flex gap-2 mt-3">
                                     <MudButton Variant="Variant.Filled"
                                                Color="Color.Primary"
@@ -216,23 +234,6 @@ else
                     <label class="form-label">Aantal reizen gereisd</label>
                     <InputNumber class="form-control" @bind-Value="_profileForm.AmountOfTrips" />
                     <ValidationMessage For="() => _profileForm.AmountOfTrips" />
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Minimaal aantal reizen per jaar</label>
-                    <InputNumber class="form-control" @bind-Value="_profileForm.MinTrips" />
-                    <ValidationMessage For="() => _profileForm.MinTrips" />
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Maximaal aantal reizen per jaar</label>
-                    <InputNumber class="form-control" @bind-Value="_profileForm.MaxTrips" />
-                    <ValidationMessage For="() => _profileForm.MaxTrips" />
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Notitie</label>
-                    <InputTextArea class="form-control" @bind-Value="_profileForm.Note" />
                 </div>
 
                 <div class="form-check mb-3">

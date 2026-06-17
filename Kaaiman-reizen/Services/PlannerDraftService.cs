@@ -27,25 +27,29 @@ public class PlannerDraftService : IPlannerDraftService
         var settings = Data.Rules.CheckRules.FromRules(rules);
 
         // Gebruik ronde-specifieke voorkeuren (PlanningRoundPreference) i.p.v. globale PreferredDestinations
-        var prefsByLeader = round.Participations
-            .ToDictionary(p => p.TravelLeaderId, p => p.Preferences);
+        var participationByLeader = round.Participations
+            .ToDictionary(p => p.TravelLeaderId, p => p);
 
         var activeLeaderInputs = leaders
             .Where(l => l.IsActive)
             .Select(l =>
             {
-                var prefs = prefsByLeader.TryGetValue(l.Id, out var p)
+                var participation = participationByLeader.TryGetValue(l.Id, out var p)
                     ? p
+                    : null;
+
+                var prefs = participation is not null
+                    ? participation.Preferences
                     : (IEnumerable<PlanningRoundPreference>)[];
 
                 return new PlannerLeaderInput
                 {
                     Id = l.Id,
                     Name = l.Name,
-                    Note = l.Note,
+                    Note = participation?.Note ?? string.Empty,
                     AmountOfTrips = l.AmountOfTrips ?? 0,
-                    MinTrips = 0,
-                    MaxTrips = l.MaxTrips ?? 0,
+                    MinTrips = participation?.MinTrips ?? 0,
+                    MaxTrips = participation?.MaxTrips ?? 0,
                     PreferredDestinations = prefs.ToDictionary(x => x.JourneyId, x => x.Rank),
                     PreferredDestinationDetails = prefs
                         .Where(x => x.Rank >= 1 && x.Rank <= 3)
