@@ -198,30 +198,34 @@ else
     @* ── Profiel & globale voorkeuren ── *@
     <div class="card">
         <div class="card-body">
-            <EditForm Model="_model" OnSubmit="HandleSubmit" FormName="PreferencesForm">
+            <EditForm Model="_profileForm" OnValidSubmit="HandleSubmit" FormName="PreferencesForm">
+                <DataAnnotationsValidator />
 
                 <div class="mb-3">
                     <label class="form-label">Aantal reizen gereisd</label>
-                    <InputNumber class="form-control" @bind-Value="_model.AmountOfTrips" />
+                    <InputNumber class="form-control" @bind-Value="_profileForm.AmountOfTrips" />
+                    <ValidationMessage For="() => _profileForm.AmountOfTrips" />
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">Minimaal aantal reizen per jaar</label>
-                    <InputNumber class="form-control" @bind-Value="_model.MinTrips" />
+                    <InputNumber class="form-control" @bind-Value="_profileForm.MinTrips" />
+                    <ValidationMessage For="() => _profileForm.MinTrips" />
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">Maximaal aantal reizen per jaar</label>
-                    <InputNumber class="form-control" @bind-Value="_model.MaxTrips" />
+                    <InputNumber class="form-control" @bind-Value="_profileForm.MaxTrips" />
+                    <ValidationMessage For="() => _profileForm.MaxTrips" />
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">Notitie</label>
-                    <InputTextArea class="form-control" @bind-Value="_model.Note" />
+                    <InputTextArea class="form-control" @bind-Value="_profileForm.Note" />
                 </div>
 
                 <div class="form-check mb-3">
-                    <InputCheckbox class="form-check-input" @bind-Value="_model.IsActive" />
+                    <InputCheckbox class="form-check-input" @bind-Value="_profileForm.IsActive" />
                     <label class="form-check-label">Actief</label>
                 </div>
 

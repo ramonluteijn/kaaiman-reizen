@@ -12,7 +12,7 @@
 
                 @if ((Journeys.Any() || AvailabilityPeriods.Any()) && ShowNavigation)
                 {
-                    <div class="cal-pills-bar">
+                    <div class="d-none d-md-flex cal-pills-bar">
                         @foreach (var group in Journeys
                                                     .OrderBy(j => j.Start)
                                                     .GroupBy(j => new { j.Start.Year, j.Start.Month }))
