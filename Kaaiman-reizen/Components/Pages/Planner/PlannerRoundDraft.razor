@@ -54,7 +54,7 @@
                 </MudText>
                 <MudDivider Vertical="true" FlexItem="true" />
                 <MudChip T="string" Color="@ParticipationColor" Size="Size.Small">
-                    @SubmittedCount / @TotalCount ingediend@(UnavailableCount > 0 ? $" · {UnavailableCount} afgemeld" : "")
+                    @(SubmittedCount + UnavailableCount) / @TotalCount ingediend@(UnavailableCount > 0 ? $" · {UnavailableCount} afgemeld" : "")
                 </MudChip>
             </div>
         </MudPaper>
