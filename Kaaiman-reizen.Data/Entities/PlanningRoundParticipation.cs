@@ -7,6 +7,9 @@ public class PlanningRoundParticipation
     public int Id { get; set; }
     public int PlanningRoundId { get; set; }
     public int TravelLeaderId { get; set; }
+    public int? MinTrips { get; set; }
+    public int? MaxTrips { get; set; }
+    public string Note { get; set; } = string.Empty;
     public ParticipationStatus Status { get; set; } = ParticipationStatus.Pending;
     public DateTime? SubmittedAt { get; set; }
 

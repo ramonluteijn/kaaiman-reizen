@@ -144,7 +144,7 @@ public partial class PlannerRoundDraft
             ConflictJourneyName: conflictJourney is not null
                 ? $"{conflictJourney.Name} ({DateDisplay.FormatDate(conflictJourney.Start)}-{DateDisplay.FormatDate(conflictJourney.End)})"
                 : string.Empty,
-            ExceedsMaxTrips: currentCount >= leader.MaxTrips,
+            ExceedsMaxTrips: leader.MaxTrips > 0 && currentCount >= leader.MaxTrips,
             CurrentAssignments: currentCount,
             MaxTrips: leader.MaxTrips,
             ValidationReason: validationReason

@@ -32,9 +32,13 @@ public partial class Preferences : ComponentBase
     private int? _expandedParticipationId;
     private int?[] _roundPreferredJourneyIds = new int?[3];
     private HashSet<int> _roundAvailableJourneyIds = new();
+    private int? _roundMinTrips;
+    private int? _roundMaxTrips;
+    private string _roundNote = string.Empty;
     private List<Journey> _journeysForRound = [];
     private bool _submittingRound;
     private string? _roundSuccessMessage;
+    private bool _isPlanner;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -45,9 +49,9 @@ public partial class Preferences : ComponentBase
 
         var authState = await _authProvider.GetAuthenticationStateAsync();
         var user = authState.User;
-        bool isPlanner = user.IsInRole("Planner");
+        _isPlanner = user.IsInRole("Planner");
 
-        if (isPlanner && Id.HasValue && Id.Value > 0)
+        if (_isPlanner && Id.HasValue && Id.Value > 0)
         {
             item = await LeaderService.GetTravelLeaderByIdAsync(Id.Value);
         }
@@ -81,6 +85,9 @@ public partial class Preferences : ComponentBase
 
     // ── Round preferences ────────────────────────────────────────────
 
+    private bool CanEditRoundPreferences(PlanningRound round) =>
+        _isPlanner || !round.IsPreferenceDeadlinePassed();
+
     private void ExpandRound(PlanningRoundParticipation participation, List<Journey> allJourneys)
     {
         _expandedParticipationId = participation.Id;
@@ -96,6 +103,9 @@ public partial class Preferences : ComponentBase
 
         _roundPreferredJourneyIds = new int?[3];
         _roundAvailableJourneyIds = new HashSet<int>();
+        _roundMinTrips = participation.MinTrips;
+        _roundMaxTrips = participation.MaxTrips;
+        _roundNote = participation.Note;
 
         foreach (var pref in participation.Preferences)
         {
@@ -141,29 +151,56 @@ public partial class Preferences : ComponentBase
 
     private async Task HandleRoundSubmit(int participationId)
     {
+        if (_roundMinTrips.HasValue && _roundMaxTrips.HasValue && _roundMinTrips > _roundMaxTrips)
+        {
+            _snackbar.Add("Minimaal aantal reizen mag niet groter zijn dan maximaal aantal reizen.", Severity.Warning);
+            return;
+        }
+
         _submittingRound = true;
+        _roundSuccessMessage = null;
 
-        var preferences = new List<(int JourneyId, int Rank)>();
-
-        for (int i = 0; i < 3; i++)
+        try
         {
-            if (_roundPreferredJourneyIds[i].HasValue)
-                preferences.Add((_roundPreferredJourneyIds[i]!.Value, i + 1));
-        }
+            var preferences = new List<(int JourneyId, int Rank)>();
 
-        var top3Ids = _roundPreferredJourneyIds.Where(id => id.HasValue).Select(id => id!.Value).ToHashSet();
-        foreach (var jid in _roundAvailableJourneyIds)
+            for (int i = 0; i < 3; i++)
+            {
+                if (_roundPreferredJourneyIds[i].HasValue)
+                    preferences.Add((_roundPreferredJourneyIds[i]!.Value, i + 1));
+            }
+
+            var top3Ids = _roundPreferredJourneyIds.Where(id => id.HasValue).Select(id => id!.Value).ToHashSet();
+            foreach (var jid in _roundAvailableJourneyIds)
+            {
+                if (!top3Ids.Contains(jid))
+                    preferences.Add((jid, 0));
+            }
+
+            await RoundService.SavePreferencesAsync(
+                participationId,
+                preferences,
+                _roundMinTrips,
+                _roundMaxTrips,
+                _roundNote,
+                allowAfterDeadline: _isPlanner);
+
+            _participations = (await RoundService.GetParticipationsForLeaderAsync(_model.Id)).ToList();
+            _expandedParticipationId = null;
+            _roundSuccessMessage = "Voorkeuren ingediend!";
+        }
+        catch (InvalidOperationException ex)
         {
-            if (!top3Ids.Contains(jid))
-                preferences.Add((jid, 0));
+            _snackbar.Add(ex.Message, Severity.Warning);
         }
-
-        await RoundService.SavePreferencesAsync(participationId, preferences);
-
-        _participations = (await RoundService.GetParticipationsForLeaderAsync(_model.Id)).ToList();
-        _expandedParticipationId = null;
-        _roundSuccessMessage = "Voorkeuren ingediend!";
-        _submittingRound = false;
+        catch
+        {
+            _snackbar.Add("Opslaan mislukt. Probeer het opnieuw.", Severity.Error);
+        }
+        finally
+        {
+            _submittingRound = false;
+        }
     }
 
     // ── Global profile form ──────────────────────────────────────────
@@ -176,15 +213,9 @@ public partial class Preferences : ComponentBase
             await LeaderService.UpdateProfileAsync(
                 _model.Id,
                 _profileForm.AmountOfTrips,
-                _profileForm.MinTrips,
-                _profileForm.MaxTrips,
-                _profileForm.Note,
                 _profileForm.IsActive);
 
             _model.AmountOfTrips = _profileForm.AmountOfTrips;
-            _model.MinTrips = _profileForm.MinTrips;
-            _model.MaxTrips = _profileForm.MaxTrips;
-            _model.Note = _profileForm.Note;
             _model.IsActive = _profileForm.IsActive;
 
             _snackbar.Add("Profiel opgeslagen.", Severity.Success);
@@ -199,40 +230,17 @@ public partial class Preferences : ComponentBase
         }
     }
 
-    private sealed class ProfileFormModel : IValidatableObject
+    private sealed class ProfileFormModel
     {
         [Required(ErrorMessage = "Aantal reizen gereisd is verplicht.")]
         [Range(0, int.MaxValue, ErrorMessage = "Aantal reizen moet groter of gelijk aan 0 zijn.")]
         public int? AmountOfTrips { get; set; }
 
-        [Required(ErrorMessage = "Minimaal aantal reizen per jaar is verplicht.")]
-        [Range(0, int.MaxValue, ErrorMessage = "Minimaal aantal reizen moet groter of gelijk aan 0 zijn.")]
-        public int? MinTrips { get; set; }
-
-        [Required(ErrorMessage = "Maximaal aantal reizen per jaar is verplicht.")]
-        [Range(0, int.MaxValue, ErrorMessage = "Maximaal aantal reizen moet groter of gelijk aan 0 zijn.")]
-        public int? MaxTrips { get; set; }
-
-        public string Note { get; set; } = string.Empty;
-
         public bool IsActive { get; set; } = true;
-
-        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
-        {
-            if (MinTrips.HasValue && MaxTrips.HasValue && MinTrips > MaxTrips)
-            {
-                yield return new ValidationResult(
-                    "Minimaal aantal reizen mag niet groter zijn dan maximaal aantal reizen.",
-                    [nameof(MinTrips), nameof(MaxTrips)]);
-            }
-        }
 
         public static ProfileFormModel FromTravelLeader(TravelLeader leader) => new()
         {
             AmountOfTrips = leader.AmountOfTrips,
-            MinTrips = leader.MinTrips,
-            MaxTrips = leader.MaxTrips,
-            Note = leader.Note,
             IsActive = leader.IsActive,
         };
     }
