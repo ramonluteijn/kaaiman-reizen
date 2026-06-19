@@ -359,7 +359,7 @@ public class PlanningRoundServiceTests
         await service.MarkUnavailableAsync(participation.Id);
         Assert.Equal(ParticipationStatus.Unavailable, (await db.PlanningRoundParticipations.FindAsync(participation.Id))!.Status);
 
-        await service.SavePreferencesAsync(participation.Id, [(journey.Id, 1)], null, null, string.Empty);
+        await service.SavePreferencesAsync(participation.Id, [(journey.Id, 1)], null, null, string.Empty, allowAfterDeadline: true);
 
         var updated = await db.PlanningRoundParticipations
             .Include(p => p.Preferences)
@@ -401,7 +401,7 @@ public class PlanningRoundServiceTests
         await service.MarkUnavailableAsync(participation.Id);
 
         // Re-submit with only one preference
-        await service.SavePreferencesAsync(participation.Id, [(journey.Id, 0)], null, null, string.Empty);
+        await service.SavePreferencesAsync(participation.Id, [(journey.Id, 0)], null, null, string.Empty, allowAfterDeadline: true);
 
         Assert.Equal(1, await db.PlanningRoundPreferences.CountAsync());
     }
