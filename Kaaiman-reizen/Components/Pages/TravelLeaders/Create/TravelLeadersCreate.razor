@@ -12,9 +12,8 @@
         <strong>Nieuwe reisleider — hoe werkt dit?</strong>
         <ul>
             <li>Vul naam, e-mailadres en telefoonnummer in.</li>
-            <li>Geef aan hoeveel reizen deze reisleider gemiddeld kan begeleiden.</li>
-            <li>Stel het minimum en maximum per jaar in.</li>
-            <li>Gebruik de notitie voor extra opmerkingen en zet de reisleider actief of inactief.</li>
+            <li>Geef aan hoeveel reizen ervaring deze reisleider heeft.</li>
+            <li>Zet de reisleider actief of inactief.</li>
             <li>Klik op "Opslaan" om het profiel aan te maken.</li>
         </ul>
     </Tooltip>
@@ -58,23 +57,6 @@
                     <label class="form-label">Aantal reizen ervaring</label>
                     <InputNumber class="form-control" @bind-Value="_model.AmountOfTrips" />
                     <ValidationMessage For="() => _model.AmountOfTrips" />
-                </div>
-
-                <div class="px-3 pb-3">
-                    <label class="form-label">Minimaal aantal reizen per jaar</label>
-                    <InputNumber class="form-control" @bind-Value="_model.MinTrips" />
-                    <ValidationMessage For="() => _model.MinTrips" />
-                </div>
-
-                <div class="px-3 pb-3">
-                    <label class="form-label">Maximaal aantal reizen per jaar</label>
-                    <InputNumber class="form-control" @bind-Value="_model.MaxTrips" />
-                    <ValidationMessage For="() => _model.MaxTrips" />
-                </div>
-
-                <div class="px-3 pb-3">
-                    <label class="form-label">Notitie</label>
-                    <InputTextArea class="form-control" @bind-Value="_model.Note" />
                 </div>
             </details>
 

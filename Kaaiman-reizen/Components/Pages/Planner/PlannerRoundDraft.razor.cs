@@ -48,10 +48,7 @@ public partial class PlannerRoundDraft : ComponentBase
     private IReadOnlyList<TravelLeader> _availibilityPeriods = [];
 
     private bool CanPublish =>
-        _request is not null && _result is not null && _result.IsSuccess &&
-        _request.Journeys.All(j =>
-            _result.JourneyAssignments.TryGetValue(j.Id, out var asgns) &&
-            asgns.Count >= j.RequiredLeaders);
+        _request is not null && _result is not null && _result.IsSuccess;
 
     private int SubmittedCount => _round?.Participations.Count(p => p.Status == ParticipationStatus.Submitted) ?? 0;
     private int UnavailableCount => _round?.Participations.Count(p => p.Status == ParticipationStatus.Unavailable) ?? 0;

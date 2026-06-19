@@ -1,6 +1,7 @@
 using Kaaiman_reizen.Data.Entities;
 using Kaaiman_reizen.Data.Enum;
 using Kaaiman_reizen.Data.Services;
+using Kaaiman_reizen.Data.Dtos;
 using Kaaiman_reizen.Exports;
 using Kaaiman_reizen.Helpers;
 using Microsoft.AspNetCore.Components;
@@ -39,7 +40,7 @@ public partial class Home : ComponentBase
 
     private IReadOnlyList<PlanningRound> _rounds = [];
     private List<TravelLeader> _travelLeadersWithoutJourneys = [];
-    private List<TravelLeader> _travelLeadersWithNotes = [];
+    private List<ParticipationNoteEntry> _travelLeadersWithNotes = [];
     private List<Journey> _journeysWithoutTravelLeaders = [];
     private List<OverlapData> _travelLeadersWithOverlappingJourneys = [];
 
@@ -68,7 +69,7 @@ public partial class Home : ComponentBase
         {
             _rounds = await RoundService.GetAllAsync();
             _travelLeadersWithoutJourneys = await TravelLeaderService.GetTravelLeadersWithoutJourneysAsync(_selectedYear);
-            _travelLeadersWithNotes = await TravelLeaderService.GetTravelLeadersWithNotesAsync();
+            _travelLeadersWithNotes = (await RoundService.GetParticipationNotesAsync()).ToList();
             _journeysWithoutTravelLeaders = await TravelLeaderService.GetJourneysWithoutTravelLeadersAsync(_selectedYear);
             _travelLeadersWithOverlappingJourneys = await TravelLeaderService.GetTravelLeadersWithOverlappingJourneys();
 

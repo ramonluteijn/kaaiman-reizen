@@ -472,9 +472,13 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
         PlanningRoundParticipation Part(string key, Dictionary<string, int> prefMap)
         {
             var prefs = Prefs(prefMap);
+            var leader = leaders[key];
             return new PlanningRoundParticipation
             {
-                TravelLeaderId = leaders[key].Id,
+                TravelLeaderId = leader.Id,
+                MinTrips = leader.MinTrips,
+                MaxTrips = leader.MaxTrips,
+                Note = leader.Note,
                 Status = prefs.Count > 0 ? ParticipationStatus.Submitted : ParticipationStatus.Pending,
                 SubmittedAt = prefs.Count > 0 ? new DateTime(2026, 2, 10, 10, 0, 0) : null,
                 Preferences = prefs
