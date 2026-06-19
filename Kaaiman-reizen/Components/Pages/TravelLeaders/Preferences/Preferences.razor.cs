@@ -153,64 +153,60 @@ public partial class Preferences : ComponentBase
 
     private async Task HandleRoundSubmit(int participationId)
     {
-        if (_roundMinTrips.HasValue && _roundMaxTrips.HasValue && _roundMinTrips > _roundMaxTrips)
-        {
-            _snackbar.Add("Minimaal aantal reizen mag niet groter zijn dan maximaal aantal reizen.", Severity.Warning);
-            return;
-        }
-
         _submittingRound = true;
         _roundSuccessMessage = null;
+        _profileErrorMessage = null;
 
-        if (_roundFullyUnavailable)
-        {
-            await RoundService.MarkUnavailableAsync(participationId);
-        }
-        else
-        {
-            var preferences = new List<(int JourneyId, int Rank)>();
         try
         {
-            var preferences = new List<(int JourneyId, int Rank)>();
-
-            for (int i = 0; i < 3; i++)
+            if (_roundMinTrips.HasValue && _roundMaxTrips.HasValue && _roundMinTrips > _roundMaxTrips)
             {
-                if (_roundPreferredJourneyIds[i].HasValue)
-                    preferences.Add((_roundPreferredJourneyIds[i]!.Value, i + 1));
+                _profileErrorMessage = "Minimaal aantal reizen mag niet groter zijn dan maximaal aantal reizen.";
+                return;
             }
 
-            var top3Ids = _roundPreferredJourneyIds.Where(id => id.HasValue).Select(id => id!.Value).ToHashSet();
-            foreach (var jid in _roundAvailableJourneyIds)
+            if (_roundFullyUnavailable)
             {
-                if (!top3Ids.Contains(jid))
-                    preferences.Add((jid, 0));
+                await RoundService.MarkUnavailableAsync(participationId);
+                _roundSuccessMessage = "Afgemeld voor deze ronde.";
+            }
+            else
+            {
+                var preferences = new List<(int JourneyId, int Rank)>();
+
+                for (int i = 0; i < 3; i++)
+                {
+                    if (_roundPreferredJourneyIds[i].HasValue)
+                        preferences.Add((_roundPreferredJourneyIds[i]!.Value, i + 1));
+                }
+
+                var top3Ids = _roundPreferredJourneyIds.Where(id => id.HasValue).Select(id => id!.Value).ToHashSet();
+                foreach (var jid in _roundAvailableJourneyIds)
+                {
+                    if (!top3Ids.Contains(jid))
+                        preferences.Add((jid, 0));
+                }
+
+                await RoundService.SavePreferencesAsync(
+                    participationId,
+                    preferences,
+                    _roundMinTrips,
+                    _roundMaxTrips,
+                    _roundNote,
+                    allowAfterDeadline: _isPlanner);
+                _roundSuccessMessage = "Voorkeuren ingediend!";
             }
 
-            await RoundService.SavePreferencesAsync(participationId, preferences);
-        }
-            await RoundService.SavePreferencesAsync(
-                participationId,
-                preferences,
-                _roundMinTrips,
-                _roundMaxTrips,
-                _roundNote,
-                allowAfterDeadline: _isPlanner);
-
-        _participations = (await RoundService.GetParticipationsForLeaderAsync(_model.Id)).ToList();
-        _expandedParticipationId = null;
-        _roundSuccessMessage = _roundFullyUnavailable ? "Afgemeld voor deze ronde." : "Voorkeuren ingediend!";
-        _submittingRound = false;
             _participations = (await RoundService.GetParticipationsForLeaderAsync(_model.Id)).ToList();
             _expandedParticipationId = null;
-            _roundSuccessMessage = "Voorkeuren ingediend!";
         }
         catch (InvalidOperationException ex)
         {
-            _snackbar.Add(ex.Message, Severity.Warning);
+            _profileErrorMessage = ex.Message;
         }
         catch
         {
-            _snackbar.Add("Opslaan mislukt. Probeer het opnieuw.", Severity.Error);
+            _profileErrorMessage = "Opslaan mislukt. Probeer het opnieuw.";
         }
         finally
         {
