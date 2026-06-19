@@ -13,9 +13,9 @@
     <Tooltip>
         <strong>Reisvoorkeuren — hoe werkt dit?</strong>
         <ul>
-            <li>Stel hier uw profiel in: aantal reizen, min/max per jaar en een notitie.</li>
+            <li>Stel hier uw profiel in: aantal reizen gereisd en actief/inactief.</li>
             <li>Vul per planningsronde uw voorkeuren in via de kaarten bovenaan.</li>
-            <li>Klik op "Opslaan" om uw profiel te bewaren.</li>
+            <li>Per ronde kun je ook je min/max en notitie invullen.</li>
         </ul>
     </Tooltip>
 </h1>
@@ -47,6 +47,7 @@ else
                 var round = participation.PlanningRound;
                 var isExpanded = _expandedParticipationId == participation.Id;
                 var isSubmitted = participation.Status == ParticipationStatus.Submitted;
+                var canEdit = CanEditRoundPreferences(round);
 
                 <div class="card mb-2">
                     <div class="card-body py-3">
@@ -66,18 +67,28 @@ else
                                 @if (isSubmitted && !isExpanded)
                                 {
                                     <span class="badge bg-success">Ingediend ✓</span>
-                                    <MudButton Size="Size.Small" Variant="Variant.Text"
-                                               OnClick="@(() => ExpandRound(participation, _journeys))">
-                                        Aanpassen
-                                    </MudButton>
+                                    @if (canEdit)
+                                    {
+                                        <MudButton Size="Size.Small" Variant="Variant.Text"
+                                                   OnClick="@(() => ExpandRound(participation, _journeys))">
+                                            Aanpassen
+                                        </MudButton>
+                                    }
                                 }
                                 else if (!isExpanded)
                                 {
-                                    <span class="badge bg-warning text-dark">Nog niet ingediend</span>
-                                    <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary"
-                                               OnClick="@(() => ExpandRound(participation, _journeys))">
-                                        Voorkeuren invullen
-                                    </MudButton>
+                                    @if (canEdit)
+                                    {
+                                        <span class="badge bg-warning text-dark">Nog niet ingediend</span>
+                                        <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary"
+                                                   OnClick="@(() => ExpandRound(participation, _journeys))">
+                                            Voorkeuren invullen
+                                        </MudButton>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Deadline verlopen</span>
+                                    }
                                 }
                                 else
                                 {
@@ -170,6 +181,24 @@ else
                                     }
                                 </div>
 
+                                <h6 class="mt-4">Voorkeuren voor deze ronde</h6>
+                                <p class="text-muted small">Deze waarden gelden alleen voor deze planningsronde.</p>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Minimaal aantal reizen</label>
+                                    <InputNumber class="form-control" @bind-Value="_roundMinTrips" />
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Maximaal aantal reizen</label>
+                                    <InputNumber class="form-control" @bind-Value="_roundMaxTrips" />
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Notitie voor planner</label>
+                                    <InputTextArea class="form-control" @bind-Value="_roundNote" />
+                                </div>
+
                                 <div class="d-flex gap-2 mt-3">
                                     <MudButton Variant="Variant.Filled"
                                                Color="Color.Primary"
@@ -205,23 +234,6 @@ else
                     <label class="form-label">Aantal reizen gereisd</label>
                     <InputNumber class="form-control" @bind-Value="_profileForm.AmountOfTrips" />
                     <ValidationMessage For="() => _profileForm.AmountOfTrips" />
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Minimaal aantal reizen per jaar</label>
-                    <InputNumber class="form-control" @bind-Value="_profileForm.MinTrips" />
-                    <ValidationMessage For="() => _profileForm.MinTrips" />
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Maximaal aantal reizen per jaar</label>
-                    <InputNumber class="form-control" @bind-Value="_profileForm.MaxTrips" />
-                    <ValidationMessage For="() => _profileForm.MaxTrips" />
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Notitie</label>
-                    <InputTextArea class="form-control" @bind-Value="_profileForm.Note" />
                 </div>
 
                 <div class="form-check mb-3">
