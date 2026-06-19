@@ -9,7 +9,7 @@
         <strong>Reisleider bewerken — hoe werkt dit?</strong>
         <ul>
             <li>Pas de naam, contactgegevens en reisgegevens van de reisleider aan.</li>
-            <li>Werk het aantal reizen, minimum, maximum en notitie bij.</li>
+            <li>Werk het aantal reizen ervaring en de actief-status bij.</li>
             <li>Zet de reisleider actief of inactief indien nodig.</li>
             <li>Klik op "Opslaan" om de wijzigingen te bewaren.</li>
         </ul>
@@ -64,23 +64,6 @@
                         <label class="form-label">Aantal reizen ervaring</label>
                         <InputNumber class="form-control" @bind-Value="_model.AmountOfTrips" />
                         <ValidationMessage For="() => _model.AmountOfTrips" />
-                    </div>
-
-                    <div class="px-3 pb-3">
-                        <label class="form-label">Minimaal aantal reizen per jaar</label>
-                        <InputNumber class="form-control" @bind-Value="_model.MinTrips" />
-                        <ValidationMessage For="() => _model.MinTrips" />
-                    </div>
-
-                    <div class="px-3 pb-3">
-                        <label class="form-label">Maximaal aantal reizen per jaar</label>
-                        <InputNumber class="form-control" @bind-Value="_model.MaxTrips" />
-                        <ValidationMessage For="() => _model.MaxTrips" />
-                    </div>
-
-                    <div class="px-3 pb-3">
-                        <label class="form-label">Notitie</label>
-                        <InputTextArea class="form-control" @bind-Value="_model.Note" />
                     </div>
                 </details>
 

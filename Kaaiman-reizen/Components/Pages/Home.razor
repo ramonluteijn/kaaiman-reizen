@@ -285,7 +285,10 @@ else
                                                 {
                                                     <MudListItem Icon="@Icons.Material.Filled.ChatBubbleOutline" IconColor="Color.Primary">
                                                         <div class="d-flex flex-column">
-                                                            <MudText Typo="Typo.subtitle2"><b>@leader.Name</b></MudText>
+                                                            <MudText Typo="Typo.subtitle2"><b>@leader.TravelLeaderName</b></MudText>
+                                                            <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                                                @leader.PlanningRoundName
+                                                            </MudText>
                                                             <MudText Typo="Typo.body2" Class="mud-text-secondary italic">
                                                                 "@leader.Note"
                                                             </MudText>
