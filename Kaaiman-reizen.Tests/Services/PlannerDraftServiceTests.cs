@@ -258,6 +258,59 @@ public class PlannerDraftServiceTests
     }
 
     [Fact]
+    public void GenerateDraft_ReturnsError_WhenAllLeadersAreUnavailable()
+    {
+        // Na MarkUnavailableAsync zijn de voorkeuren gewist; de leader komt niet in request.Leaders.
+        // GenerateDraft ontvangt dan een lege Leaders-lijst.
+        var request = new PlannerDraftRequest
+        {
+            Journeys = [
+                new PlannerJourneyInput
+                {
+                    Id = 1, Name = "Italië", RequiredLeaders = 1,
+                    Start = new DateOnly(2026, 6, 1), End = new DateOnly(2026, 6, 10)
+                }
+            ],
+            Leaders = []
+        };
+
+        var result = _service.GenerateDraft(request);
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains("Geen reisleiders", result.ErrorMessage);
+    }
+
+    [Fact]
+    public void GenerateDraft_AssignsAvailableLeader_WhenOtherLeaderIsUnavailable()
+    {
+        // Leider A is afgemeld (niet in Leaders), leider B is beschikbaar.
+        var request = new PlannerDraftRequest
+        {
+            Journeys = [
+                new PlannerJourneyInput
+                {
+                    Id = 1, Name = "Noorwegen", RequiredLeaders = 1,
+                    Start = new DateOnly(2026, 7, 1), End = new DateOnly(2026, 7, 10)
+                }
+            ],
+            Leaders = [
+                new PlannerLeaderInput
+                {
+                    Id = 2, Name = "Leider B", MaxTrips = 5,
+                    PreferredDestinations = new Dictionary<int, int> { { 1, 1 } }
+                }
+            ]
+        };
+
+        var result = _service.GenerateDraft(request);
+
+        Assert.True(result.IsSuccess);
+        Assert.True(result.JourneyAssignments.TryGetValue(1, out var assignments));
+        Assert.Single(assignments);
+        Assert.Equal(2, assignments[0].LeaderId);
+    }
+
+    [Fact]
     public void GenerateDraft_IgnoresMinMaxConstraints_WhenDisabled()
     {
         var request = new PlannerDraftRequest
