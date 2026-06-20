@@ -3,7 +3,6 @@ using Kaaiman_reizen.Data.Enum;
 using Kaaiman_reizen.Data.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
-using MudBlazor;
 using System.ComponentModel.DataAnnotations;
 
 namespace Kaaiman_reizen.Components.Pages.TravelLeaders.Preferences;
@@ -15,7 +14,6 @@ public partial class Preferences : ComponentBase
     [Inject] private IPlanningRoundService RoundService { get; set; } = default!;
     [Inject] private NavigationManager Navigation { get; set; } = default!;
     [Inject] private AuthenticationStateProvider _authProvider { get; set; } = default!;
-    [Inject] private ISnackbar _snackbar { get; set; } = default!;
 
     [Parameter] public int? Id { get; set; }
 
@@ -35,10 +33,13 @@ public partial class Preferences : ComponentBase
     private int? _roundMinTrips;
     private int? _roundMaxTrips;
     private string _roundNote = string.Empty;
+    private bool _roundFullyUnavailable;
     private List<Journey> _journeysForRound = [];
     private bool _submittingRound;
     private string? _roundSuccessMessage;
     private bool _isPlanner;
+    private string? _profileSuccessMessage;
+    private string? _profileErrorMessage;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -92,6 +93,7 @@ public partial class Preferences : ComponentBase
     {
         _expandedParticipationId = participation.Id;
         _roundSuccessMessage = null;
+        _roundFullyUnavailable = participation.Status == ParticipationStatus.Unavailable;
 
         var round = participation.PlanningRound;
         _journeysForRound = allJourneys
@@ -151,51 +153,60 @@ public partial class Preferences : ComponentBase
 
     private async Task HandleRoundSubmit(int participationId)
     {
-        if (_roundMinTrips.HasValue && _roundMaxTrips.HasValue && _roundMinTrips > _roundMaxTrips)
-        {
-            _snackbar.Add("Minimaal aantal reizen mag niet groter zijn dan maximaal aantal reizen.", Severity.Warning);
-            return;
-        }
-
         _submittingRound = true;
         _roundSuccessMessage = null;
+        _profileErrorMessage = null;
 
         try
         {
-            var preferences = new List<(int JourneyId, int Rank)>();
-
-            for (int i = 0; i < 3; i++)
+            if (_roundMinTrips.HasValue && _roundMaxTrips.HasValue && _roundMinTrips > _roundMaxTrips)
             {
-                if (_roundPreferredJourneyIds[i].HasValue)
-                    preferences.Add((_roundPreferredJourneyIds[i]!.Value, i + 1));
+                _profileErrorMessage = "Minimaal aantal reizen mag niet groter zijn dan maximaal aantal reizen.";
+                return;
             }
 
-            var top3Ids = _roundPreferredJourneyIds.Where(id => id.HasValue).Select(id => id!.Value).ToHashSet();
-            foreach (var jid in _roundAvailableJourneyIds)
+            if (_roundFullyUnavailable)
             {
-                if (!top3Ids.Contains(jid))
-                    preferences.Add((jid, 0));
+                await RoundService.MarkUnavailableAsync(participationId);
+                _roundSuccessMessage = "Afgemeld voor deze ronde.";
             }
+            else
+            {
+                var preferences = new List<(int JourneyId, int Rank)>();
 
-            await RoundService.SavePreferencesAsync(
-                participationId,
-                preferences,
-                _roundMinTrips,
-                _roundMaxTrips,
-                _roundNote,
-                allowAfterDeadline: _isPlanner);
+                for (int i = 0; i < 3; i++)
+                {
+                    if (_roundPreferredJourneyIds[i].HasValue)
+                        preferences.Add((_roundPreferredJourneyIds[i]!.Value, i + 1));
+                }
+
+                var top3Ids = _roundPreferredJourneyIds.Where(id => id.HasValue).Select(id => id!.Value).ToHashSet();
+                foreach (var jid in _roundAvailableJourneyIds)
+                {
+                    if (!top3Ids.Contains(jid))
+                        preferences.Add((jid, 0));
+                }
+
+                await RoundService.SavePreferencesAsync(
+                    participationId,
+                    preferences,
+                    _roundMinTrips,
+                    _roundMaxTrips,
+                    _roundNote,
+                    allowAfterDeadline: _isPlanner);
+                _roundSuccessMessage = "Voorkeuren ingediend!";
+            }
 
             _participations = (await RoundService.GetParticipationsForLeaderAsync(_model.Id)).ToList();
             _expandedParticipationId = null;
-            _roundSuccessMessage = "Voorkeuren ingediend!";
         }
         catch (InvalidOperationException ex)
         {
-            _snackbar.Add(ex.Message, Severity.Warning);
+            _profileErrorMessage = ex.Message;
         }
         catch
         {
-            _snackbar.Add("Opslaan mislukt. Probeer het opnieuw.", Severity.Error);
+            _profileErrorMessage = "Opslaan mislukt. Probeer het opnieuw.";
         }
         finally
         {
@@ -207,6 +218,8 @@ public partial class Preferences : ComponentBase
 
     private async Task HandleSubmit()
     {
+        _profileSuccessMessage = null;
+        _profileErrorMessage = null;
         _isSaving = true;
         try
         {
@@ -218,11 +231,11 @@ public partial class Preferences : ComponentBase
             _model.AmountOfTrips = _profileForm.AmountOfTrips;
             _model.IsActive = _profileForm.IsActive;
 
-            _snackbar.Add("Profiel opgeslagen.", Severity.Success);
+            _profileSuccessMessage = "Profiel opgeslagen.";
         }
         catch
         {
-            _snackbar.Add("Opslaan mislukt. Probeer het opnieuw.", Severity.Error);
+            _profileErrorMessage = "Opslaan mislukt. Probeer het opnieuw.";
         }
         finally
         {

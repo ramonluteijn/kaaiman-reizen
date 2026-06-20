@@ -51,7 +51,12 @@ public partial class PlannerRoundDraft : ComponentBase
         _request is not null && _result is not null && _result.IsSuccess;
 
     private int SubmittedCount => _round?.Participations.Count(p => p.Status == ParticipationStatus.Submitted) ?? 0;
+    private int UnavailableCount => _round?.Participations.Count(p => p.Status == ParticipationStatus.Unavailable) ?? 0;
     private int TotalCount => _round?.Participations.Count ?? 0;
+    private HashSet<int> UnavailableLeaderIds => _round?.Participations
+        .Where(p => p.Status == ParticipationStatus.Unavailable)
+        .Select(p => p.TravelLeaderId)
+        .ToHashSet() ?? [];
 
     private int DaysUntilPreferenceDeadline =>
         (int)(_round!.PreferenceDeadline.Date - DateTime.UtcNow.Date).TotalDays;
@@ -73,7 +78,7 @@ public partial class PlannerRoundDraft : ComponentBase
         get
         {
             if (_round is null || TotalCount == 0) return Color.Default;
-            var ratio = (double)SubmittedCount / TotalCount;
+            var ratio = (double)(SubmittedCount + UnavailableCount) / TotalCount;
             if (ratio >= 1.0) return Color.Success;
             if (ratio >= 0.5) return Color.Warning;
             return Color.Error;
@@ -168,6 +173,17 @@ public partial class PlannerRoundDraft : ComponentBase
         ClearSaveMessage();
         StateHasChanged();
 
+        if (!autoUpdated)
+        {
+            var freshRound = await _roundService.GetByIdAsync(RoundId);
+            if (freshRound is not null)
+            {
+                _round = freshRound;
+                _request = await _draftService.BuildRequestAsync(_round);
+                _availibilityPeriods = BuildAvailabilityFromRound();
+            }
+        }
+
         await Task.Delay(50);
         _result = await Task.Run(() => _draftService.GenerateDraft(_request));
         _isGenerating = false;
@@ -195,10 +211,14 @@ public partial class PlannerRoundDraft : ComponentBase
 
             foreach (var assignment in journeyGroup)
             {
+                var isAssigneeUnavailable = _round!.Participations
+                    .Any(p => p.TravelLeaderId == assignment.TravelLeaderId
+                           && p.Status == ParticipationStatus.Unavailable);
+
                 var leader = _request.Leaders.FirstOrDefault(l => l.Id == assignment.TravelLeaderId);
-                if (leader is null)
+                if (leader is null || isAssigneeUnavailable)
                 {
-                    result.JourneyWarnings[journey.Id] = $"Let op: {assignment.TravelLeader.Name} is automatisch verwijderd omdat deze inactief is of geen voorkeuren heeft.";
+                    result.JourneyWarnings[journey.Id] = $"Let op: {assignment.TravelLeader?.Name ?? "Reisleider"} is automatisch verwijderd omdat deze inactief is, geen voorkeuren heeft of zich heeft afgemeld.";
                     isStale = true;
                     continue;
                 }

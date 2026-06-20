@@ -20,5 +20,6 @@ public interface IPlanningRoundService
         bool allowAfterDeadline = false,
         CancellationToken ct = default);
     Task<IReadOnlyList<ParticipationNoteEntry>> GetParticipationNotesAsync(CancellationToken ct = default);
+    Task MarkUnavailableAsync(int participationId, CancellationToken ct = default);
     Task DeleteAsync(int id, CancellationToken ct = default);
 }

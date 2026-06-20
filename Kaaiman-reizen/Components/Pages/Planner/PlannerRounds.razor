@@ -34,6 +34,7 @@ else
         {
             var status = GetStatus(round);
             var submitted = SubmittedCount(round);
+            var unavailable = UnavailableCount(round);
             var total = round.Participations.Count;
             var journeyCount = JourneyCount(round);
 
@@ -57,7 +58,7 @@ else
                             </span>
                             <span>
                                 <i class="bi bi-people me-1"></i>
-                                @submitted / @total ingediend
+                                @submitted / @total ingediend@(unavailable > 0 ? $" · {unavailable} afgemeld" : "")
                             </span>
                         </div>
 
