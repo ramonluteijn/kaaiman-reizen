@@ -28,7 +28,8 @@ public class JourneyReminderHostedService : BackgroundService
             try
             {
                 // Get interval from config (default: 86400 seconds = 24 hours)
-                var intervalSeconds = _configuration.GetValue<int>("JourneyReminder:IntervalSeconds", 86400);
+                var intervalSeconds = _configuration.GetValue<int?>("Email:JourneyReminder:IntervalSeconds")
+                    ?? _configuration.GetValue<int>("JourneyReminder:IntervalSeconds", 86400);
                 var delay = TimeSpan.FromSeconds(intervalSeconds);
 
                 _logger.LogInformation("JourneyReminderHostedService: Next run in {Seconds} seconds", intervalSeconds);

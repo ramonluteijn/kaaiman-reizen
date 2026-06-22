@@ -131,9 +131,11 @@ builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
 builder.Services.AddScoped<AccountService, AccountService>();
 
-builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
+builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("Email:SmtpSettings"));
 
-if (builder.Environment.IsDevelopment())
+var useConsoleEmailSender = builder.Configuration.GetValue("Email:UseConsoleSender", builder.Environment.IsDevelopment());
+
+if (useConsoleEmailSender)
 {
     builder.Services.AddTransient<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender, ConsoleEmailSender>();
     builder.Services.AddTransient<IEmailSender<ApplicationUser>, ConsoleEmailSender>();
