@@ -98,8 +98,7 @@ public partial class Preferences : ComponentBase
         var round = participation.PlanningRound;
         _journeysForRound = allJourneys
             .Where(j => j.BookingStatus == BookingStatus.Huidig
-                     && j.Start >= round.StartDate
-                     && j.Start <= round.EndDate)
+                     && j.PlanningRoundId == round.Id)
             .OrderBy(j => j.Start)
             .ToList();
 

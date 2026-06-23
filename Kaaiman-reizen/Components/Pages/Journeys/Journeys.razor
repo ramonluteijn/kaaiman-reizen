@@ -233,12 +233,11 @@
 
     private int FreeJourneyCount => _journeys.Count(j =>
         j.BookingStatus == BookingStatus.Huidig &&
-        !_rounds.Any(r => j.Start >= r.StartDate && j.Start <= r.EndDate));
+        j.PlanningRoundId == null);
 
     private int JourneyCountForRound(PlanningRound round) =>
         _journeys.Count(j => j.BookingStatus == BookingStatus.Huidig
-                           && j.Start >= round.StartDate
-                           && j.Start <= round.EndDate);
+                           && j.PlanningRoundId == round.Id);
 
     private void SetTab(int tab) => _activeTab = tab;
 
@@ -270,12 +269,11 @@
         0 => _journeys,
         1 => _journeys.Where(j =>
                 j.BookingStatus == BookingStatus.Huidig &&
-                !_rounds.Any(r => j.Start >= r.StartDate && j.Start <= r.EndDate)),
+                j.PlanningRoundId == null),
         _ when _activeTab - 2 < _rounds.Count =>
             _journeys.Where(j =>
                 j.BookingStatus == BookingStatus.Huidig &&
-                j.Start >= _rounds[_activeTab - 2].StartDate &&
-                j.Start <= _rounds[_activeTab - 2].EndDate),
+                j.PlanningRoundId == _rounds[_activeTab - 2].Id),
         _ => _journeys
     };
 
