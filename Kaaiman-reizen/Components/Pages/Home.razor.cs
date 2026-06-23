@@ -168,7 +168,7 @@ public partial class Home : ComponentBase
             {
                 StepStatus.Completed => SublabelStyle.GreenBadge,
                 StepStatus.Attention => SublabelStyle.RedText,
-                _                    => SublabelStyle.OrangeText
+                _ => SublabelStyle.OrangeText
             },
             ButtonText = step2Status == StepStatus.Current ? "Herinner" : null,
             ButtonVariant = ButtonVariant.Primary,
