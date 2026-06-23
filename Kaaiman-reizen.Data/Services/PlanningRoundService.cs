@@ -56,6 +56,8 @@ public class PlanningRoundService : IPlanningRoundService
     {
         return await _db.PlanningRounds
             .Include(r => r.Participations)
+                .ThenInclude(p => p.TravelLeader)
+            .Include(r => r.Participations)
                 .ThenInclude(p => p.Preferences)
             .Include(r => r.Versions)
             .OrderByDescending(r => r.Year)

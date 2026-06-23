@@ -39,20 +39,15 @@ public partial class Home : ComponentBase
     private int _selectedYear = DateTime.UtcNow.Year;
     private bool _publishedPlanning;
     private List<Journey> _plannedJourneysWithTravelLeaders = [];
-
     private List<Journey> _publishedJourneys = [];
 
-    private int _userTimezoneOffsetMinutes;
-    private bool _userTimezoneOffsetLoaded;
-
-    private List<Notification> _notifications = [];
-    private string _currentUserId = string.Empty;
-
-    private IReadOnlyList<PlanningRound> _rounds = [];
     private List<TravelLeader> _travelLeadersWithoutJourneys = [];
     private List<ParticipationNoteEntry> _travelLeadersWithNotes = [];
     private List<Journey> _journeysWithoutTravelLeaders = [];
     private List<OverlapData> _travelLeadersWithOverlappingJourneys = [];
+
+    private int _userTimezoneOffsetMinutes;
+    private bool _userTimezoneOffsetLoaded;
 
     protected override async Task OnInitializedAsync()
     {
@@ -157,6 +152,12 @@ public partial class Home : ComponentBase
         else
             step2Status = StepStatus.Attention;
 
+        var pendingLeaders = round.Participations
+            .Where(p => p.Status == ParticipationStatus.Pending)
+            .Select(p => p.TravelLeader?.Name ?? $"Reisleider {p.TravelLeaderId}")
+            .OrderBy(n => n)
+            .ToList();
+
         var step2 = new PlanStep
         {
             Number = 2,
@@ -171,7 +172,8 @@ public partial class Home : ComponentBase
             },
             ButtonText = step2Status == StepStatus.Current ? "Herinner" : null,
             ButtonVariant = ButtonVariant.Primary,
-            ButtonHref = $"/planner/rounds/{round.Id}/draft"
+            ButtonHref = $"/planner/rounds/{round.Id}/draft",
+            PendingLeaders = pendingLeaders
         };
 
         // Step 3: Voorkeuren controleren

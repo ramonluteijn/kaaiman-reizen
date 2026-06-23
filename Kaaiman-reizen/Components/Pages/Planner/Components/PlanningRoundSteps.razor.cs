@@ -5,6 +5,11 @@ namespace Kaaiman_reizen.Components.Pages.Planner.Components;
 public partial class PlanningRoundSteps : ComponentBase
 {
     [Parameter, EditorRequired] public StepPlanModel Model { get; set; } = default!;
+
+    private int? _expandedPendingStep;
+
+    private void TogglePending(int stepNumber) =>
+        _expandedPendingStep = _expandedPendingStep == stepNumber ? null : stepNumber;
 }
 
 public class StepPlanModel
@@ -30,4 +35,5 @@ public class PlanStep
     public string? ButtonText { get; init; }
     public ButtonVariant ButtonVariant { get; init; }
     public string? ButtonHref { get; init; }
+    public List<string> PendingLeaders { get; init; } = [];
 }

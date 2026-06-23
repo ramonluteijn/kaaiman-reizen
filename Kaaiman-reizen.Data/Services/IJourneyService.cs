@@ -9,6 +9,7 @@ public interface IJourneyService
     Task<IReadOnlyList<Entities.Journey>> GetJourneysWithPublishedPlanningAsync(int year, CancellationToken cancellationToken = default);
     Task AddJourneyAsync(Entities.Journey journey, List<int> selectedLeaders, CancellationToken cancellationToken = default);
     Task DeleteJourneyAsync(int id, CancellationToken cancellationToken = default);
+    Task DeleteJourneysAsync(IEnumerable<int> ids, CancellationToken cancellationToken = default);
     Task<Entities.Journey?> GetJourneyByIdAsync(int id, CancellationToken cancellationToken = default);
     Task<Entities.Journey?> GetJourneyByIdWithPublishedPlanningAsync(int id, CancellationToken cancellationToken = default);
     Task UpdateJourneyAsync(Entities.Journey journey, List<int> selectedLeaders, CancellationToken cancellationToken = default);

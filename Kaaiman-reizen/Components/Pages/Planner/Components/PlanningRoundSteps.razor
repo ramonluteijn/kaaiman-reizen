@@ -76,6 +76,24 @@
                         {
                             <div class="sp-sublabel @sublabelCls">@step.Sublabel</div>
                         }
+                        @if (step.PendingLeaders.Count > 0 && step.Status != StepStatus.Completed)
+                        {
+                            <button class="sp-pending-toggle" @onclick="() => TogglePending(step.Number)">
+                                @step.PendingLeaders.Count niet ingediend
+                                <span class="material-icons sp-pending-icon">
+                                    @(_expandedPendingStep == step.Number ? "expand_less" : "expand_more")
+                                </span>
+                            </button>
+                            @if (_expandedPendingStep == step.Number)
+                            {
+                                <div class="sp-pending-list">
+                                    @foreach (var name in step.PendingLeaders)
+                                    {
+                                        <div class="sp-pending-name">@name</div>
+                                    }
+                                </div>
+                            }
+                        }
                         @if (step.ButtonText is not null)
                         {
                             @if (step.ButtonHref is not null)

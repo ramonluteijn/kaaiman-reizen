@@ -31,6 +31,14 @@
                 @bind:event="oninput" />
 
             <div class="d-flex gap-2 flex-wrap-reverse">
+                @if (_selectedIds.Any())
+                {
+                    <MudButton Variant="Variant.Filled" Color="Color.Error"
+                               StartIcon="@Icons.Material.Filled.DeleteSweep"
+                               OnClick="OpenBulkDeleteModal">
+                        Verwijder geselecteerde (@_selectedIds.Count)
+                    </MudButton>
+                }
                 <AuthorizeView Roles="Planner">
                     <MudButton Variant="Variant.Outlined" Color="Color.Primary"
                                StartIcon="@Icons.Material.Filled.EventNote"
@@ -87,6 +95,9 @@
         <Table TItem="Journey" Items="FilteredJourneys" OnDelete="@OnDelete" Path="journeys"
                EditHrefSelector="@GetEditHref">
             <HeaderContent>
+                <th class="journey-check-column">
+                    <input type="checkbox" checked="@IsAllSelected" @onchange="ToggleSelectAll" />
+                </th>
                 <th class="journey-name-column" @onclick='() => SortBy("Name")'>
                     Reis @(GetSortIcon("Name"))
                 </th>
@@ -110,6 +121,10 @@
                 </th>
             </HeaderContent>
             <RowTemplate>
+                <td class="journey-check-column">
+                    <input type="checkbox" checked="@_selectedIds.Contains(context.Id)"
+                           @onchange="() => ToggleSelect(context)" />
+                </td>
                 <td class="journey-name-cell">
                     <span class="fw-semibold">@context.Name</span>
                 </td>
@@ -199,6 +214,20 @@
     </Actions>
 </AlertModal>
 
+@* Alert modal for bulk delete *@
+<AlertModal IsOpen="@_isBulkDeleteModalOpen" IsOpenChanged="@(v => _isBulkDeleteModalOpen = v)" Title="Reizen verwijderen"
+            Severity="Severity.Warning" Dismissible="true" CloseOnBackdropClick="true"
+            Message="@($"Weet je zeker dat je {_selectedIds.Count} reizen wilt verwijderen? Dit kan niet ongedaan worden gemaakt.")">
+    <Actions>
+        <MudButton Variant="Variant.Text" OnClick="() => _isBulkDeleteModalOpen = false">
+            Annuleren
+        </MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="ConfirmBulkDeleteAsync">
+            Verwijder @_selectedIds.Count reizen
+        </MudButton>
+    </Actions>
+</AlertModal>
+
 @* Alert modal for bulk import *@
 <AlertModal IsOpen="@_isImportModalOpen" IsOpenChanged="HandleDeleteModalChanged" Title="Reizen importeren"
             Severity="Severity.Info" Dismissible="true" CloseOnBackdropClick="true" Message="@ImportModalMessage">
@@ -218,10 +247,12 @@
     private int _activeTab = 0;
 
     private bool _isDeleteModalOpen;
+    private bool _isBulkDeleteModalOpen;
     private bool _isImportModalOpen;
     private bool _isCreateRoundModalOpen;
     private Journey? _journeyPendingDelete;
     private String? _bulkImportInfo;
+    private HashSet<int> _selectedIds = [];
 
     private string DeleteModalMessage => _journeyPendingDelete is null
         ? "Weet je zeker dat je deze reis wilt verwijderen?"
@@ -240,7 +271,40 @@
                            && j.Start >= round.StartDate
                            && j.Start <= round.EndDate);
 
-    private void SetTab(int tab) => _activeTab = tab;
+    private bool IsAllSelected =>
+        FilteredJourneys.Any() && FilteredJourneys.All(j => _selectedIds.Contains(j.Id));
+
+    private void ToggleSelect(Journey journey)
+    {
+        if (!_selectedIds.Remove(journey.Id))
+            _selectedIds.Add(journey.Id);
+    }
+
+    private void ToggleSelectAll(ChangeEventArgs e)
+    {
+        if (e.Value is true)
+            foreach (var j in FilteredJourneys) _selectedIds.Add(j.Id);
+        else
+            _selectedIds.Clear();
+    }
+
+    private void OpenBulkDeleteModal() => _isBulkDeleteModalOpen = true;
+
+    private async Task ConfirmBulkDeleteAsync()
+    {
+        var ids = _selectedIds.ToList();
+        await JourneyService.DeleteJourneysAsync(ids);
+        _journeys.RemoveAll(j => ids.Contains(j.Id));
+        _selectedIds.Clear();
+        _isBulkDeleteModalOpen = false;
+        StateHasChanged();
+    }
+
+    private void SetTab(int tab)
+    {
+        _activeTab = tab;
+        _selectedIds.Clear();
+    }
 
     private static string GetEditHref(Journey journey) => $"/journeys/edit/{journey.Id}";
 
