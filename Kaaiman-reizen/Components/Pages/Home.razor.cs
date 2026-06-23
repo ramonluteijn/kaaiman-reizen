@@ -31,20 +31,14 @@ public partial class Home : ComponentBase
     private List<Notification> _notifications = [];
     private string _currentUserId = string.Empty;
 
-    // Planning rounds + journeys (voor stappenplan)
     private IReadOnlyList<PlanningRound> _rounds = [];
     private List<Journey> _allJourneys = [];
+    private HashSet<int> _expandedRounds = [];
 
-    // Legacy data voor de kaarten onder het stappenplan
     private int _selectedYear = DateTime.UtcNow.Year;
     private bool _publishedPlanning;
-    private bool _publishedPlanningIsComplete;
     private List<Journey> _plannedJourneysWithTravelLeaders = [];
-    private List<TravelLeader> _travelLeadersWithoutJourneys = [];
-    private List<TravelLeader> _travelLeadersWithNotes = [];
-    private List<Journey> _journeysWithoutTravelLeaders = [];
 
-    // Reisleider-weergave
     private List<Journey> _publishedJourneys = [];
 
     private int _userTimezoneOffsetMinutes;
@@ -75,15 +69,15 @@ public partial class Home : ComponentBase
         {
             _rounds = await RoundService.GetAllAsync();
 
+            _expandedRounds = _rounds
+                .Where(r => !r.Versions.Any(v => v.IsPublished))
+                .Select(r => r.Id)
+                .ToHashSet();
+
             var journeys = await JourneyService.GetJourneysAsync();
             _allJourneys = journeys.Where(j => j.BookingStatus == BookingStatus.Huidig).ToList();
 
-            _travelLeadersWithoutJourneys = await TravelLeaderService.GetTravelLeadersWithoutJourneysAsync(_selectedYear);
-            _travelLeadersWithNotes = await TravelLeaderService.GetTravelLeadersWithNotesAsync();
-            _journeysWithoutTravelLeaders = await TravelLeaderService.GetJourneysWithoutTravelLeadersAsync(_selectedYear);
-
             _publishedPlanning = PlanningService.PublishedPlanningExists();
-            _publishedPlanningIsComplete = await PlanningService.IsPublishedPlanningCompleteAsync(_selectedYear);
             _plannedJourneysWithTravelLeaders = await PlanningService.GetAllJourneysWithTravelLeadersFromLatestPublishedPlanning();
         }
 
@@ -96,9 +90,14 @@ public partial class Home : ComponentBase
         _loading = false;
     }
 
-    // ── Stappenplan ───────────────────────────────────────────────────────
+    // ── Planning round steps ──────────────────────────────────────────────
 
-    private StappenplanModel BuildStappenplan(PlanningRound round)
+    private void ToggleRound(int id)
+    {
+        if (!_expandedRounds.Remove(id)) _expandedRounds.Add(id);
+    }
+
+    private StepPlanModel BuildPlanningRoundSteps(PlanningRound round)
     {
         var now = DateTime.UtcNow;
         var deadlinePassed = now > round.PreferenceDeadline;
@@ -121,170 +120,170 @@ public partial class Home : ComponentBase
             .ToHashSet();
         var journeysWithoutPrefs = journeysInRound.Count(j => !journeyIdsWithPrefs.Contains(j.Id));
 
-        // Stap 1: Reizen aanmaken
-        var step1Status = journeyCount > 0 ? StapStatus.Voltooid : StapStatus.Huidig;
-        var step1 = new PlanStap
+        // Step 1: Reizen aanmaken
+        var step1Status = journeyCount > 0 ? StepStatus.Completed : StepStatus.Current;
+        var step1 = new PlanStep
         {
-            Nummer = 1,
-            Titel = "Reizen aanmaken",
+            Number = 1,
+            Title = "Reizen aanmaken",
             Status = step1Status,
             Sublabel = journeyCount > 0 ? $"{journeyCount} reizen" : "0 reizen",
-            SublabelStijl = journeyCount > 0 ? SublabelStijl.GroenBadge : SublabelStijl.OranjeText,
-            KnopTekst = "Reizen beheren",
-            KnopVariant = KnopVariant.Outlined,
-            KnopHref = "/journeys"
+            SublabelStyle = journeyCount > 0 ? SublabelStyle.GreenBadge : SublabelStyle.OrangeText,
+            ButtonText = "Reizen beheren",
+            ButtonVariant = ButtonVariant.Outlined,
+            ButtonHref = "/journeys"
         };
 
-        // Stap 2: Voorkeuren uitvragen
-        StapStatus step2Status;
+        // Step 2: Voorkeuren uitvragen
+        StepStatus step2Status;
         if (totalParticipants > 0 && submittedCount == totalParticipants)
-            step2Status = StapStatus.Voltooid;
+            step2Status = StepStatus.Completed;
         else if (!deadlinePassed)
-            step2Status = StapStatus.Huidig;
+            step2Status = StepStatus.Current;
         else
-            step2Status = StapStatus.Aandacht;
+            step2Status = StepStatus.Attention;
 
-        var step2 = new PlanStap
+        var step2 = new PlanStep
         {
-            Nummer = 2,
-            Titel = "Voorkeuren uitvragen",
+            Number = 2,
+            Title = "Voorkeuren uitvragen",
             Status = step2Status,
             Sublabel = $"{submittedCount} / {totalParticipants} ingediend",
-            SublabelStijl = step2Status switch
+            SublabelStyle = step2Status switch
             {
-                StapStatus.Voltooid => SublabelStijl.GroenBadge,
-                StapStatus.Aandacht => SublabelStijl.RoodText,
-                _ => SublabelStijl.OranjeText
+                StepStatus.Completed => SublabelStyle.GreenBadge,
+                StepStatus.Attention => SublabelStyle.RedText,
+                _                    => SublabelStyle.OrangeText
             },
-            KnopTekst = step2Status == StapStatus.Huidig ? "Herinner" : null,
-            KnopVariant = KnopVariant.Primair,
-            KnopHref = $"/planner/rounds/{round.Id}/draft"
+            ButtonText = step2Status == StepStatus.Current ? "Herinner" : null,
+            ButtonVariant = ButtonVariant.Primary,
+            ButtonHref = $"/planner/rounds/{round.Id}/draft"
         };
 
-        // Stap 3: Voorkeuren controleren
-        StapStatus step3Status;
+        // Step 3: Voorkeuren controleren
+        StepStatus step3Status;
         string step3Sublabel;
-        SublabelStijl step3SublabelStijl;
+        SublabelStyle step3SublabelStyle;
 
         if (!deadlinePassed)
         {
-            step3Status = StapStatus.Toekomstig;
+            step3Status = StepStatus.Future;
             step3Sublabel = $"deadline {round.PreferenceDeadline:d MMM}";
-            step3SublabelStijl = SublabelStijl.GrijsText;
+            step3SublabelStyle = SublabelStyle.GreyText;
         }
         else if (journeysWithoutPrefs == 0)
         {
-            step3Status = StapStatus.Voltooid;
+            step3Status = StepStatus.Completed;
             step3Sublabel = "Volledig";
-            step3SublabelStijl = SublabelStijl.GroenBadge;
+            step3SublabelStyle = SublabelStyle.GreenBadge;
         }
         else
         {
-            step3Status = StapStatus.Aandacht;
+            step3Status = StepStatus.Attention;
             step3Sublabel = $"{journeysWithoutPrefs} zonder voorkeur";
-            step3SublabelStijl = SublabelStijl.RoodText;
+            step3SublabelStyle = SublabelStyle.RedText;
         }
 
-        var step3 = new PlanStap
+        var step3 = new PlanStep
         {
-            Nummer = 3,
-            Titel = "Voorkeuren controleren",
+            Number = 3,
+            Title = "Voorkeuren controleren",
             Status = step3Status,
             Sublabel = step3Sublabel,
-            SublabelStijl = step3SublabelStijl,
-            KnopTekst = deadlinePassed ? "Open ronde" : null,
-            KnopVariant = KnopVariant.Outlined,
-            KnopHref = $"/planner/rounds/{round.Id}/draft"
+            SublabelStyle = step3SublabelStyle,
+            ButtonText = deadlinePassed ? "Open ronde" : null,
+            ButtonVariant = ButtonVariant.Outlined,
+            ButtonHref = $"/planner/rounds/{round.Id}/draft"
         };
 
-        // Stap 4: Planning genereren
-        StapStatus step4Status;
+        // Step 4: Planning genereren
+        StepStatus step4Status;
         string step4Sublabel;
-        SublabelStijl step4SublabelStijl;
-        string? step4KnopTekst;
-        KnopVariant step4KnopVariant;
+        SublabelStyle step4SublabelStyle;
+        string? step4ButtonText;
+        ButtonVariant step4ButtonVariant;
 
         if (isPublished || (hasDraft && !draftIsStale))
         {
-            step4Status = StapStatus.Voltooid;
+            step4Status = StepStatus.Completed;
             step4Sublabel = "concept aangemaakt";
-            step4SublabelStijl = SublabelStijl.GroenBadge;
-            step4KnopTekst = isPublished ? null : "Open";
-            step4KnopVariant = KnopVariant.Outlined;
+            step4SublabelStyle = SublabelStyle.GreenBadge;
+            step4ButtonText = isPublished ? null : "Open";
+            step4ButtonVariant = ButtonVariant.Outlined;
         }
         else if (draftIsStale)
         {
-            step4Status = StapStatus.Aandacht;
+            step4Status = StepStatus.Attention;
             step4Sublabel = "verouderd concept";
-            step4SublabelStijl = SublabelStijl.OranjeText;
-            step4KnopTekst = "Opnieuw genereren";
-            step4KnopVariant = KnopVariant.Gevaar;
+            step4SublabelStyle = SublabelStyle.OrangeText;
+            step4ButtonText = "Opnieuw genereren";
+            step4ButtonVariant = ButtonVariant.Danger;
         }
-        else if (step3Status == StapStatus.Voltooid)
+        else if (step3Status == StepStatus.Completed)
         {
-            step4Status = StapStatus.Huidig;
+            step4Status = StepStatus.Current;
             step4Sublabel = "nog geen concept";
-            step4SublabelStijl = SublabelStijl.GrijsText;
-            step4KnopTekst = "Genereer";
-            step4KnopVariant = KnopVariant.Primair;
+            step4SublabelStyle = SublabelStyle.GreyText;
+            step4ButtonText = "Genereer";
+            step4ButtonVariant = ButtonVariant.Primary;
         }
         else
         {
-            step4Status = StapStatus.Toekomstig;
+            step4Status = StepStatus.Future;
             step4Sublabel = "nog geen concept";
-            step4SublabelStijl = SublabelStijl.GrijsText;
-            step4KnopTekst = null;
-            step4KnopVariant = KnopVariant.Outlined;
+            step4SublabelStyle = SublabelStyle.GreyText;
+            step4ButtonText = null;
+            step4ButtonVariant = ButtonVariant.Outlined;
         }
 
-        var step4 = new PlanStap
+        var step4 = new PlanStep
         {
-            Nummer = 4,
-            Titel = "Planning genereren",
+            Number = 4,
+            Title = "Planning genereren",
             Status = step4Status,
             Sublabel = step4Sublabel,
-            SublabelStijl = step4SublabelStijl,
-            KnopTekst = step4KnopTekst,
-            KnopVariant = step4KnopVariant,
-            KnopHref = $"/planner/rounds/{round.Id}/draft"
+            SublabelStyle = step4SublabelStyle,
+            ButtonText = step4ButtonText,
+            ButtonVariant = step4ButtonVariant,
+            ButtonHref = $"/planner/rounds/{round.Id}/draft"
         };
 
-        // Stap 5: Publiceren
-        StapStatus step5Status;
+        // Step 5: Publiceren
+        StepStatus step5Status;
         if (isPublished)
-            step5Status = StapStatus.Voltooid;
-        else if (step4Status == StapStatus.Voltooid)
-            step5Status = StapStatus.Huidig;
+            step5Status = StepStatus.Completed;
+        else if (step4Status == StepStatus.Completed)
+            step5Status = StepStatus.Current;
         else
-            step5Status = StapStatus.Toekomstig;
+            step5Status = StepStatus.Future;
 
-        var step5 = new PlanStap
+        var step5 = new PlanStep
         {
-            Nummer = 5,
-            Titel = "Publiceren",
+            Number = 5,
+            Title = "Publiceren",
             Status = step5Status,
             Sublabel = isPublished ? "gepubliceerd" : $"deadline {round.PublicationDeadline:d MMM}",
-            SublabelStijl = isPublished ? SublabelStijl.GroenBadge : SublabelStijl.GrijsText,
-            KnopTekst = step5Status != StapStatus.Toekomstig ? "Open" : null,
-            KnopVariant = KnopVariant.Outlined,
-            KnopHref = $"/planner/rounds/{round.Id}/draft"
+            SublabelStyle = isPublished ? SublabelStyle.GreenBadge : SublabelStyle.GreyText,
+            ButtonText = step5Status != StepStatus.Future ? "Open" : null,
+            ButtonVariant = ButtonVariant.Outlined,
+            ButtonHref = $"/planner/rounds/{round.Id}/draft"
         };
 
-        var stappen = new List<PlanStap> { step1, step2, step3, step4, step5 };
-        var voltooideStappen = stappen.Count(s => s.Status == StapStatus.Voltooid);
-        var voortgang = (voltooideStappen * 100) / stappen.Count;
-        var huidigStap = stappen
+        var steps = new List<PlanStep> { step1, step2, step3, step4, step5 };
+        var completedSteps = steps.Count(s => s.Status == StepStatus.Completed);
+        var progress = (completedSteps * 100) / steps.Count;
+        var currentStep = steps
             .Select((s, i) => (s, i + 1))
-            .FirstOrDefault(x => x.s.Status != StapStatus.Voltooid).Item2;
-        if (huidigStap == 0) huidigStap = stappen.Count;
+            .FirstOrDefault(x => x.s.Status != StepStatus.Completed).Item2;
+        if (currentStep == 0) currentStep = steps.Count;
 
-        return new StappenplanModel
+        return new StepPlanModel
         {
-            RondeNaam = round.Name,
-            Seizoen = round.Year,
-            Voortgang = voortgang,
-            HuidigStap = huidigStap,
-            Stappen = stappen
+            RoundName = round.Name,
+            Year = round.Year,
+            Progress = progress,
+            CurrentStep = currentStep,
+            Steps = steps
         };
     }
 
