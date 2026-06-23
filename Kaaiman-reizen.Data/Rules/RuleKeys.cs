@@ -9,6 +9,9 @@ public static class RuleKeys
     public const string PreferencesEnabled = "PreferencesEnabled";
     public const string JourneyReminderEnabled = "JourneyReminderEnabled";
     public const string JourneyReminderDays = "JourneyReminderDays";
+    public const string WelcomeEmailEnabled = "WelcomeEmailEnabled";
+    public const string PlanningPublishedEnabled = "PlanningPublishedEnabled";
+    public const string PlanningChangedEnabled = "PlanningChangedEnabled";
     public const string PreferenceWeight = "PreferenceWeight";
     public const string NoOverlapWeight = "NoOverlapWeight";
     public const string MinimumGapWeight = "MinimumGapWeight";
@@ -20,5 +23,8 @@ public static class RuleKeys
     public const int DefaultMinimumGapWeight = 100;
     public const int DefaultRequiredExperienceWeight = 100;
     public const bool DefaultJourneyReminderEnabled = true;
+    public const bool DefaultWelcomeEmailEnabled = true;
+    public const bool DefaultPlanningPublishedEnabled = true;
+    public const bool DefaultPlanningChangedEnabled = true;
     public static readonly int[] DefaultJourneyReminderDays = [7, 3];
 }

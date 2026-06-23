@@ -19,7 +19,10 @@ internal sealed class RuleConfiguration : IEntityTypeConfiguration<Rule>
             new Rule { Id = 4, Key = RuleKeys.MinMaxJourneys, Description = "Controle op minimum/maximum aantal reizen per reisleider.", IsActive = true, Weight = 1 },
             new Rule { Id = 5, Key = RuleKeys.PreferencesEnabled, Description = "Reisleider krijgt voorkeur voor reizen naar zijn favoriete bestemmingen.", IsActive = true, Weight = 1 },
             new Rule { Id = 6, Key = RuleKeys.JourneyReminderEnabled, Description = "Versturen van reisnotificaties voor aankomende reizen.", IsActive = true, Value = "true", Weight = 1 },
-            new Rule { Id = 7, Key = RuleKeys.JourneyReminderDays, Description = "Aantal dagen voor vertrek waarop reisnotificaties worden verstuurd (komma-gescheiden).", IsActive = true, Value = "7,3", Weight = 1 }
+            new Rule { Id = 7, Key = RuleKeys.JourneyReminderDays, Description = "Aantal dagen voor vertrek waarop reisnotificaties worden verstuurd (komma-gescheiden).", IsActive = true, Value = "7,3", Weight = 1 },
+            new Rule { Id = 8, Key = RuleKeys.WelcomeEmailEnabled, Description = "Versturen van een welkomstmail met tijdelijk wachtwoord aan een nieuwe reisleider.", IsActive = true, Value = "true", Weight = 1 },
+            new Rule { Id = 9, Key = RuleKeys.PlanningPublishedEnabled, Description = "Versturen van een notificatie wanneer een nieuwe planning wordt gepubliceerd.", IsActive = true, Value = "true", Weight = 1 },
+            new Rule { Id = 10, Key = RuleKeys.PlanningChangedEnabled, Description = "Versturen van een notificatie aan betrokken reisleiders wanneer een gepubliceerde planning wijzigt.", IsActive = true, Value = "true", Weight = 1 }
         );
     }
 }
