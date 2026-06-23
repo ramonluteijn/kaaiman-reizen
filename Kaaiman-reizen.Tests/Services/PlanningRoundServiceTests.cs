@@ -1,8 +1,8 @@
 using Kaaiman_reizen.Data;
 using Kaaiman_reizen.Data.Entities;
-using Kaaiman_reizen.Data.Enum;
 using Kaaiman_reizen.Data.Services;
 using Microsoft.EntityFrameworkCore;
+using Kaaiman_reizen.Data.Enum;
 
 namespace Kaaiman_reizen.Tests.Services;
 
@@ -11,8 +11,9 @@ public class PlanningRoundServiceTests
     private static MainContext GetInMemoryDb()
     {
         var options = new DbContextOptionsBuilder<MainContext>()
-            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
+
         return new MainContext(options);
     }
 
@@ -46,6 +47,39 @@ public class PlanningRoundServiceTests
         Travelers = 20,
         BookingStatus = BookingStatus.Huidig
     };
+
+    [Fact]
+    public async Task CreateAsync_AllowsOverlappingPlanningRounds()
+    {
+        // Arrange
+        var db = GetInMemoryDb();
+        db.PlanningRounds.Add(new PlanningRound
+        {
+            Name = "Bestaande ronde",
+            Year = 2026,
+            StartDate = new DateOnly(2026, 1, 1),
+            EndDate = new DateOnly(2026, 6, 30),
+            PreferenceDeadline = new DateTime(2025, 12, 15, 0, 0, 0, DateTimeKind.Utc),
+            PublicationDeadline = new DateTime(2026, 7, 1, 0, 0, 0, DateTimeKind.Utc)
+        });
+        await db.SaveChangesAsync();
+
+        var service = new PlanningRoundService(db);
+
+        // Act
+        var created = await service.CreateAsync(
+            name: "Overlappende ronde",
+            year: 2026,
+            startDate: new DateOnly(2026, 3, 1),
+            endDate: new DateOnly(2026, 9, 30),
+            preferenceDeadline: new DateTime(2026, 2, 1, 0, 0, 0, DateTimeKind.Utc),
+            publicationDeadline: new DateTime(2026, 10, 1, 0, 0, 0, DateTimeKind.Utc));
+
+        // Assert
+        Assert.NotNull(created);
+        Assert.Equal("Overlappende ronde", created.Name);
+        Assert.Equal(2, await db.PlanningRounds.CountAsync());
+    }
 
     // ── MarkUnavailableAsync ─────────────────────────────────────────────────────
 
