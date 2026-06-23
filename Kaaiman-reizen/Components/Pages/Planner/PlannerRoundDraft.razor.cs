@@ -19,6 +19,7 @@ public partial class PlannerRoundDraft : ComponentBase
     [Inject] private IPlanningRoundService _roundService { get; set; } = default!;
     [Inject] private IPlannerDraftService _draftService { get; set; } = default!;
     [Inject] private IPlanningService _planningService { get; set; } = default!;
+    [Inject] private ITravelLeaderService _travelLeaderService { get; set; } = default!;
     [Inject] private IRuleService _ruleService { get; set; } = default!;
     [Inject] private ISnackbar _snackbar { get; set; } = default!;
     [Inject] private NavigationManager _nav { get; set; } = default!;
@@ -40,12 +41,15 @@ public partial class PlannerRoundDraft : ComponentBase
     private List<LeaderCandidate> _selectedCandidates = [];
     private bool _sidebarLeaderOpen = true;
     private bool _sidebarJourneyOpen = false;
+    private bool _sidebarNotesOpen = false;
     private DateOnly? _jumpToDate;
     private bool _noteModalOpen;
     private LeaderPlanningRow? _selectedLeaderRow;
     private bool _preferenceChangesDetected = false;
     public CalendarModes selectedMode = CalendarModes.JourneyMode;
     private IReadOnlyList<TravelLeader> _availibilityPeriods = [];
+    public List<TravelLeader> leadersWithNotes = [];
+    public string selectedOption = "unprocessed";
 
     private bool CanPublish =>
         _request is not null && _result is not null && _result.IsSuccess;
@@ -89,6 +93,7 @@ public partial class PlannerRoundDraft : ComponentBase
     {
         await LoadDataForRoundAsync();
         _availibilityPeriods = BuildAvailabilityFromRound();
+        leadersWithNotes = await _travelLeaderService.GetTravelLeadersWithNotesAsync();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
