@@ -180,10 +180,4 @@ public class PlanningRoundService : IPlanningRoundService
         await _db.SaveChangesAsync(ct);
     }
 
-    public async Task VerifyLeadersAsync(int roundId, CancellationToken ct = default)
-    {
-        await _db.PlanningRounds
-            .Where(r => r.Id == roundId)
-            .ExecuteUpdateAsync(s => s.SetProperty(r => r.LeadersVerifiedAt, DateTime.UtcNow), ct);
-    }
 }

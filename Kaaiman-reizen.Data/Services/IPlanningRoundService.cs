@@ -22,5 +22,4 @@ public interface IPlanningRoundService
     Task<IReadOnlyList<ParticipationNoteEntry>> GetParticipationNotesAsync(CancellationToken ct = default);
     Task MarkUnavailableAsync(int participationId, CancellationToken ct = default);
     Task DeleteAsync(int id, CancellationToken ct = default);
-    Task VerifyLeadersAsync(int roundId, CancellationToken ct = default);
 }

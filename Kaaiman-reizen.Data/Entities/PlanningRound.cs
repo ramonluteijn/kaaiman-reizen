@@ -10,8 +10,6 @@ public class PlanningRound
     public DateTime PreferenceDeadline { get; set; }
     public DateTime PublicationDeadline { get; set; }
 
-    public DateTime? LeadersVerifiedAt { get; set; }
-
     public List<PlanningRoundParticipation> Participations { get; set; } = [];
     public List<PlanningVersion> Versions { get; set; } = [];
 

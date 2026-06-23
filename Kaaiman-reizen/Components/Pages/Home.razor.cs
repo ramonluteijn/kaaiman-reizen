@@ -313,11 +313,6 @@ public partial class Home : ComponentBase
         return round.Participations.Any(p => p.SubmittedAt.HasValue && p.SubmittedAt > draft.CreatedAt);
     }
 
-    private async Task VerifyLeadersAsync(PlanningRound round)
-    {
-        await RoundService.VerifyLeadersAsync(round.Id);
-        round.LeadersVerifiedAt = DateTime.UtcNow;
-    }
 
     // ── Notificaties ──────────────────────────────────────────────────────
 
