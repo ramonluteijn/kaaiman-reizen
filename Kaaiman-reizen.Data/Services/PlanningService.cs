@@ -1,4 +1,6 @@
 using Kaaiman_reizen.Data.Entities;
+using Kaaiman_reizen.Data.Rules;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kaaiman_reizen.Data.Services;
@@ -65,6 +67,136 @@ public class PlanningService : IPlanningService
                 JourneyId = pair.Key,
                 TravelLeaderId = leaderId
             }).ToList();
+    }
+
+    private static HashSet<string> ToAssignmentKeySet(IEnumerable<PlanningAssignment> assignments)
+    {
+        return assignments
+            .Select(a => $"{a.JourneyId}:{a.TravelLeaderId}")
+            .ToHashSet();
+    }
+
+    private static HashSet<(int JourneyId, int TravelLeaderId)> ToAssignmentTupleSet(IEnumerable<PlanningAssignment> assignments)
+    {
+        return assignments
+            .Select(a => (a.JourneyId, a.TravelLeaderId))
+            .ToHashSet();
+    }
+
+    private static IReadOnlySet<int> GetChangedTravelLeaderIds(
+        IEnumerable<PlanningAssignment> previousAssignments,
+        IEnumerable<PlanningAssignment> currentAssignments)
+    {
+        var previousSet = ToAssignmentTupleSet(previousAssignments);
+        var currentSet = ToAssignmentTupleSet(currentAssignments);
+
+        var addedOrRemoved = previousSet
+            .Except(currentSet)
+            .Concat(currentSet.Except(previousSet))
+            .ToList();
+
+        return addedOrRemoved
+            .Select(pair => pair.TravelLeaderId)
+            .Distinct()
+            .ToHashSet();
+    }
+
+    private static bool HasAssignmentChanges(
+        IReadOnlyCollection<PlanningVersion> existingPublishedVersions,
+        IReadOnlyDictionary<int, IReadOnlyCollection<int>> journeyAssignments)
+    {
+        if (existingPublishedVersions.Count == 0)
+            return false;
+
+        var latestPublished = existingPublishedVersions
+            .OrderByDescending(v => v.CreatedAt)
+            .ThenByDescending(v => v.Id)
+            .First();
+
+        var currentAssignments = MapAssignments(journeyAssignments);
+        var previousSet = ToAssignmentKeySet(latestPublished.Assignments);
+        var currentSet = ToAssignmentKeySet(currentAssignments);
+
+        return !previousSet.SetEquals(currentSet);
+    }
+
+    private async Task CreatePlanningChangedNotificationsForTravelLeadersAsync(
+        string planningName,
+        IReadOnlySet<int> changedTravelLeaderIds,
+        CancellationToken cancellationToken)
+    {
+        if (changedTravelLeaderIds.Count == 0)
+            return;
+
+        var planningChangedEnabled = await _db.IsRuleEnabledAsync(
+            RuleKeys.PlanningChangedEnabled,
+            RuleKeys.DefaultPlanningChangedEnabled,
+            cancellationToken);
+
+        if (!planningChangedEnabled)
+            return;
+
+        var travelLeaderRole = await _db.Roles
+            .AsNoTracking()
+            .FirstOrDefaultAsync(r => r.Name == "Reisleider", cancellationToken);
+
+        if (travelLeaderRole is null)
+            return;
+
+        var changedLeaderEmails = await _db.TravelLeader
+            .AsNoTracking()
+            .Where(tl => changedTravelLeaderIds.Contains(tl.Id) && !string.IsNullOrWhiteSpace(tl.Email))
+            .Select(tl => tl.Email)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        if (changedLeaderEmails.Count == 0)
+            return;
+
+        var travelLeaderUsers = await _db.Users
+            .AsNoTracking()
+            .Where(u =>
+                !string.IsNullOrWhiteSpace(u.Email)
+                && changedLeaderEmails.Contains(u.Email)
+                && _db.UserRoles.Any(ur => ur.UserId == u.Id && ur.RoleId == travelLeaderRole.Id))
+            .ToListAsync(cancellationToken);
+
+        if (travelLeaderUsers.Count == 0)
+            return;
+
+        var now = DateTime.UtcNow;
+        var dashboardMessage = $"De gepubliceerde planning '{planningName}' is gewijzigd. Bekijk direct uw planning op het dashboard.";
+
+        var notifications = travelLeaderUsers.Select(u => new Notification
+        {
+            ApplicationUserId = u.Id,
+            Message = dashboardMessage,
+            CreatedAt = now,
+            IsRead = false
+        });
+
+        _db.Notifications.AddRange(notifications);
+
+        var emails = travelLeaderUsers
+            .Where(u => !string.IsNullOrWhiteSpace(u.Email))
+            .Select(u => u.Email!)
+            .ToList();
+
+        if (emails.Count > 0)
+        {
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    using var scope = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.CreateScope(_serviceProvider);
+                    var emailDispatcher = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<IEmailDispatcher>(scope.ServiceProvider);
+                    var subject = $"Planning gewijzigd: {planningName}";
+                    var message = $"De gepubliceerde planning '{planningName}' is gewijzigd. Log in op het dashboard om uw bijgewerkte planning te bekijken.";
+                    await emailDispatcher.SendEmailToUsersAsync(emails, subject, message);
+                }
+                catch { }
+            });
+        }
     }
 
     public async Task<List<Journey>> GetAllJourneysWithTravelLeadersFromLatestPublishedPlanning()
@@ -185,7 +317,20 @@ public class PlanningService : IPlanningService
         {
             var publishedVersions = await _db.PlanningVersions
                 .Where(v => v.IsPublished && v.PlanningRoundId == roundId)
+                .Include(v => v.Assignments)
                 .ToListAsync(cancellationToken);
+
+            var publishedPlanningChanged = HasAssignmentChanges(publishedVersions, journeyAssignments);
+            var currentAssignments = MapAssignments(journeyAssignments);
+            var changedTravelLeaderIds = publishedVersions.Count == 0
+                ? new HashSet<int>()
+                : GetChangedTravelLeaderIds(
+                    publishedVersions
+                        .OrderByDescending(v => v.CreatedAt)
+                        .ThenByDescending(v => v.Id)
+                        .First()
+                        .Assignments,
+                    currentAssignments);
 
             foreach (var v in publishedVersions)
                 v.IsPublished = false;
@@ -197,35 +342,48 @@ public class PlanningService : IPlanningService
                 Name = name,
                 CreatedAt = DateTime.UtcNow,
                 IsPublished = true,
-                Assignments = MapAssignments(journeyAssignments)
+                Assignments = currentAssignments
             };
             _db.PlanningVersions.Add(version);
 
-            var allUsers = await _db.Users.ToListAsync(cancellationToken);
-            var notifications = allUsers.Select(u => new Notification
-            {
-                ApplicationUserId = u.Id,
-                Message = $"De definitieve planning '{name}' is gepubliceerd. Bekijk het dashboard en geef uw input.",
-                CreatedAt = DateTime.UtcNow,
-                IsRead = false
-            });
-            _db.Notifications.AddRange(notifications);
+            var planningPublishedEnabled = await _db.IsRuleEnabledAsync(
+                RuleKeys.PlanningPublishedEnabled,
+                RuleKeys.DefaultPlanningPublishedEnabled,
+                cancellationToken);
 
-            var emails = allUsers.Where(u => !string.IsNullOrWhiteSpace(u.Email)).Select(u => u.Email!).ToList();
-            if (emails.Any())
+            if (planningPublishedEnabled)
             {
-                _ = Task.Run(async () =>
+                var allUsers = await _db.Users.ToListAsync(cancellationToken);
+                var notifications = allUsers.Select(u => new Notification
                 {
-                    try
-                    {
-                        using var scope = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.CreateScope(_serviceProvider);
-                        var emailDispatcher = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<IEmailDispatcher>(scope.ServiceProvider);
-                        var subject = $"Nieuwe planning gepubliceerd: {name}";
-                        var message = $"De definitieve planning '{name}' is gepubliceerd. Log in op het dashboard om de planning te bekijken en uw input te geven.";
-                        await emailDispatcher.SendEmailToUsersAsync(emails, subject, message);
-                    }
-                    catch { }
+                    ApplicationUserId = u.Id,
+                    Message = $"De definitieve planning '{name}' is gepubliceerd. Bekijk het dashboard en geef uw input.",
+                    CreatedAt = DateTime.UtcNow,
+                    IsRead = false
                 });
+                _db.Notifications.AddRange(notifications);
+
+                var emails = allUsers.Where(u => !string.IsNullOrWhiteSpace(u.Email)).Select(u => u.Email!).ToList();
+                if (emails.Any())
+                {
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            using var scope = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.CreateScope(_serviceProvider);
+                            var emailDispatcher = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<IEmailDispatcher>(scope.ServiceProvider);
+                            var subject = $"Nieuwe planning gepubliceerd: {name}";
+                            var message = $"De definitieve planning '{name}' is gepubliceerd. Log in op het dashboard om de planning te bekijken en uw input te geven.";
+                            await emailDispatcher.SendEmailToUsersAsync(emails, subject, message);
+                        }
+                        catch { }
+                    });
+                }
+            }
+
+            if (publishedPlanningChanged)
+            {
+                await CreatePlanningChangedNotificationsForTravelLeadersAsync(name, changedTravelLeaderIds, cancellationToken);
             }
         }
         else

@@ -54,7 +54,7 @@
                 </MudText>
                 <MudDivider Vertical="true" FlexItem="true" />
                 <MudChip T="string" Color="@ParticipationColor" Size="Size.Small">
-                    @SubmittedCount / @TotalCount ingediend
+                    @(SubmittedCount + UnavailableCount) / @TotalCount ingediend@(UnavailableCount > 0 ? $" · {UnavailableCount} afgemeld" : "")
                 </MudChip>
             </div>
         </MudPaper>
@@ -141,6 +141,7 @@
                                 @foreach (var row in leaderRows)
                                 {
                                     var hasJourneys = row.AssignedJourneys.Count > 0;
+                                    var isLeaderUnavailable = UnavailableLeaderIds.Contains(row.Leader.Id);
                                     <div class="pd-sidebar-row @(hasJourneys ? "pd-sidebar-row--assigned" : "pd-sidebar-row--unassigned") position-relative">
                                         <div class="pd-sidebar-avatar">@row.LeaderName[0]</div>
 
@@ -153,7 +154,13 @@
                                                        OnClick="@(() => OpenLeaderDetails(row))" />
 
                                         <div class="pd-sidebar-info">
-                                            <span class="pd-sidebar-name">@row.LeaderName</span>
+                                            <div class="d-flex align-items-center gap-1 flex-wrap">
+                                                <span class="pd-sidebar-name">@row.LeaderName</span>
+                                                @if (isLeaderUnavailable)
+                                                {
+                                                    <span class="badge bg-secondary" style="font-size:0.65rem;">Afgemeld</span>
+                                                }
+                                            </div>
                                             @if (hasJourneys)
                                             {
                                                 <span class="pd-sidebar-count">@row.AssignedJourneys.Count rei@(row.AssignedJourneys.Count == 1 ? "s" : "zen")</span>
@@ -184,6 +191,10 @@
                                                             <span class="pd-sidebar-pref">@pref.JourneyTitle (#@pref.Rank)</span>
                                                         }
                                                     </div>
+                                                }
+                                                else if (isLeaderUnavailable)
+                                                {
+                                                    <span class="pd-sidebar-no-prefs">Afgemeld voor deze ronde</span>
                                                 }
                                                 else
                                                 {
@@ -336,3 +347,23 @@
     OnClose="CloseDrawer"
     OnAssignLeader="AssignLeader"
     OnRemoveLeader="RemoveLeader" />
+
+<AlertModal IsOpen="_leaveConfirmOpen"
+            Title="Planning niet opgeslagen"
+            Severity="Severity.Warning"
+            Dismissible="false"
+            CloseOnBackdropClick="false"
+            Message="Je hebt wijzigingen in de planning die nog niet zijn opgeslagen. Als je deze pagina verlaat, gaan deze wijzigingen verloren.">
+    <Actions>
+        <MudButton Variant="Variant.Text"
+                   Color="Color.Default"
+                   OnClick="CancelLeave">
+            Op pagina blijven
+        </MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Warning"
+                   OnClick="ConfirmLeaveAsync">
+            Verlaten zonder opslaan
+        </MudButton>
+    </Actions>
+</AlertModal>

@@ -6,11 +6,13 @@ using Kaaiman_reizen.Models.Planner;
 using Kaaiman_reizen.Models.ViewModels;
 using Kaaiman_reizen.Services;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Routing;
+using Microsoft.JSInterop;
 using MudBlazor;
 
 namespace Kaaiman_reizen.Components.Pages.Planner;
 
-public partial class PlannerRoundDraft : ComponentBase
+public partial class PlannerRoundDraft : ComponentBase, IAsyncDisposable
 {
     private const int SaveMessageDisplayMs = 5000;
 
@@ -23,6 +25,7 @@ public partial class PlannerRoundDraft : ComponentBase
     [Inject] private ISnackbar _snackbar { get; set; } = default!;
     [Inject] private NavigationManager _nav { get; set; } = default!;
     [Inject] private IUserTimezoneService UserTimezoneService { get; set; } = default!;
+    [Inject] private IJSRuntime _js { get; set; } = default!;
 
     private PlanningRound? _round;
     private PlannerDraftRequest? _request;
@@ -47,14 +50,23 @@ public partial class PlannerRoundDraft : ComponentBase
     public CalendarModes selectedMode = CalendarModes.JourneyMode;
     private IReadOnlyList<TravelLeader> _availibilityPeriods = [];
 
+    private bool _hasUnsavedChanges;
+    private bool _leaveConfirmOpen;
+    private string? _pendingNavigationUri;
+    private bool _allowNavigation;
+    private IDisposable? _locationChangingRegistration;
+    private DotNetObjectReference<PlannerRoundDraft>? _dotNetRef;
+
     private bool CanPublish =>
-        _request is not null && _result is not null && _result.IsSuccess &&
-        _request.Journeys.All(j =>
-            _result.JourneyAssignments.TryGetValue(j.Id, out var asgns) &&
-            asgns.Count >= j.RequiredLeaders);
+        _request is not null && _result is not null && _result.IsSuccess;
 
     private int SubmittedCount => _round?.Participations.Count(p => p.Status == ParticipationStatus.Submitted) ?? 0;
+    private int UnavailableCount => _round?.Participations.Count(p => p.Status == ParticipationStatus.Unavailable) ?? 0;
     private int TotalCount => _round?.Participations.Count ?? 0;
+    private HashSet<int> UnavailableLeaderIds => _round?.Participations
+        .Where(p => p.Status == ParticipationStatus.Unavailable)
+        .Select(p => p.TravelLeaderId)
+        .ToHashSet() ?? [];
 
     private int DaysUntilPreferenceDeadline =>
         (int)(_round!.PreferenceDeadline.Date - DateTime.UtcNow.Date).TotalDays;
@@ -76,7 +88,7 @@ public partial class PlannerRoundDraft : ComponentBase
         get
         {
             if (_round is null || TotalCount == 0) return Color.Default;
-            var ratio = (double)SubmittedCount / TotalCount;
+            var ratio = (double)(SubmittedCount + UnavailableCount) / TotalCount;
             if (ratio >= 1.0) return Color.Success;
             if (ratio >= 0.5) return Color.Warning;
             return Color.Error;
@@ -92,7 +104,76 @@ public partial class PlannerRoundDraft : ComponentBase
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender) return;
+        _dotNetRef ??= DotNetObjectReference.Create(this);
+        _locationChangingRegistration = _nav.RegisterLocationChangingHandler(OnLocationChangingAsync);
         await UserTimezoneService.EnsureLoadedAsync();
+        await SyncUnsavedGuardAsync();
+    }
+
+    private async Task MarkDirtyAsync()
+    {
+        if (_hasUnsavedChanges) return;
+        _hasUnsavedChanges = true;
+        await SyncUnsavedGuardAsync();
+    }
+
+    private async Task MarkCleanAsync()
+    {
+        if (!_hasUnsavedChanges) return;
+        _hasUnsavedChanges = false;
+        await SyncUnsavedGuardAsync();
+    }
+
+    private async Task SyncUnsavedGuardAsync()
+    {
+        try
+        {
+            await _js.InvokeVoidAsync("kaaimanUnsavedGuard.setEnabled", _hasUnsavedChanges, _dotNetRef);
+        }
+        catch (JSDisconnectedException) { }
+        catch (InvalidOperationException) { }
+    }
+
+    [JSInvokable]
+    public async Task OnGuardedNavigationAsync(string url)
+    {
+        if (!_hasUnsavedChanges)
+        {
+            _allowNavigation = true;
+            _nav.NavigateTo(url);
+            return;
+        }
+
+        _pendingNavigationUri = url;
+        _leaveConfirmOpen = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async ValueTask OnLocationChangingAsync(LocationChangingContext context)
+    {
+        if (!_hasUnsavedChanges || _allowNavigation)
+            return;
+
+        context.PreventNavigation();
+        _pendingNavigationUri = context.TargetLocation;
+        _leaveConfirmOpen = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ConfirmLeaveAsync()
+    {
+        _leaveConfirmOpen = false;
+        _allowNavigation = true;
+        await MarkCleanAsync();
+
+        if (!string.IsNullOrEmpty(_pendingNavigationUri))
+            _nav.NavigateTo(_pendingNavigationUri);
+    }
+
+    private void CancelLeave()
+    {
+        _leaveConfirmOpen = false;
+        _pendingNavigationUri = null;
     }
 
     private async Task<DateTime> GetUserLocalNowAsync()
@@ -171,9 +252,22 @@ public partial class PlannerRoundDraft : ComponentBase
         ClearSaveMessage();
         StateHasChanged();
 
+        if (!autoUpdated)
+        {
+            var freshRound = await _roundService.GetByIdAsync(RoundId);
+            if (freshRound is not null)
+            {
+                _round = freshRound;
+                _request = await _draftService.BuildRequestAsync(_round);
+                _availibilityPeriods = BuildAvailabilityFromRound();
+            }
+        }
+
         await Task.Delay(50);
         _result = await Task.Run(() => _draftService.GenerateDraft(_request));
         _isGenerating = false;
+
+        await MarkDirtyAsync();
 
         if (autoUpdated)
             SetSaveMessage("Planning automatisch bijgewerkt omdat reisleider- of reisgegevens zijn gewijzigd.", Severity.Info);
@@ -198,10 +292,14 @@ public partial class PlannerRoundDraft : ComponentBase
 
             foreach (var assignment in journeyGroup)
             {
+                var isAssigneeUnavailable = _round!.Participations
+                    .Any(p => p.TravelLeaderId == assignment.TravelLeaderId
+                           && p.Status == ParticipationStatus.Unavailable);
+
                 var leader = _request.Leaders.FirstOrDefault(l => l.Id == assignment.TravelLeaderId);
-                if (leader is null)
+                if (leader is null || isAssigneeUnavailable)
                 {
-                    result.JourneyWarnings[journey.Id] = $"Let op: {assignment.TravelLeader.Name} is automatisch verwijderd omdat deze inactief is of geen voorkeuren heeft.";
+                    result.JourneyWarnings[journey.Id] = $"Let op: {assignment.TravelLeader?.Name ?? "Reisleider"} is automatisch verwijderd omdat deze inactief is, geen voorkeuren heeft of zich heeft afgemeld.";
                     isStale = true;
                     continue;
                 }
@@ -350,5 +448,19 @@ public partial class PlannerRoundDraft : ComponentBase
                         }).ToList()
                 };
             }).ToList();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        _locationChangingRegistration?.Dispose();
+
+        try
+        {
+            await _js.InvokeVoidAsync("kaaimanUnsavedGuard.setEnabled", false, null);
+        }
+        catch (JSDisconnectedException) { }
+        catch (InvalidOperationException) { }
+
+        _dotNetRef?.Dispose();
     }
 }

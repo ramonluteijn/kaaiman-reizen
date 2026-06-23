@@ -20,13 +20,6 @@ public partial class PlannerRoundDraft
         if (_round is null || _request is null || _result is null || !_result.IsSuccess)
             return;
 
-        if (isPublished && !CanPublish)
-        {
-            SetSaveMessage("Publiceren niet mogelijk: niet alle reizen zijn volledig bezet.", Severity.Warning);
-            _snackbar.Add("Niet alle reizen hebben het vereiste aantal reisleiders.", Severity.Warning);
-            return;
-        }
-
         _isSaving = true;
         ClearSaveMessage();
 
@@ -48,6 +41,7 @@ public partial class PlannerRoundDraft
 
             SetSaveMessage(message, severity);
             _snackbar.Add(message, severity);
+            await MarkCleanAsync();
         }
         catch (Exception)
         {

@@ -1,5 +1,6 @@
 using Kaaiman_reizen.Data.Entities;
 using Kaaiman_reizen.Data.Enum;
+using Kaaiman_reizen.Data.Dtos;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kaaiman_reizen.Data.Services;
@@ -22,9 +23,9 @@ public class PlanningRoundService : IPlanningRoundService
                 $"De datumreeks overlapt met bestaande ronde \"{overlapping.Name}\" " +
                 $"({overlapping.StartDate:d MMM} – {overlapping.EndDate:d MMM yyyy}). Kies een andere periode.");
 
-        var activeLeaderIds = await _db.TravelLeader
+        var activeLeaders = await _db.TravelLeader
             .Where(l => l.IsActive)
-            .Select(l => l.Id)
+            .Select(l => new { l.Id, l.MinTrips, l.MaxTrips, l.Note })
             .ToListAsync(ct);
 
         var round = new PlanningRound
@@ -35,9 +36,12 @@ public class PlanningRoundService : IPlanningRoundService
             EndDate = endDate,
             PreferenceDeadline = preferenceDeadline,
             PublicationDeadline = publicationDeadline,
-            Participations = activeLeaderIds.Select(id => new PlanningRoundParticipation
+            Participations = activeLeaders.Select(leader => new PlanningRoundParticipation
             {
-                TravelLeaderId = id,
+                TravelLeaderId = leader.Id,
+                MinTrips = leader.MinTrips,
+                MaxTrips = leader.MaxTrips,
+                Note = leader.Note,
                 Status = ParticipationStatus.Pending
             }).ToList()
         };
@@ -80,13 +84,27 @@ public class PlanningRoundService : IPlanningRoundService
             .ToListAsync(ct);
     }
 
-    public async Task SavePreferencesAsync(int participationId, IReadOnlyList<(int JourneyId, int Rank)> preferences, CancellationToken ct = default)
+    public async Task SavePreferencesAsync(
+        int participationId,
+        IReadOnlyList<(int JourneyId, int Rank)> preferences,
+        int? minTrips,
+        int? maxTrips,
+        string note,
+        bool allowAfterDeadline = false,
+        CancellationToken ct = default)
     {
+        if (minTrips.HasValue && maxTrips.HasValue && minTrips > maxTrips)
+            throw new InvalidOperationException("Minimaal aantal reizen mag niet groter zijn dan maximaal aantal reizen.");
+
         var participation = await _db.PlanningRoundParticipations
             .Include(p => p.Preferences)
+            .Include(p => p.PlanningRound)
             .FirstOrDefaultAsync(p => p.Id == participationId, ct);
 
         if (participation is null) return;
+
+        if (!allowAfterDeadline && participation.PlanningRound.IsPreferenceDeadlinePassed())
+            throw new InvalidOperationException("De deadline voor het indienen van voorkeuren is verlopen.");
 
         _db.RemoveRange(participation.Preferences);
         participation.Preferences = preferences.Select(p => new PlanningRoundPreference
@@ -95,9 +113,58 @@ public class PlanningRoundService : IPlanningRoundService
             JourneyId = p.JourneyId,
             Rank = p.Rank
         }).ToList();
+        participation.MinTrips = minTrips;
+        participation.MaxTrips = maxTrips;
+        participation.Note = note;
 
         participation.Status = ParticipationStatus.Submitted;
         participation.SubmittedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync(ct);
+    }
+
+    public async Task<IReadOnlyList<ParticipationNoteEntry>> GetParticipationNotesAsync(CancellationToken ct = default)
+    {
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        return await _db.PlanningRoundParticipations
+            .Where(p =>
+                p.PlanningRound.EndDate >= today &&
+                p.Note != null &&
+                p.Note != string.Empty)
+            .Select(p => new ParticipationNoteEntry
+            {
+                PlanningRoundId = p.PlanningRoundId,
+                PlanningRoundName = p.PlanningRound.Name,
+                TravelLeaderId = p.TravelLeaderId,
+                TravelLeaderName = p.TravelLeader.Name,
+                Note = p.Note
+            })
+            .OrderBy(x => x.PlanningRoundName)
+            .ThenBy(x => x.TravelLeaderName)
+            .ToListAsync(ct);
+    }
+
+    public async Task MarkUnavailableAsync(int participationId, CancellationToken ct = default)
+    {
+        var participation = await _db.PlanningRoundParticipations
+            .Include(p => p.Preferences)
+            .FirstOrDefaultAsync(p => p.Id == participationId, ct);
+
+        if (participation is null) return;
+
+        _db.RemoveRange(participation.Preferences);
+        participation.Preferences = [];
+        participation.Status = ParticipationStatus.Unavailable;
+        participation.SubmittedAt = DateTime.UtcNow;
+
+        // Remove leader from any unsaved draft planning versions for this round
+        var draftAssignments = await _db.PlanningAssignments
+            .Where(a => a.TravelLeaderId == participation.TravelLeaderId
+                     && a.PlanningVersion.PlanningRoundId == participation.PlanningRoundId
+                     && !a.PlanningVersion.IsPublished)
+            .ToListAsync(ct);
+
+        _db.RemoveRange(draftAssignments);
 
         await _db.SaveChangesAsync(ct);
     }

@@ -186,16 +186,21 @@
 
         if (freeHuidig.Count > 0)
         {
-            _form.StartDate = freeHuidig.Min(j => j.Start);
+            var minDate = freeHuidig.Min(j => j.Start);
+            _form.StartDate = minDate;
             _form.EndDate = freeHuidig.Max(j => j.End);
+            _form.PreferenceDeadline = minDate.AddMonths(-2);
+            _form.PublicationDeadline = minDate.AddMonths(-1);
             _form.Name = $"Planningsronde {_form.StartDate.Year}";
         }
         else
         {
-            var today = DateOnly.FromDateTime(DateTime.Today);
-            _form.StartDate = new DateOnly(today.Year, 1, 1);
-            _form.EndDate = new DateOnly(today.Year, 12, 31);
-            _form.Name = $"Planningsronde {today.Year}";
+            var thisYear = DateOnly.FromDateTime(DateTime.Today).Year;
+            _form.StartDate = new DateOnly(thisYear + 1, 1, 1);
+            _form.EndDate = new DateOnly(thisYear + 1, 12, 31);
+            _form.PreferenceDeadline = new DateOnly(thisYear, 11, 30);
+            _form.PublicationDeadline = new DateOnly(thisYear, 10, 31);
+            _form.Name = $"Planningsronde {thisYear}";
         }
 
         RefreshJourneysInRange();

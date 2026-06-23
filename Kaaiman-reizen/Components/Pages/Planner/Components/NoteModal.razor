@@ -54,7 +54,13 @@
                     }
                 </MudPaper>
 
-                <div>
+                <div class="d-flex gap-2">
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Tune"
+                               OnClick="EditPreferences">
+                        Voorkeuren aanpassen
+                    </MudButton>
                     <MudButton Variant="Variant.Outlined" OnClick="OnClose">Sluiten</MudButton>
                 </div>
             </MudStack>

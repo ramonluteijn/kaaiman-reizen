@@ -2,6 +2,7 @@ using Kaaiman_reizen.Components.Pages.Planner.Components;
 using Kaaiman_reizen.Data.Entities;
 using Kaaiman_reizen.Data.Enum;
 using Kaaiman_reizen.Data.Services;
+using Kaaiman_reizen.Data.Dtos;
 using Kaaiman_reizen.Exports;
 using Kaaiman_reizen.Helpers;
 using Microsoft.AspNetCore.Components;
@@ -44,6 +45,15 @@ public partial class Home : ComponentBase
     private int _userTimezoneOffsetMinutes;
     private bool _userTimezoneOffsetLoaded;
 
+    private List<Notification> _notifications = [];
+    private string _currentUserId = string.Empty;
+
+    private IReadOnlyList<PlanningRound> _rounds = [];
+    private List<TravelLeader> _travelLeadersWithoutJourneys = [];
+    private List<ParticipationNoteEntry> _travelLeadersWithNotes = [];
+    private List<Journey> _journeysWithoutTravelLeaders = [];
+    private List<OverlapData> _travelLeadersWithOverlappingJourneys = [];
+
     protected override async Task OnInitializedAsync()
     {
         var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
@@ -68,6 +78,10 @@ public partial class Home : ComponentBase
         if (_isPlanner)
         {
             _rounds = await RoundService.GetAllAsync();
+            _travelLeadersWithoutJourneys = await TravelLeaderService.GetTravelLeadersWithoutJourneysAsync(_selectedYear);
+            _travelLeadersWithNotes = (await RoundService.GetParticipationNotesAsync()).ToList();
+            _journeysWithoutTravelLeaders = await TravelLeaderService.GetJourneysWithoutTravelLeadersAsync(_selectedYear);
+            _travelLeadersWithOverlappingJourneys = await TravelLeaderService.GetTravelLeadersWithOverlappingJourneys();
 
             _expandedRounds = _rounds
                 .Where(r => !r.Versions.Any(v => v.IsPublished))

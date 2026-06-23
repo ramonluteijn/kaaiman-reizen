@@ -215,6 +215,30 @@ h1:focus {
     min-height: 12rem;
 }
 
+.app-details-toggle > summary {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    list-style: none;
+}
+
+.app-details-toggle > summary::-webkit-details-marker {
+    display: none;
+}
+
+.app-details-toggle > summary::before {
+    content: "\25B6";
+    font-size: 0.7rem;
+    color: #6c757d;
+    transform: rotate(0deg);
+    transition: transform 0.15s ease-in-out;
+}
+
+.app-details-toggle[open] > summary::before {
+    transform: rotate(90deg);
+}
+
 @media (max-width: 575.98px) {
     .auth-page-shell {
         min-height: auto;

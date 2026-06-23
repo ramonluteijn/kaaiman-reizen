@@ -12,9 +12,8 @@
         <strong>Nieuwe reisleider — hoe werkt dit?</strong>
         <ul>
             <li>Vul naam, e-mailadres en telefoonnummer in.</li>
-            <li>Geef aan hoeveel reizen deze reisleider gemiddeld kan begeleiden.</li>
-            <li>Stel het minimum en maximum per jaar in.</li>
-            <li>Gebruik de notitie voor extra opmerkingen en zet de reisleider actief of inactief.</li>
+            <li>Geef aan hoeveel reizen ervaring deze reisleider heeft.</li>
+            <li>Zet de reisleider actief of inactief.</li>
             <li>Klik op "Opslaan" om het profiel aan te maken.</li>
         </ul>
     </Tooltip>
@@ -51,28 +50,15 @@
                 <ValidationMessage For="() => _model.PhoneNumber" />
             </div>
 
-            <div class="mb-3">
-                <label class="form-label">Aantal reizen</label>
-                <InputNumber class="form-control" @bind-Value="_model.AmountOfTrips" />
-                <ValidationMessage For="() => _model.AmountOfTrips" />
-            </div>
+            <details class="app-details-toggle mb-3 border rounded">
+                <summary class="fw-semibold px-3 py-2">Geavanceerde instellingen</summary>
 
-            <div class="mb-3">
-                <label class="form-label">Minimaal aantal reizen per jaar</label>
-                <InputNumber class="form-control" @bind-Value="_model.MinTrips" />
-                <ValidationMessage For="() => _model.MinTrips" />
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">Maximaal aantal reizen per jaar</label>
-                <InputNumber class="form-control" @bind-Value="_model.MaxTrips" />
-                <ValidationMessage For="() => _model.MaxTrips" />
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">Notitie</label>
-                <InputTextArea class="form-control" @bind-Value="_model.Note" />
-            </div>
+                <div class="px-3 pb-3">
+                    <label class="form-label">Aantal reizen ervaring</label>
+                    <InputNumber class="form-control" @bind-Value="_model.AmountOfTrips" />
+                    <ValidationMessage For="() => _model.AmountOfTrips" />
+                </div>
+            </details>
 
             <div class="form-check mb-3">
                 <InputCheckbox class="form-check-input" @bind-Value="_model.IsActive" />

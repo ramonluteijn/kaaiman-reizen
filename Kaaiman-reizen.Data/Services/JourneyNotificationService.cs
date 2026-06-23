@@ -99,18 +99,12 @@ public class JourneyNotificationService
         await _db.SaveChangesAsync(cancellationToken);
     }
 
-    private async Task<bool> IsReminderEnabledAsync(CancellationToken cancellationToken)
+    private Task<bool> IsReminderEnabledAsync(CancellationToken cancellationToken)
     {
-        var rule = await _db.Rule
-            .AsNoTracking()
-            .FirstOrDefaultAsync(r => r.Key == RuleKeys.JourneyReminderEnabled, cancellationToken);
-
-        if (rule == null)
-            return RuleKeys.DefaultJourneyReminderEnabled;
-
-        return bool.TryParse(rule.Value, out var isEnabled)
-            ? isEnabled
-            : RuleKeys.DefaultJourneyReminderEnabled;
+        return _db.IsRuleEnabledAsync(
+            RuleKeys.JourneyReminderEnabled,
+            RuleKeys.DefaultJourneyReminderEnabled,
+            cancellationToken);
     }
 
     private async Task<List<int>> GetReminderDaysAsync(CancellationToken cancellationToken)

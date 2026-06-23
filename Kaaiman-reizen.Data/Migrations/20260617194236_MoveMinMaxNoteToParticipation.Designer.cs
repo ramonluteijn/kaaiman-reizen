@@ -4,6 +4,7 @@ using Kaaiman_reizen.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Kaaiman_reizen.Data.Migrations
 {
     [DbContext(typeof(MainContext))]
-    partial class MainContextModelSnapshot : ModelSnapshot
+    [Migration("20260617194236_MoveMinMaxNoteToParticipation")]
+    partial class MoveMinMaxNoteToParticipation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -436,33 +439,6 @@ namespace Kaaiman_reizen.Data.Migrations
                             IsActive = true,
                             Key = "JourneyReminderDays",
                             Value = "7,3",
-                            Weight = 1
-                        },
-                        new
-                        {
-                            Id = 8,
-                            Description = "Versturen van een welkomstmail met tijdelijk wachtwoord aan een nieuwe reisleider.",
-                            IsActive = true,
-                            Key = "WelcomeEmailEnabled",
-                            Value = "true",
-                            Weight = 1
-                        },
-                        new
-                        {
-                            Id = 9,
-                            Description = "Versturen van een notificatie wanneer een nieuwe planning wordt gepubliceerd.",
-                            IsActive = true,
-                            Key = "PlanningPublishedEnabled",
-                            Value = "true",
-                            Weight = 1
-                        },
-                        new
-                        {
-                            Id = 10,
-                            Description = "Versturen van een notificatie aan betrokken reisleiders wanneer een gepubliceerde planning wijzigt.",
-                            IsActive = true,
-                            Key = "PlanningChangedEnabled",
-                            Value = "true",
                             Weight = 1
                         });
                 });

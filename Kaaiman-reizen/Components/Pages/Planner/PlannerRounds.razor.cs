@@ -31,7 +31,10 @@ public partial class PlannerRounds : ComponentBase
         _allJourneys.Count(j => j.Start >= round.StartDate && j.Start <= round.EndDate);
 
     private int SubmittedCount(PlanningRound round) =>
-        round.Participations.Count(p => p.Status == ParticipationStatus.Submitted);
+        round.Participations.Count(p => p.Status is ParticipationStatus.Submitted or ParticipationStatus.Unavailable);
+
+    private int UnavailableCount(PlanningRound round) =>
+        round.Participations.Count(p => p.Status == ParticipationStatus.Unavailable);
 
     private RoundStatus GetStatus(PlanningRound round)
     {
