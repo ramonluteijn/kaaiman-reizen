@@ -41,6 +41,7 @@ public partial class PlannerRoundDraft
 
             SetSaveMessage(message, severity);
             _snackbar.Add(message, severity);
+            await MarkCleanAsync();
         }
         catch (Exception)
         {
