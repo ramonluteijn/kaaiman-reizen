@@ -1,4 +1,7 @@
-﻿@page "/"
+@page "/"
+
+@using Kaaiman_reizen.Components.Pages.Planner.Components
+@using Kaaiman_reizen.Data.Enum
 
 @rendermode InteractiveServer
 
@@ -39,311 +42,270 @@ else
 else
 {
     @if (_notifications.Any())
+    {
+        <AlertModal IsOpen="true" Title="Notificaties" Severity="Severity.Info" Dismissible="false"
+                    CloseOnBackdropClick="false">
+            <MudStack Spacing="1">
+                @foreach (var notification in _notifications)
+                {
+                    <MudPaper Class="pa-3 d-flex align-center justify-space-between gap-3" Outlined="true">
+                        <MudText Typo="Typo.body2">@notification.Message</MudText>
+                        <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small"
+                                       OnClick="@(() => MarkNotificationAsRead(notification))" aria-label="Melding sluiten" />
+                    </MudPaper>
+                }
+            </MudStack>
+        </AlertModal>
+    }
+
+    @if (_isPlanner)
+    {
+        <section>
+
+            @* ── Planning round steps cards ── *@
+            @if (!_rounds.Any())
             {
-                <AlertModal IsOpen="true" Title="Notificaties" Severity="Severity.Info" Dismissible="false"
-                            CloseOnBackdropClick="false">
-                    <MudStack Spacing="1">
-                        @foreach (var notification in _notifications)
-                        {
-                            <MudPaper Class="pa-3 d-flex align-center justify-space-between gap-3" Outlined="true">
-                                <MudText Typo="Typo.body2">@notification.Message</MudText>
-                                <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small"
-                                               OnClick="@(() => MarkNotificationAsRead(notification))" aria-label="Melding sluiten" />
-                            </MudPaper>
-                        }
-                    </MudStack>
-                </AlertModal>
+                <MudCard Elevation="2" Class="mb-4">
+                    <MudCardContent Class="d-flex flex-column align-center py-6">
+                        <span class="material-icons mb-2" style="font-size: 48px; color: #9e9e9e;">event_note</span>
+                        <MudText Typo="Typo.h6" Class="mb-1">Nog geen planningsrondes</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+                            Maak een ronde aan om het stappenplan te starten.
+                        </MudText>
+                        <MudButton Href="/planner/rounds"
+                                   Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   EndIcon="@Icons.Material.Filled.Add">
+                            Ronde aanmaken
+                        </MudButton>
+                    </MudCardContent>
+                </MudCard>
             }
-
-            @if (_isPlanner)
+            else
             {
-                <section>
-                    <MudGrid Class="mt-1">
+                @foreach (var round in _rounds)
+                {
+                    var isExpanded = _expandedRounds.Contains(round.Id);
+                    var isPublished = round.Versions.Any(v => v.IsPublished);
 
-                        @* ── Planningsrondes statusoverzicht ── *@
-                        @{
-                            var activePublished = ActivePublishedRounds().ToList();
-                            var pendingPrefs    = RoundsWithPendingPrefs().ToList();
-                            var staleRounds     = RoundsWithStaleDraft().ToList();
-                        }
-                        @if (activePublished.Any() || pendingPrefs.Any() || staleRounds.Any())
-                        {
-                            <MudItem xs="12">
-                                <MudCard Elevation="2">
-                                    <MudCardContent>
-                                        <MudText Typo="Typo.h6" Class="mb-3">Planningsrondes</MudText>
-                                        <MudStack Spacing="2">
-
-                                            @foreach (var round in activePublished)
-                                            {
-                                                <MudPaper Class="pa-3 d-flex align-center justify-space-between flex-wrap gap-2" Outlined="true">
-                                                    <div class="d-flex align-center gap-2 flex-wrap">
-                                                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" />
-                                                        <div>
-                                                            <MudText Typo="Typo.body1"><b>@round.Name</b></MudText>
-                                                            <MudText Typo="Typo.body2" Color="Color.Secondary">
-                                                                @round.StartDate.ToString("d MMM") – @round.EndDate.ToString("d MMM yyyy") · Gepubliceerd
-                                                            </MudText>
-                                                        </div>
-                                                    </div>
-                                                    <MudButton Href="@($"/planner/rounds/{round.Id}/draft")"
-                                                               Variant="Variant.Outlined"
-                                                               Color="Color.Primary"
-                                                               Size="Size.Small"
-                                                               EndIcon="@Icons.Material.Filled.ArrowForward">
-                                                        Bekijk
-                                                    </MudButton>
-                                                </MudPaper>
-                                            }
-
-                                            @foreach (var item in pendingPrefs)
-                                            {
-                                                var daysLeft = (int)(item.Round.PreferenceDeadline.Date - DateTime.UtcNow.Date).TotalDays;
-                                                <MudPaper Class="pa-3 d-flex align-center justify-space-between flex-wrap gap-2" Outlined="true">
-                                                    <div class="d-flex align-center gap-2 flex-wrap">
-                                                        <MudIcon Icon="@Icons.Material.Filled.HourglassBottom" Color="Color.Warning" Size="Size.Small" />
-                                                        <div>
-                                                            <MudText Typo="Typo.body1"><b>@item.Round.Name</b></MudText>
-                                                            <MudText Typo="Typo.body2" Color="Color.Secondary">
-                                                                @item.Pending van @item.Total reisleiders nog niet ingediend ·
-                                                                deadline @(daysLeft == 0 ? "vandaag" : $"over {daysLeft} dag{(daysLeft == 1 ? "" : "en")}")
-                                                            </MudText>
-                                                        </div>
-                                                    </div>
-                                                    <MudButton Href="@($"/planner/rounds/{item.Round.Id}/draft")"
-                                                               Variant="Variant.Outlined"
-                                                               Color="Color.Warning"
-                                                               Size="Size.Small"
-                                                               EndIcon="@Icons.Material.Filled.ArrowForward">
-                                                        Bekijk
-                                                    </MudButton>
-                                                </MudPaper>
-                                            }
-
-                                            @foreach (var round in staleRounds)
-                                            {
-                                                <MudPaper Class="pa-3 d-flex align-center justify-space-between flex-wrap gap-2" Outlined="true">
-                                                    <div class="d-flex align-center gap-2 flex-wrap">
-                                                        <MudIcon Icon="@Icons.Material.Filled.Sync" Color="Color.Error" Size="Size.Small" />
-                                                        <div>
-                                                            <MudText Typo="Typo.body1"><b>@round.Name</b></MudText>
-                                                            <MudText Typo="Typo.body2" Color="Color.Secondary">
-                                                                Voorkeuren gewijzigd na aanmaken concept — opnieuw genereren aanbevolen
-                                                            </MudText>
-                                                        </div>
-                                                    </div>
-                                                    <MudButton Href="@($"/planner/rounds/{round.Id}/draft")"
-                                                               Variant="Variant.Outlined"
-                                                               Color="Color.Error"
-                                                               Size="Size.Small"
-                                                               EndIcon="@Icons.Material.Filled.ArrowForward">
-                                                        Opnieuw genereren
-                                                    </MudButton>
-                                                </MudPaper>
-                                            }
-
-                                        </MudStack>
-                                    </MudCardContent>
-                                </MudCard>
-                            </MudItem>
-                        }
-
-                        @if (_publishedPlanning)
-                        {
-                            <MudItem xs="12">
-                                <MudCard Elevation="2">
-                                    <MudCardContent>
-                                        <MudText Typo="Typo.h6" Class="mb-3">Definitieve planning</MudText>
-                                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="HandlePrintPdf"
-                                                   EndIcon="@Icons.Material.Filled.PictureAsPdf">
-                                            Download als PDF
-                                        </MudButton>
-                                    </MudCardContent>
-                                </MudCard>
-                            </MudItem>
-                        }
-
-                        <MudItem xs="12">
-                            <MudCard Elevation="2">
-                                <MudCardContent>
-                                    <MudText Typo="Typo.h6" Class="mb-3">Planning</MudText>
-                                    <MudButton Href="/planner/rounds"
-                                               Variant="Variant.Filled"
-                                               Color="Color.Primary"
-                                               Size="Size.Small"
-                                               EndIcon="@Icons.Material.Filled.ArrowForward">
-                                        Naar planningsrondes
-                                    </MudButton>
-                                </MudCardContent>
-                            </MudCard>
-                        </MudItem>
-
-                        <MudItem xs="12" sm="12" md="6">
-                            <MudCard Elevation="2" Class="h-100">
-                                <MudCardContent>
-                                    <MudText Typo="Typo.h6" Color="Color.Warning" Class="mb-3">
-                                        Reizen zonder reisleiders (@_journeysWithoutTravelLeaders.Count)
-                                    </MudText>
-
-                                    @if (_publishedPlanningIsComplete)
-                                    {
-                                        <AlertModal IsOpen="true"
-                                                    Title="Reisplanning compleet"
-                                                    Severity="Severity.Success"
-                                                    Message="Alle reizen zijn voorzien van reisleiders." />
-                                    }
-                                    else if (!_journeysWithoutTravelLeaders.Any())
-                                    {
-                                        <MudText Typo="Typo.body2" Class="mud-text-secondary">
-                                            Concept is volledig — publiceer de planning om te bevestigen.
-                                        </MudText>
-                                    }
-                                    else
-                                    {
-                                        <div style="max-height: 200px; overflow-y: auto;" class="pr-2 mb-2">
-                                            <MudList T="string" Clickable="false" Dense="true">
-                                                @foreach (var journey in _journeysWithoutTravelLeaders)
-                                                {
-                                                    <MudListItem Icon="@Icons.Material.Filled.EventBusy" IconColor="Color.Warning">
-                                                        <div class="d-flex flex-column">
-                                                            <MudText Typo="Typo.body1"><b>@journey.Name</b></MudText>
-                                                            <MudText Typo="Typo.body2" Class="mud-text-secondary">
-                                                                @DateDisplay.FormatDateRange(journey.Start, journey.End)
-                                                            </MudText>
-                                                        </div>
-                                                    </MudListItem>
-                                                    <MudDivider DividerType="DividerType.Inset" />
-                                                }
-                                            </MudList>
-                                        </div>
-                                        <MudButton Href="/journeys/create"
-                                                   Variant="Variant.Outlined"
-                                                   Color="Color.Warning"
-                                                   Size="Size.Small"
-                                                   EndIcon="@Icons.Material.Filled.Add">
-                                            Nieuwe reis aanmaken
-                                        </MudButton>
-                                    }
-                                </MudCardContent>
-                            </MudCard>
-                        </MudItem>
-
-                        <MudItem xs="12" sm="12" md="6">
-                            <MudCard Elevation="2" Class="h-100">
-                                <MudCardContent>
-                                    <MudText Typo="Typo.h6" Color="Color.Warning" Class="mb-3">
-                                        Reisleiders zonder reis (@_travelLeadersWithoutJourneys.Count)
-                                    </MudText>
-
-                                    @if (!_travelLeadersWithoutJourneys.Any())
-                                    {
-                                        <MudText Typo="Typo.body2" Class="text-muted">
-                                            Iedereen is momenteel ingepland.
-                                        </MudText>
-                                    }
-                                    else
-                                    {
-                                        <div style="height: 190px; overflow-y: auto; overflow-x: hidden;" class="pr-2 mb-2">
-                                            <MudList T="string" Dense="true" DisablePadding="true">
-                                                @foreach (var leader in _travelLeadersWithoutJourneys)
-                                                {
-                                                    <MudListItem Icon="@Icons.Material.Filled.PersonOutline" IconColor="Color.Warning" Class="py-0">
-                                                        <div style="height: 30px;" class="d-flex align-center">
-                                                            <MudText Typo="Typo.body2">@leader.Name</MudText>
-                                                        </div>
-                                                    </MudListItem>
-                                                    <MudDivider />
-                                                }
-                                            </MudList>
-                                        </div>
-                                        <MudButton Href="/travelleaders/create"
-                                                   Variant="Variant.Outlined"
-                                                   Color="Color.Warning"
-                                                   Size="Size.Small"
-                                                   EndIcon="@Icons.Material.Filled.PersonAdd">
-                                            Nieuwe reisleider aanmaken
-                                        </MudButton>
-                                    }
-                                </MudCardContent>
-                            </MudCard>
-                        </MudItem>
-
-                        <MudItem xs="12" sm="12">
-                            <MudCard Elevation="2" Class="h-100">
-                                <MudCardContent>
-                                    <MudText Typo="Typo.h6" Class="mb-3">Notities van reisleiders (@_travelLeadersWithNotes.Count)</MudText>
-
-                                    @if (_travelLeadersWithNotes.Any() == false)
-                                    {
-                                        <MudText Typo="Typo.body2" Class="text-muted italic">Geen nieuwe opmerkingen gevonden.</MudText>
-                                    }
-                                    else
-                                    {
-                                        <div style="height: 230px; overflow-y: auto; overflow-x: hidden;" class="pr-2">
-                                            <MudList T="string" Dense="true" DisablePadding="true">
-                                                @foreach (var leader in _travelLeadersWithNotes)
-                                                {
-                                                    <MudListItem Icon="@Icons.Material.Filled.ChatBubbleOutline" IconColor="Color.Primary">
-                                                        <div class="d-flex flex-column">
-                                                            <MudText Typo="Typo.subtitle2"><b>@leader.TravelLeaderName</b></MudText>
-                                                            <MudText Typo="Typo.caption" Class="mud-text-secondary">
-                                                                @leader.PlanningRoundName
-                                                            </MudText>
-                                                            <MudText Typo="Typo.body2" Class="mud-text-secondary italic">
-                                                                "@leader.Note"
-                                                            </MudText>
-                                                        </div>
-                                                    </MudListItem>
-                                                    <MudDivider DividerType="DividerType.Inset" />
-                                                }
-                                            </MudList>
-                                        </div>
-                                    }
-                                </MudCardContent>
-                            </MudCard>
-                        </MudItem>
-                    </MudGrid>
-
-                </section>
-            }
-
-            @if (_isReisleider)
-            {
-                <section>
-                    <h2 class="h5">Gepubliceerde planning</h2>
-
-                    @if (_publishedJourneys.Count == 0)
+                    @if (!isExpanded)
                     {
-                        <div class="text-muted">Er is nog geen gepubliceerde planning zichtbaar.</div>
+                        <MudPaper Class="pa-3 mb-2 d-flex align-center justify-space-between" Elevation="1">
+                            <div class="d-flex align-center gap-2">
+                                @if (isPublished)
+                                {
+                                    <span class="material-icons" style="color: #2e7d32; font-size: 18px;">check_circle</span>
+                                }
+                                <MudText Typo="Typo.body1"><strong>@round.Name</strong></MudText>
+                                @if (isPublished)
+                                {
+                                    <MudChip T="string" Color="Color.Success" Size="Size.Small">Gepubliceerd</MudChip>
+                                }
+                            </div>
+                            <MudIconButton Icon="@Icons.Material.Filled.ExpandMore"
+                                           Size="Size.Small"
+                                           OnClick="@(() => ToggleRound(round.Id))"
+                                           aria-label="Uitklappen" />
+                        </MudPaper>
                     }
                     else
                     {
-                        <div class="card">
-                            <div class="card-body p-0">
-                                <div class="table-responsive app-table-scroll">
-                                    <table class="app-table mb-0 table">
-                                        <thead>
-                                            <tr>
-                                                <th>Land</th>
-                                                <th>Periode</th>
-                                                <th>Reisleiders</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach (var journey in _publishedJourneys)
-                                            {
-                                                <tr>
-                                                    <td>@journey.Name</td>
-                                                    <td>@DateDisplay.FormatDate(journey.Start) - @DateDisplay.FormatDate(journey.End)</td>
-                                                    <td>@FormatTravelLeaders(journey)</td>
-                                                </tr>
-                                            }
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
+                        <div class="mb-4">
+                            <PlanningRoundSteps Model="@BuildPlanningRoundSteps(round)" />
                         </div>
+                        @if (isPublished)
+                        {
+                            <div class="mb-2" style="text-align: right;">
+                                <MudButton Size="Size.Small"
+                                           Variant="Variant.Text"
+                                           StartIcon="@Icons.Material.Filled.ExpandLess"
+                                           OnClick="@(() => ToggleRound(round.Id))">
+                                    Inklappen
+                                </MudButton>
+                            </div>
+                        }
                     }
-                </section>
+                }
             }
+
+            @* ── PDF banner ── *@
+            @{
+                var publishedRound = _rounds
+                    .Where(r => r.Versions.Any(v => v.IsPublished))
+                    .OrderByDescending(r => r.Year)
+                    .ThenByDescending(r => r.StartDate)
+                    .FirstOrDefault();
+                var publishedVersion = publishedRound?.Versions
+                    .Where(v => v.IsPublished)
+                    .OrderByDescending(v => v.CreatedAt)
+                    .FirstOrDefault();
+            }
+            @if (_publishedPlanning && publishedRound is not null && publishedVersion is not null)
+            {
+                <MudPaper Class="pa-3 mb-4 d-flex align-center justify-space-between flex-wrap gap-3"
+                          Elevation="1"
+                          Style="border-left: 4px solid var(--mud-palette-primary);">
+                    <div class="d-flex align-center gap-2">
+                        <span class="material-icons" style="color: var(--mud-palette-primary);">picture_as_pdf</span>
+                        <div>
+                            <MudText Typo="Typo.body1">
+                                Definitieve planning — <strong>@publishedRound.Name</strong>
+                            </MudText>
+                            <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                Gepubliceerd op @publishedVersion.CreatedAt.ToString("d MMM yyyy")
+                            </MudText>
+                        </div>
+                    </div>
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               Size="Size.Small"
+                               OnClick="HandlePrintPdf"
+                               EndIcon="@Icons.Material.Filled.PictureAsPdf">
+                        Download als PDF
+                    </MudButton>
+                </MudPaper>
+            }
+            
+            <MudGrid Class="mt-1">
+
+                <MudItem xs="12" sm="12" md="6">
+                    <MudCard Elevation="2" Class="h-100">
+                        <MudCardContent>
+                            <MudText Typo="Typo.h6" Class="mb-3">Voorkeuren per ronde</MudText>
+
+                            @if (!_rounds.Any())
+                            {
+                                <MudText Typo="Typo.body2" Class="mud-text-secondary">Nog geen rondes aangemaakt.</MudText>
+                            }
+                            else
+                            {
+                                <div style="max-height: 240px; overflow-y: auto;" class="pr-2">
+                                    @foreach (var round in _rounds)
+                                    {
+                                        var total = round.Participations.Count;
+                                        var submitted = round.Participations.Count(p => p.Status == ParticipationStatus.Submitted);
+                                        var deadlinePassed = DateTime.UtcNow > round.PreferenceDeadline;
+                                        var pct = total > 0 ? (submitted * 100 / total) : 0;
+                                        var barColor = (submitted == total && total > 0) ? "#2e7d32"
+                                            : deadlinePassed ? "#c62828"
+                                            : "#ef6c00";
+
+                                        <div class="mb-3">
+                                            <div class="d-flex justify-space-between mb-1">
+                                                <MudText Typo="Typo.body2"><strong>@round.Name</strong></MudText>
+                                                <MudText Typo="Typo.body2" Style="@($"color: {barColor}; font-weight: 600;")">
+                                                    @submitted / @total ingediend
+                                                </MudText>
+                                            </div>
+                                            <div style="height: 6px; background: #e0e0e0; border-radius: 3px; overflow: hidden;">
+                                                <div style="@($"height: 100%; width: {pct}%; background: {barColor}; border-radius: 3px; transition: width 0.3s;")"></div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+
+                <MudItem xs="12" sm="12" md="6">
+                    <MudCard Elevation="2" Class="h-100">
+                        <MudCardContent>
+                            <MudText Typo="Typo.h6" Class="mb-3">Concept &amp; publicatie</MudText>
+
+                            @if (!_rounds.Any())
+                            {
+                                <MudText Typo="Typo.body2" Class="mud-text-secondary">Nog geen rondes aangemaakt.</MudText>
+                            }
+                            else
+                            {
+                                <MudList T="string" Dense="true" DisablePadding="true">
+                                    @foreach (var round in _rounds)
+                                    {
+                                        var published = round.Versions.Any(v => v.IsPublished);
+                                        var hasDraft = round.Versions.Any(v => !v.IsPublished);
+                                        var stale = IsDraftStale(round);
+
+                                        string badge;
+                                        Color badgeColor;
+                                        if (published)
+                                        {
+                                            badge = "Gepubliceerd";
+                                            badgeColor = Color.Success;
+                                        }
+                                        else if (stale)
+                                        {
+                                            badge = "Concept verouderd";
+                                            badgeColor = Color.Warning;
+                                        }
+                                        else if (hasDraft)
+                                        {
+                                            badge = "Concept aanwezig";
+                                            badgeColor = Color.Success;
+                                        }
+                                        else
+                                        {
+                                            badge = "Geen concept";
+                                            badgeColor = Color.Default;
+                                        }
+
+                                        <MudListItem Class="py-1">
+                                            <div class="d-flex align-center justify-space-between">
+                                                <MudText Typo="Typo.body2">@round.Name</MudText>
+                                                <MudChip T="string" Color="@badgeColor" Size="Size.Small">@badge</MudChip>
+                                            </div>
+                                        </MudListItem>
+                                        <MudDivider />
+                                    }
+                                </MudList>
+                            }
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+
+
+            </MudGrid>
+
+        </section>
+    }
+
+    @if (_isReisleider)
+    {
+        <section>
+            <h2 class="h5">Gepubliceerde planning</h2>
+
+            @if (_publishedJourneys.Count == 0)
+            {
+                <div class="text-muted">Er is nog geen gepubliceerde planning zichtbaar.</div>
+            }
+            else
+            {
+                <div class="card">
+                    <div class="card-body p-0">
+                        <div class="table-responsive app-table-scroll">
+                            <table class="app-table mb-0 table">
+                                <thead>
+                                    <tr>
+                                        <th>Land</th>
+                                        <th>Periode</th>
+                                        <th>Reisleiders</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var journey in _publishedJourneys)
+                                    {
+                                        <tr>
+                                            <td>@journey.Name</td>
+                                            <td>@DateDisplay.FormatDate(journey.Start) - @DateDisplay.FormatDate(journey.End)</td>
+                                            <td>@FormatTravelLeaders(journey)</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            }
+        </section>
+    }
 }

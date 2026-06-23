@@ -76,6 +76,12 @@ public class JourneyService : IJourneyService
         await _db.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task DeleteJourneysAsync(IEnumerable<int> ids, CancellationToken cancellationToken = default)
+    {
+        foreach (var id in ids)
+            await DeleteJourneyAsync(id, cancellationToken);
+    }
+
     public async Task<Journey?> GetJourneyByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         return await _db.Journey
@@ -159,7 +165,7 @@ public class JourneyService : IJourneyService
                 var columns = row.Elements<Cell>().ToList();
                 var journey = new Journey
                 {
-                    Name = sharedStringTable?.ElementAt(int.Parse(columns[0].CellValue?.InnerText ?? string.Empty))?.InnerText ?? string.Empty,
+                    Name = ReadCellString(columns[0], sharedStringTable),
                     Start = DateOnly.FromDateTime(DateTime.FromOADate(double.Parse(columns[1].CellValue?.InnerText ?? string.Empty))),
                     End = DateOnly.FromDateTime(DateTime.FromOADate(double.Parse(columns[2].CellValue?.InnerText ?? string.Empty))),
                     Busses = int.TryParse(columns[3].CellValue?.InnerText ?? string.Empty, out int busses) ? busses : 0,
@@ -214,6 +220,17 @@ public class JourneyService : IJourneyService
         }
 
         return journeys;
+    }
+
+    private static string ReadCellString(Cell cell, SharedStringTable? sharedStringTable)
+    {
+        if (cell.DataType?.Value == CellValues.InlineString)
+            return cell.InlineString?.Text?.Text ?? string.Empty;
+
+        if (int.TryParse(cell.CellValue?.InnerText, out var index))
+            return sharedStringTable?.ElementAt(index)?.InnerText ?? string.Empty;
+
+        return cell.CellValue?.InnerText ?? string.Empty;
     }
 
     private BookingStatus GetBookingStatus(int status) => status switch

@@ -1,0 +1,114 @@
+<div class="sp-card">
+
+    <div class="sp-header">
+        <div class="sp-header-left">
+            <span class="material-icons sp-header-icon">check_box</span>
+            <span class="sp-header-title">Stappenplan &mdash; @Model.RoundName</span>
+            <span class="sp-stap-badge">stap @Model.CurrentStep van @Model.Steps.Count</span>
+        </div>
+        <a href="/planner/rounds" class="sp-help-link">
+            Alle rondes <span class="material-icons sp-help-icon">arrow_forward</span>
+        </a>
+    </div>
+
+    <div class="sp-progress-row">
+        <span class="sp-progress-label">Voortgang</span>
+        <div class="sp-progress-track">
+            <div class="sp-progress-fill" style="width: @Model.Progress%"></div>
+        </div>
+        <span class="sp-progress-pct">@Model.Progress%</span>
+    </div>
+
+    <div class="sp-steps-outer">
+        <div class="sp-steps">
+            @foreach (var (step, idx) in Model.Steps.Select((s, i) => (s, i)))
+            {
+                var isFirst = idx == 0;
+                var isLast = idx == Model.Steps.Count - 1;
+                var prevCompleted = !isFirst && Model.Steps[idx - 1].Status == StepStatus.Completed;
+                var selfCompleted = step.Status == StepStatus.Completed;
+
+                var leftCls = isFirst ? "sp-line--hidden" : (prevCompleted ? "sp-line--green" : "sp-line--grey");
+                var rightCls = isLast ? "sp-line--hidden" : (selfCompleted ? "sp-line--green" : "sp-line--grey");
+                var circleCls = step.Status switch
+                {
+                    StepStatus.Completed  => "sp-circle--voltooid",
+                    StepStatus.Current    => "sp-circle--huidig",
+                    StepStatus.Attention  => "sp-circle--aandacht",
+                    _                     => "sp-circle--toekomstig"
+                };
+                var sublabelCls = step.SublabelStyle switch
+                {
+                    SublabelStyle.GreenBadge => "sp-sublabel--groen-badge",
+                    SublabelStyle.GreyBadge  => "sp-sublabel--grijs-badge",
+                    SublabelStyle.OrangeText => "sp-sublabel--oranje",
+                    SublabelStyle.RedText    => "sp-sublabel--rood",
+                    _                        => "sp-sublabel--grijs"
+                };
+                var knopCls = step.ButtonVariant switch
+                {
+                    ButtonVariant.Danger   => "sp-btn--gevaar",
+                    ButtonVariant.Outlined => "sp-btn--outlined",
+                    _                      => "sp-btn--primair"
+                };
+
+                <div class="sp-step">
+                    <div class="sp-step-head">
+                        <div class="sp-line @leftCls"></div>
+                        <div class="sp-circle @circleCls">
+                            @if (step.Status == StepStatus.Completed)
+                            {
+                                <span class="material-icons sp-check-icon">check</span>
+                            }
+                            else
+                            {
+                                @step.Number
+                            }
+                        </div>
+                        <div class="sp-line @rightCls"></div>
+                    </div>
+
+                    <div class="sp-step-body">
+                        <div class="sp-step-title @(step.Status == StepStatus.Current ? "sp-step-title--active" : "")">
+                            @step.Title
+                        </div>
+                        @if (!string.IsNullOrEmpty(step.Sublabel))
+                        {
+                            <div class="sp-sublabel @sublabelCls">@step.Sublabel</div>
+                        }
+                        @if (step.PendingLeaders.Count > 0 && step.Status != StepStatus.Completed)
+                        {
+                            <button class="sp-pending-toggle" @onclick="() => TogglePending(step.Number)">
+                                @step.PendingLeaders.Count niet ingediend
+                                <span class="material-icons sp-pending-icon">
+                                    @(_expandedPendingStep == step.Number ? "expand_less" : "expand_more")
+                                </span>
+                            </button>
+                            @if (_expandedPendingStep == step.Number)
+                            {
+                                <div class="sp-pending-list">
+                                    @foreach (var name in step.PendingLeaders)
+                                    {
+                                        <div class="sp-pending-name">@name</div>
+                                    }
+                                </div>
+                            }
+                        }
+                        @if (step.ButtonText is not null)
+                        {
+                            @if (step.ButtonHref is not null)
+                            {
+                                <a href="@step.ButtonHref" class="sp-btn @knopCls">@step.ButtonText</a>
+                            }
+                            else
+                            {
+                                <button class="sp-btn @knopCls">@step.ButtonText</button>
+                            }
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+</div>
