@@ -1,5 +1,6 @@
 @page "/settings"
 @using Microsoft.AspNetCore.Authorization
+@using Kaaiman_reizen.Data.Rules
 @attribute [Authorize(Roles = "Planner")]
 @rendermode InteractiveServer
 
@@ -87,28 +88,38 @@
 <div class="card">
     <div class="card-body">
         <h2 class="h5">Reisnotificaties</h2>
+        <p class="text-muted">Kies per notificatie of deze verstuurd wordt.</p>
 
-        <div class="form-check form-switch mb-3">
-            <input class="form-check-input"
-                   type="checkbox"
-                   role="switch"
-                   id="journey-reminder-enabled"
-                   checked="@_notificationsEnabled"
-                   @onchange="OnNotificationsEnabledChanged" />
-            <label class="form-check-label" for="journey-reminder-enabled">
-                Notificaties versturen
-            </label>
-        </div>
+        @foreach (var toggle in NotificationToggles)
+        {
+            <div class="mb-3">
+                <div class="form-check form-switch">
+                    <input class="form-check-input"
+                           type="checkbox"
+                           role="switch"
+                           id="@($"notification-{toggle.Key}")"
+                           checked="@IsNotificationEnabled(toggle.Key)"
+                           @onchange="@(args => OnNotificationToggleChanged(toggle.Key, args))" />
+                    <label class="form-check-label" for="@($"notification-{toggle.Key}")">
+                        @toggle.Label
+                    </label>
+                </div>
+                <div class="form-text">@toggle.Description</div>
 
-        <div class="mb-2">
-            <label class="form-label" for="journey-reminder-days">Dagen voor vertrek</label>
-            <input id="journey-reminder-days"
-                   class="form-control"
-                   placeholder="Bijv. 7,3"
-                   value="@_notificationDaysInput"
-                   @onchange="OnReminderDaysChanged"
-                   disabled="@(!_notificationsEnabled)" />
-            <div class="form-text">Gebruik komma's tussen dagen, bijvoorbeeld 14,7,3.</div>
-        </div>
+                @if (toggle.Key == RuleKeys.JourneyReminderEnabled)
+                {
+                    <div class="mt-2 ms-4">
+                        <label class="form-label" for="journey-reminder-days">Dagen voor vertrek</label>
+                        <input id="journey-reminder-days"
+                               class="form-control"
+                               placeholder="Bijv. 7,3"
+                               value="@_notificationDaysInput"
+                               @onchange="OnReminderDaysChanged"
+                               disabled="@(!IsNotificationEnabled(RuleKeys.JourneyReminderEnabled))" />
+                        <div class="form-text">Gebruik komma's tussen dagen, bijvoorbeeld 14,7,3.</div>
+                    </div>
+                }
+            </div>
+        }
     </div>
 </div>
