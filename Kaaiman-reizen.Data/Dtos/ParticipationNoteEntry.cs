@@ -7,4 +7,6 @@ public sealed class ParticipationNoteEntry
     public int TravelLeaderId { get; init; }
     public string TravelLeaderName { get; init; } = string.Empty;
     public string Note { get; init; } = string.Empty;
+
+    public bool NoteIsProcessed { get; set; }
 }

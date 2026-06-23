@@ -272,29 +272,26 @@
                                     </MudSelect>
                                 </div>
 
-                                @{
-                                    var test = false;
-                                }
-
                                 <div class="d-flex flex-column">
-                                    @foreach (var leader in leadersWithNotes)
+                                    @foreach (var participation in planningRoundParticipationNotes)
                                     {
                                         <div class="mb-3">
-                                            <p class="fw-bold mb-2">@leader.Name</p>
+                                            <p class="fw-bold mb-2">@participation.TravelLeaderName</p>
 
                                             <div class="d-flex align-items-start gap-2 rounded border p-2">
-                                                <MudCheckBox @bind-Value="test"
-                                                             Color="Color.Success"
-                                                             UncheckedColor="Color.Default"
-                                                             Class="mt-n1" />
-                                                <span>@leader.Note</span>
+                                                <MudCheckBox Value="@participation.NoteIsProcessed"
+                                                 ValueChanged="@((bool value) => OnNoteProcessedChanged(participation, value))"
+                                                 Color="Color.Success"
+                                                 UncheckedColor="Color.Default"
+                                                 Class="mt-n1" />
+                                                <span>@participation.Note</span>
                                             </div>
                                         </div>
                                     }
                                 </div>
 
                             </aside>
-                        }
+                        }s
 
                         <div class="pd-main">
                             @if (_result.JourneyWarnings.Any())
