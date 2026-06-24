@@ -1,4 +1,5 @@
 using Kaaiman_reizen.Data.Entities;
+using Kaaiman_reizen.Data.Rules;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -125,6 +126,14 @@ public class PlanningService : IPlanningService
         CancellationToken cancellationToken)
     {
         if (changedTravelLeaderIds.Count == 0)
+            return;
+
+        var planningChangedEnabled = await _db.IsRuleEnabledAsync(
+            RuleKeys.PlanningChangedEnabled,
+            RuleKeys.DefaultPlanningChangedEnabled,
+            cancellationToken);
+
+        if (!planningChangedEnabled)
             return;
 
         var travelLeaderRole = await _db.Roles
@@ -337,31 +346,39 @@ public class PlanningService : IPlanningService
             };
             _db.PlanningVersions.Add(version);
 
-            var allUsers = await _db.Users.ToListAsync(cancellationToken);
-            var notifications = allUsers.Select(u => new Notification
-            {
-                ApplicationUserId = u.Id,
-                Message = $"De definitieve planning '{name}' is gepubliceerd. Bekijk het dashboard en geef uw input.",
-                CreatedAt = DateTime.UtcNow,
-                IsRead = false
-            });
-            _db.Notifications.AddRange(notifications);
+            var planningPublishedEnabled = await _db.IsRuleEnabledAsync(
+                RuleKeys.PlanningPublishedEnabled,
+                RuleKeys.DefaultPlanningPublishedEnabled,
+                cancellationToken);
 
-            var emails = allUsers.Where(u => !string.IsNullOrWhiteSpace(u.Email)).Select(u => u.Email!).ToList();
-            if (emails.Any())
+            if (planningPublishedEnabled)
             {
-                _ = Task.Run(async () =>
+                var allUsers = await _db.Users.ToListAsync(cancellationToken);
+                var notifications = allUsers.Select(u => new Notification
                 {
-                    try
-                    {
-                        using var scope = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.CreateScope(_serviceProvider);
-                        var emailDispatcher = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<IEmailDispatcher>(scope.ServiceProvider);
-                        var subject = $"Nieuwe planning gepubliceerd: {name}";
-                        var message = $"De definitieve planning '{name}' is gepubliceerd. Log in op het dashboard om de planning te bekijken en uw input te geven.";
-                        await emailDispatcher.SendEmailToUsersAsync(emails, subject, message);
-                    }
-                    catch { }
+                    ApplicationUserId = u.Id,
+                    Message = $"De definitieve planning '{name}' is gepubliceerd. Bekijk het dashboard en geef uw input.",
+                    CreatedAt = DateTime.UtcNow,
+                    IsRead = false
                 });
+                _db.Notifications.AddRange(notifications);
+
+                var emails = allUsers.Where(u => !string.IsNullOrWhiteSpace(u.Email)).Select(u => u.Email!).ToList();
+                if (emails.Any())
+                {
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            using var scope = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.CreateScope(_serviceProvider);
+                            var emailDispatcher = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<IEmailDispatcher>(scope.ServiceProvider);
+                            var subject = $"Nieuwe planning gepubliceerd: {name}";
+                            var message = $"De definitieve planning '{name}' is gepubliceerd. Log in op het dashboard om de planning te bekijken en uw input te geven.";
+                            await emailDispatcher.SendEmailToUsersAsync(emails, subject, message);
+                        }
+                        catch { }
+                    });
+                }
             }
 
             if (publishedPlanningChanged)

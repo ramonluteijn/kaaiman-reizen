@@ -25,6 +25,11 @@
     background-color: #fff;
 }
 
+.journey-check-column {
+    width: 2.5rem;
+    text-align: center;
+}
+
 .journey-name-column,
 .journey-name-cell {
 	min-width: 14rem;

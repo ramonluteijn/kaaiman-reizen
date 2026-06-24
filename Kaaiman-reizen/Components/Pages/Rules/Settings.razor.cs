@@ -28,14 +28,24 @@ public partial class Settings
     private string _searchTerm = string.Empty;
     private string _sortColumn = "Key";
     private bool _sortAscending = true;
-    private bool _notificationsEnabled = RuleKeys.DefaultJourneyReminderEnabled;
+    private readonly Dictionary<string, bool> _notificationEnabled = new();
     private string _notificationDaysInput = string.Join(',', RuleKeys.DefaultJourneyReminderDays);
 
-    private static readonly HashSet<string> NotificationRuleKeys =
+    private sealed record NotificationToggle(string Key, string Label, string Description, bool DefaultEnabled);
+
+    private static readonly IReadOnlyList<NotificationToggle> NotificationToggles =
     [
-        RuleKeys.JourneyReminderEnabled,
-        RuleKeys.JourneyReminderDays
+        new(RuleKeys.JourneyReminderEnabled, "Herinnering aankomende reis", "Stuurt reisleiders een herinnering voor een aankomende reis.", RuleKeys.DefaultJourneyReminderEnabled),
+        new(RuleKeys.WelcomeEmailEnabled, "Welkomstmail nieuwe reisleider", "Stuurt een nieuwe reisleider een welkomstmail met een tijdelijk wachtwoord.", RuleKeys.DefaultWelcomeEmailEnabled),
+        new(RuleKeys.PlanningPublishedEnabled, "Nieuwe planning gepubliceerd", "Informeert iedereen wanneer een nieuwe planning wordt gepubliceerd.", RuleKeys.DefaultPlanningPublishedEnabled),
+        new(RuleKeys.PlanningChangedEnabled, "Planning gewijzigd", "Informeert betrokken reisleiders wanneer een gepubliceerde planning wijzigt.", RuleKeys.DefaultPlanningChangedEnabled),
     ];
+
+    private static readonly HashSet<string> NotificationRuleKeys =
+        NotificationToggles
+            .Select(toggle => toggle.Key)
+            .Append(RuleKeys.JourneyReminderDays)
+            .ToHashSet();
 
     protected override async Task OnInitializedAsync()
     {
@@ -172,16 +182,21 @@ public partial class Settings
         }
     }
 
-    private async Task OnNotificationsEnabledChanged(ChangeEventArgs args)
+    private bool IsNotificationEnabled(string key) =>
+        _notificationEnabled.TryGetValue(key, out var enabled) && enabled;
+
+    private async Task OnNotificationToggleChanged(string key, ChangeEventArgs args)
     {
-        _notificationsEnabled = args.Value switch
+        var enabled = args.Value switch
         {
             bool value => value,
             string text when bool.TryParse(text, out var parsed) => parsed,
-            _ => _notificationsEnabled
+            _ => IsNotificationEnabled(key)
         };
 
-        await UpdateNotificationRuleAsync(RuleKeys.JourneyReminderEnabled, _notificationsEnabled.ToString().ToLowerInvariant());
+        _notificationEnabled[key] = enabled;
+
+        await UpdateNotificationRuleAsync(key, enabled.ToString().ToLowerInvariant());
     }
 
     private async Task OnReminderDaysChanged(ChangeEventArgs args)
@@ -198,10 +213,13 @@ public partial class Settings
 
     private void LoadNotificationSettingsFromRules()
     {
-        var enabledRule = _rules.FirstOrDefault(r => r.Key == RuleKeys.JourneyReminderEnabled);
-        _notificationsEnabled = bool.TryParse(enabledRule?.TypedValue?.ToString(), out var enabled)
-            ? enabled
-            : RuleKeys.DefaultJourneyReminderEnabled;
+        foreach (var toggle in NotificationToggles)
+        {
+            var rule = _rules.FirstOrDefault(r => r.Key == toggle.Key);
+            _notificationEnabled[toggle.Key] = bool.TryParse(rule?.TypedValue?.ToString(), out var enabled)
+                ? enabled
+                : toggle.DefaultEnabled;
+        }
 
         var daysRule = _rules.FirstOrDefault(r => r.Key == RuleKeys.JourneyReminderDays);
         var normalizedDays = NormalizeReminderDays(daysRule?.TypedValue?.ToString() ?? string.Empty);

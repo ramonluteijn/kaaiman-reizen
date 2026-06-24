@@ -41,7 +41,7 @@ public partial class PlannerRoundDraft
         };
     }
 
-    private void RemoveLeader(TravelLeaderViewModel leader)
+    private async Task RemoveLeader(TravelLeaderViewModel leader)
     {
         if (_selectedJourney is null || _result is null) return;
 
@@ -53,9 +53,10 @@ public partial class PlannerRoundDraft
         }
         RefreshSelectedJourney();
         _selectedCandidates = GetCandidatesFor(_selectedJourney);
+        await MarkDirtyAsync();
     }
 
-    private void AssignLeader(LeaderCandidate candidate)
+    private async Task AssignLeader(LeaderCandidate candidate)
     {
         if (_selectedJourney is null || _result is null || _request is null) return;
 
@@ -85,6 +86,7 @@ public partial class PlannerRoundDraft
 
         RefreshSelectedJourney();
         _selectedCandidates = GetCandidatesFor(_selectedJourney);
+        await MarkDirtyAsync();
     }
 
     private List<LeaderCandidate> GetCandidatesFor(JourneyViewModel journey)

@@ -1,5 +1,6 @@
 ﻿using Kaaiman_reizen.Data.Entities;
 using Kaaiman_reizen.Data.Identity;
+using Kaaiman_reizen.Data.Rules;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
@@ -35,11 +36,18 @@ namespace Kaaiman_reizen.Data.Services
             await _userManager.AddToRoleAsync(user, "Reisleider");
             await _userManager.AddClaimAsync(user, new Claim("TravelLeaderId", id.ToString()));
 
-            await _emailDispatcher.SendEmailAsync(
-                email,
-                "Welkom bij Kaaiman Reizen",
-                $"Beste {name},<br><br>Je account is aangemaakt.<br>Je tijdelijk wachtwoord is: <strong>{password}</strong><br><br>Na je eerste keer inloggen kun je je wachtwoord wijzigen door op je e-mailadres te klikken linksonder in het menu."
-            );
+            var welcomeEmailEnabled = await _db.IsRuleEnabledAsync(
+                RuleKeys.WelcomeEmailEnabled,
+                RuleKeys.DefaultWelcomeEmailEnabled);
+
+            if (welcomeEmailEnabled)
+            {
+                await _emailDispatcher.SendEmailAsync(
+                    email,
+                    "Welkom bij Kaaiman Reizen",
+                    $"Beste {name},<br><br>Je account is aangemaakt.<br>Je tijdelijk wachtwoord is: <strong>{password}</strong><br><br>Na je eerste keer inloggen kun je je wachtwoord wijzigen door op je e-mailadres te klikken linksonder in het menu."
+                );
+            }
         }
 
         public async Task DeleteAccountByEmailAsync(string email)

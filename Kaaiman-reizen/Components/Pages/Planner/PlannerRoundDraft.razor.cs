@@ -7,11 +7,13 @@ using Kaaiman_reizen.Models.Planner;
 using Kaaiman_reizen.Models.ViewModels;
 using Kaaiman_reizen.Services;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Routing;
+using Microsoft.JSInterop;
 using MudBlazor;
 
 namespace Kaaiman_reizen.Components.Pages.Planner;
 
-public partial class PlannerRoundDraft : ComponentBase
+public partial class PlannerRoundDraft : ComponentBase, IAsyncDisposable
 {
     private const int SaveMessageDisplayMs = 5000;
 
@@ -24,6 +26,7 @@ public partial class PlannerRoundDraft : ComponentBase
     [Inject] private ISnackbar _snackbar { get; set; } = default!;
     [Inject] private NavigationManager _nav { get; set; } = default!;
     [Inject] private IUserTimezoneService UserTimezoneService { get; set; } = default!;
+    [Inject] private IJSRuntime _js { get; set; } = default!;
 
     private PlanningRound? _round;
     private PlannerDraftRequest? _request;
@@ -54,6 +57,13 @@ public partial class PlannerRoundDraft : ComponentBase
         _selectedOption == "processed"
             ? _planningRoundParticipationNotes.Where(p => p.NoteIsProcessed)
             : _planningRoundParticipationNotes.Where(p => !p.NoteIsProcessed);
+
+    private bool _hasUnsavedChanges;
+    private bool _leaveConfirmOpen;
+    private string? _pendingNavigationUri;
+    private bool _allowNavigation;
+    private IDisposable? _locationChangingRegistration;
+    private DotNetObjectReference<PlannerRoundDraft>? _dotNetRef;
 
     private bool CanPublish =>
         _request is not null && _result is not null && _result.IsSuccess;
@@ -103,7 +113,76 @@ public partial class PlannerRoundDraft : ComponentBase
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender) return;
+        _dotNetRef ??= DotNetObjectReference.Create(this);
+        _locationChangingRegistration = _nav.RegisterLocationChangingHandler(OnLocationChangingAsync);
         await UserTimezoneService.EnsureLoadedAsync();
+        await SyncUnsavedGuardAsync();
+    }
+
+    private async Task MarkDirtyAsync()
+    {
+        if (_hasUnsavedChanges) return;
+        _hasUnsavedChanges = true;
+        await SyncUnsavedGuardAsync();
+    }
+
+    private async Task MarkCleanAsync()
+    {
+        if (!_hasUnsavedChanges) return;
+        _hasUnsavedChanges = false;
+        await SyncUnsavedGuardAsync();
+    }
+
+    private async Task SyncUnsavedGuardAsync()
+    {
+        try
+        {
+            await _js.InvokeVoidAsync("kaaimanUnsavedGuard.setEnabled", _hasUnsavedChanges, _dotNetRef);
+        }
+        catch (JSDisconnectedException) { }
+        catch (InvalidOperationException) { }
+    }
+
+    [JSInvokable]
+    public async Task OnGuardedNavigationAsync(string url)
+    {
+        if (!_hasUnsavedChanges)
+        {
+            _allowNavigation = true;
+            _nav.NavigateTo(url);
+            return;
+        }
+
+        _pendingNavigationUri = url;
+        _leaveConfirmOpen = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async ValueTask OnLocationChangingAsync(LocationChangingContext context)
+    {
+        if (!_hasUnsavedChanges || _allowNavigation)
+            return;
+
+        context.PreventNavigation();
+        _pendingNavigationUri = context.TargetLocation;
+        _leaveConfirmOpen = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ConfirmLeaveAsync()
+    {
+        _leaveConfirmOpen = false;
+        _allowNavigation = true;
+        await MarkCleanAsync();
+
+        if (!string.IsNullOrEmpty(_pendingNavigationUri))
+            _nav.NavigateTo(_pendingNavigationUri);
+    }
+
+    private void CancelLeave()
+    {
+        _leaveConfirmOpen = false;
+        _pendingNavigationUri = null;
     }
 
     private async Task<DateTime> GetUserLocalNowAsync()
@@ -196,6 +275,8 @@ public partial class PlannerRoundDraft : ComponentBase
         await Task.Delay(50);
         _result = await Task.Run(() => _draftService.GenerateDraft(_request));
         _isGenerating = false;
+
+        await MarkDirtyAsync();
 
         if (autoUpdated)
             SetSaveMessage("Planning automatisch bijgewerkt omdat reisleider- of reisgegevens zijn gewijzigd.", Severity.Info);
@@ -382,5 +463,19 @@ public partial class PlannerRoundDraft : ComponentBase
     {
         entry.NoteIsProcessed = isChecked;
         await _roundService.UpdateNoteProcessedStatusForTraveleaderInPlanningRoundAsync(entry.PlanningRoundId, entry.TravelLeaderId, isChecked);
+    }
+    
+    public async ValueTask DisposeAsync()
+    {
+        _locationChangingRegistration?.Dispose();
+
+        try
+        {
+            await _js.InvokeVoidAsync("kaaimanUnsavedGuard.setEnabled", false, null);
+        }
+        catch (JSDisconnectedException) { }
+        catch (InvalidOperationException) { }
+
+        _dotNetRef?.Dispose();
     }
 }

@@ -1,3 +1,4 @@
+using Kaaiman_reizen.Components.Pages.Planner.Components;
 using Kaaiman_reizen.Data.Entities;
 using Kaaiman_reizen.Data.Enum;
 using Kaaiman_reizen.Data.Services;
@@ -27,22 +28,26 @@ public partial class Home : ComponentBase
     private bool _loading = true;
     private bool _isPlanner;
     private bool _isReisleider;
-    private List<Journey> _publishedJourneys = [];
-    private int _selectedYear = DateTime.UtcNow.Year;
-    private bool _publishedPlanning;
-    private bool _publishedPlanningIsComplete;
-    private List<Journey> _plannedJourneysWithTravelLeaders = [];
-    private int _userTimezoneOffsetMinutes;
-    private bool _userTimezoneOffsetLoaded;
 
     private List<Notification> _notifications = [];
     private string _currentUserId = string.Empty;
 
     private IReadOnlyList<PlanningRound> _rounds = [];
+    private List<Journey> _allJourneys = [];
+    private HashSet<int> _expandedRounds = [];
+
+    private int _selectedYear = DateTime.UtcNow.Year;
+    private bool _publishedPlanning;
+    private List<Journey> _plannedJourneysWithTravelLeaders = [];
+    private List<Journey> _publishedJourneys = [];
+
     private List<TravelLeader> _travelLeadersWithoutJourneys = [];
     private List<ParticipationNoteEntry> _travelLeadersWithNotes = [];
     private List<Journey> _journeysWithoutTravelLeaders = [];
     private List<OverlapData> _travelLeadersWithOverlappingJourneys = [];
+
+    private int _userTimezoneOffsetMinutes;
+    private bool _userTimezoneOffsetLoaded;
 
     protected override async Task OnInitializedAsync()
     {
@@ -73,11 +78,17 @@ public partial class Home : ComponentBase
             _journeysWithoutTravelLeaders = await TravelLeaderService.GetJourneysWithoutTravelLeadersAsync(_selectedYear);
             _travelLeadersWithOverlappingJourneys = await TravelLeaderService.GetTravelLeadersWithOverlappingJourneys();
 
+            _expandedRounds = _rounds
+                .Where(r => !r.Versions.Any(v => v.IsPublished))
+                .Select(r => r.Id)
+                .ToHashSet();
+
+            var journeys = await JourneyService.GetJourneysAsync();
+            _allJourneys = journeys.Where(j => j.BookingStatus == BookingStatus.Huidig).ToList();
+
             _publishedPlanning = PlanningService.PublishedPlanningExists();
-            _publishedPlanningIsComplete = await PlanningService.IsPublishedPlanningCompleteAsync(_selectedYear);
             _plannedJourneysWithTravelLeaders = await PlanningService.GetAllJourneysWithTravelLeadersFromLatestPublishedPlanning();
         }
-
 
         if (_isReisleider)
         {
@@ -88,45 +99,230 @@ public partial class Home : ComponentBase
         _loading = false;
     }
 
-    private IEnumerable<PlanningRound> ActivePublishedRounds()
+    // ── Planning round steps ──────────────────────────────────────────────
+
+    private void ToggleRound(int id)
     {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        return _rounds.Where(r =>
-            r.EndDate >= today &&
-            r.Versions.Any(v => v.IsPublished));
+        if (!_expandedRounds.Remove(id)) _expandedRounds.Add(id);
     }
 
-    private record RoundPrefsStatus(PlanningRound Round, int Pending, int Total);
-    private IEnumerable<RoundPrefsStatus> RoundsWithPendingPrefs()
+    private StepPlanModel BuildPlanningRoundSteps(PlanningRound round)
     {
-        return _rounds
-            .Where(r => r.PreferenceDeadline > DateTime.UtcNow)
-            .Select(r => new RoundPrefsStatus(
-                r,
-                r.Participations.Count(p => p.Status == ParticipationStatus.Pending),
-                r.Participations.Count))
-            .Where(x => x.Pending > 0);
-    }
+        var now = DateTime.UtcNow;
+        var deadlinePassed = now > round.PreferenceDeadline;
 
-    private IEnumerable<PlanningRound> RoundsWithStaleDraft()
-    {
-        return _rounds.Where(r =>
+        var journeysInRound = _allJourneys
+            .Where(j => j.Start >= round.StartDate && j.Start <= round.EndDate)
+            .ToList();
+        var journeyCount = journeysInRound.Count;
+
+        var totalParticipants = round.Participations.Count;
+        var submittedCount = round.Participations.Count(p => p.Status == ParticipationStatus.Submitted);
+
+        var hasDraft = round.Versions.Any(v => !v.IsPublished);
+        var isPublished = round.Versions.Any(v => v.IsPublished);
+        var draftIsStale = IsDraftStale(round);
+
+        var journeyIdsWithPrefs = round.Participations
+            .SelectMany(p => p.Preferences)
+            .Select(pref => pref.JourneyId)
+            .ToHashSet();
+        var journeysWithoutPrefs = journeysInRound.Count(j => !journeyIdsWithPrefs.Contains(j.Id));
+
+        // Step 1: Reizen aanmaken
+        var step1Status = journeyCount > 0 ? StepStatus.Completed : StepStatus.Current;
+        var step1 = new PlanStep
         {
-            var draft = r.Versions
-                .Where(v => !v.IsPublished)
-                .OrderByDescending(v => v.CreatedAt)
-                .FirstOrDefault();
-            if (draft is null) return false;
-            return r.Participations.Any(p =>
-                p.SubmittedAt.HasValue && p.SubmittedAt > draft.CreatedAt);
-        });
+            Number = 1,
+            Title = "Reizen aanmaken",
+            Status = step1Status,
+            Sublabel = journeyCount > 0 ? $"{journeyCount} reizen" : "0 reizen",
+            SublabelStyle = journeyCount > 0 ? SublabelStyle.GreenBadge : SublabelStyle.OrangeText,
+            ButtonText = "Reizen beheren",
+            ButtonVariant = ButtonVariant.Outlined,
+            ButtonHref = "/journeys"
+        };
+
+        // Step 2: Voorkeuren uitvragen
+        StepStatus step2Status;
+        if (totalParticipants > 0 && submittedCount == totalParticipants)
+            step2Status = StepStatus.Completed;
+        else if (!deadlinePassed)
+            step2Status = StepStatus.Current;
+        else
+            step2Status = StepStatus.Attention;
+
+        var pendingLeaders = round.Participations
+            .Where(p => p.Status == ParticipationStatus.Pending)
+            .Select(p => p.TravelLeader?.Name ?? $"Reisleider {p.TravelLeaderId}")
+            .OrderBy(n => n)
+            .ToList();
+
+        var step2 = new PlanStep
+        {
+            Number = 2,
+            Title = "Voorkeuren uitvragen",
+            Status = step2Status,
+            Sublabel = $"{submittedCount} / {totalParticipants} ingediend",
+            SublabelStyle = step2Status switch
+            {
+                StepStatus.Completed => SublabelStyle.GreenBadge,
+                StepStatus.Attention => SublabelStyle.RedText,
+                _ => SublabelStyle.OrangeText
+            },
+            ButtonText = step2Status == StepStatus.Current ? "Herinner" : null,
+            ButtonVariant = ButtonVariant.Primary,
+            ButtonHref = $"/planner/rounds/{round.Id}/draft",
+            PendingLeaders = pendingLeaders
+        };
+
+        // Step 3: Voorkeuren controleren
+        StepStatus step3Status;
+        string step3Sublabel;
+        SublabelStyle step3SublabelStyle;
+
+        if (!deadlinePassed)
+        {
+            step3Status = StepStatus.Future;
+            step3Sublabel = $"deadline {round.PreferenceDeadline:d MMM}";
+            step3SublabelStyle = SublabelStyle.GreyText;
+        }
+        else if (journeysWithoutPrefs == 0)
+        {
+            step3Status = StepStatus.Completed;
+            step3Sublabel = "Volledig";
+            step3SublabelStyle = SublabelStyle.GreenBadge;
+        }
+        else
+        {
+            step3Status = StepStatus.Attention;
+            step3Sublabel = $"{journeysWithoutPrefs} zonder voorkeur";
+            step3SublabelStyle = SublabelStyle.RedText;
+        }
+
+        var step3 = new PlanStep
+        {
+            Number = 3,
+            Title = "Voorkeuren controleren",
+            Status = step3Status,
+            Sublabel = step3Sublabel,
+            SublabelStyle = step3SublabelStyle,
+            ButtonText = deadlinePassed ? "Open ronde" : null,
+            ButtonVariant = ButtonVariant.Outlined,
+            ButtonHref = $"/planner/rounds/{round.Id}/draft"
+        };
+
+        // Step 4: Planning genereren
+        StepStatus step4Status;
+        string step4Sublabel;
+        SublabelStyle step4SublabelStyle;
+        string? step4ButtonText;
+        ButtonVariant step4ButtonVariant;
+
+        if (isPublished || (hasDraft && !draftIsStale))
+        {
+            step4Status = StepStatus.Completed;
+            step4Sublabel = "concept aangemaakt";
+            step4SublabelStyle = SublabelStyle.GreenBadge;
+            step4ButtonText = isPublished ? null : "Open";
+            step4ButtonVariant = ButtonVariant.Outlined;
+        }
+        else if (draftIsStale)
+        {
+            step4Status = StepStatus.Attention;
+            step4Sublabel = "verouderd concept";
+            step4SublabelStyle = SublabelStyle.OrangeText;
+            step4ButtonText = "Opnieuw genereren";
+            step4ButtonVariant = ButtonVariant.Danger;
+        }
+        else if (step3Status == StepStatus.Completed)
+        {
+            step4Status = StepStatus.Current;
+            step4Sublabel = "nog geen concept";
+            step4SublabelStyle = SublabelStyle.GreyText;
+            step4ButtonText = "Genereer";
+            step4ButtonVariant = ButtonVariant.Primary;
+        }
+        else
+        {
+            step4Status = StepStatus.Future;
+            step4Sublabel = "nog geen concept";
+            step4SublabelStyle = SublabelStyle.GreyText;
+            step4ButtonText = null;
+            step4ButtonVariant = ButtonVariant.Outlined;
+        }
+
+        var step4 = new PlanStep
+        {
+            Number = 4,
+            Title = "Planning genereren",
+            Status = step4Status,
+            Sublabel = step4Sublabel,
+            SublabelStyle = step4SublabelStyle,
+            ButtonText = step4ButtonText,
+            ButtonVariant = step4ButtonVariant,
+            ButtonHref = $"/planner/rounds/{round.Id}/draft"
+        };
+
+        // Step 5: Publiceren
+        StepStatus step5Status;
+        if (isPublished)
+            step5Status = StepStatus.Completed;
+        else if (step4Status == StepStatus.Completed)
+            step5Status = StepStatus.Current;
+        else
+            step5Status = StepStatus.Future;
+
+        var step5 = new PlanStep
+        {
+            Number = 5,
+            Title = "Publiceren",
+            Status = step5Status,
+            Sublabel = isPublished ? "gepubliceerd" : $"deadline {round.PublicationDeadline:d MMM}",
+            SublabelStyle = isPublished ? SublabelStyle.GreenBadge : SublabelStyle.GreyText,
+            ButtonText = step5Status != StepStatus.Future ? "Open" : null,
+            ButtonVariant = ButtonVariant.Outlined,
+            ButtonHref = $"/planner/rounds/{round.Id}/draft"
+        };
+
+        var steps = new List<PlanStep> { step1, step2, step3, step4, step5 };
+        var completedSteps = steps.Count(s => s.Status == StepStatus.Completed);
+        var progress = (completedSteps * 100) / steps.Count;
+        var currentStep = steps
+            .Select((s, i) => (s, i + 1))
+            .FirstOrDefault(x => x.s.Status != StepStatus.Completed).Item2;
+        if (currentStep == 0) currentStep = steps.Count;
+
+        return new StepPlanModel
+        {
+            RoundName = round.Name,
+            Year = round.Year,
+            Progress = progress,
+            CurrentStep = currentStep,
+            Steps = steps
+        };
     }
+
+    private bool IsDraftStale(PlanningRound round)
+    {
+        var draft = round.Versions
+            .Where(v => !v.IsPublished)
+            .OrderByDescending(v => v.CreatedAt)
+            .FirstOrDefault();
+        if (draft is null) return false;
+        return round.Participations.Any(p => p.SubmittedAt.HasValue && p.SubmittedAt > draft.CreatedAt);
+    }
+
+
+    // ── Notificaties ──────────────────────────────────────────────────────
 
     private async Task MarkNotificationAsRead(Notification notification)
     {
         await NotificationService.MarkAsReadAsync(notification.Id, _currentUserId);
         _notifications.Remove(notification);
     }
+
+    // ── Timezone ──────────────────────────────────────────────────────────
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -154,21 +350,13 @@ public partial class Home : ComponentBase
         }
     }
 
-    private string FormatCreatedAt(DateTime createdAt)
-    {
-        var userLocal = DateDisplay.ToUserLocal(createdAt, _userTimezoneOffsetMinutes);
-        return DateDisplay.FormatDateTime(userLocal);
-    }
+    // ── Helpers ───────────────────────────────────────────────────────────
 
     private static string FormatTravelLeaders(Journey journey)
     {
         var leaders = journey.TravelLeaders ?? [];
-        if (leaders.Count == 0)
-        {
-            return "-";
-        }
-
-        return string.Join("; ", leaders.OrderBy(leader => leader.Name).Select(leader => leader.Name));
+        if (leaders.Count == 0) return "-";
+        return string.Join("; ", leaders.OrderBy(l => l.Name).Select(l => l.Name));
     }
 
     private async Task HandlePrintPdf()

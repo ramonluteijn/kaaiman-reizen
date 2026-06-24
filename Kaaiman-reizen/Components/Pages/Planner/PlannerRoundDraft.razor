@@ -389,3 +389,22 @@
     OnClose="CloseDrawer"
     OnAssignLeader="AssignLeader"
     OnRemoveLeader="RemoveLeader" />
+<AlertModal IsOpen="_leaveConfirmOpen"
+            Title="Planning niet opgeslagen"
+            Severity="Severity.Warning"
+            Dismissible="false"
+            CloseOnBackdropClick="false"
+            Message="Je hebt wijzigingen in de planning die nog niet zijn opgeslagen. Als je deze pagina verlaat, gaan deze wijzigingen verloren.">
+    <Actions>
+        <MudButton Variant="Variant.Text"
+                   Color="Color.Default"
+                   OnClick="CancelLeave">
+            Op pagina blijven
+        </MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Warning"
+                   OnClick="ConfirmLeaveAsync">
+            Verlaten zonder opslaan
+        </MudButton>
+    </Actions>
+</AlertModal>

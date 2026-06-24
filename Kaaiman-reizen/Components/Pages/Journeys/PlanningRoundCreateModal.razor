@@ -291,9 +291,9 @@
         [MaxLength(100, ErrorMessage = "Naam mag maximaal 100 tekens zijn.")]
         public string Name { get; set; } = string.Empty;
 
-        public DateOnly StartDate { get; set; }
-        public DateOnly EndDate { get; set; }
-        public DateOnly PreferenceDeadline { get; set; }
-        public DateOnly PublicationDeadline { get; set; }
+        public DateOnly StartDate { get; set; } = DateOnly.FromDateTime(DateTime.Today);
+        public DateOnly EndDate { get; set; } = DateOnly.FromDateTime(DateTime.Today);
+        public DateOnly PreferenceDeadline { get; set; } = DateOnly.FromDateTime(DateTime.Today);
+        public DateOnly PublicationDeadline { get; set; } = DateOnly.FromDateTime(DateTime.Today);
     }
 }

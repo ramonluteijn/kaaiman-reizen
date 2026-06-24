@@ -24,23 +24,7 @@
     <Routes />
     <script src="@Assets["_framework/blazor.web.js"]"></script>
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
-    <script>
-        window.downloadFileFromStream = async (fileName, contentStreamReference) => {
-        const arrayBuffer = await contentStreamReference.arrayBuffer();
-        const blob = new Blob([arrayBuffer]);
-        const url = URL.createObjectURL(blob);
-        const anchorElement = document.createElement('a');
-        anchorElement.href = url;
-        anchorElement.download = fileName ?? '';
-        anchorElement.click();
-        anchorElement.remove();
-        URL.revokeObjectURL(url);
-        }
-
-        window.kaaimanDateTime = {
-        getTimezoneOffsetMinutes: () => new Date().getTimezoneOffset()
-        }
-    </script>
+    <script src="@Assets["app.js"]"></script>
 </body>
 
 </html>

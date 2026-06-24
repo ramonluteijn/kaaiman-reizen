@@ -351,5 +351,96 @@ namespace Kaaiman_reizen.Tests.Services
 
             Assert.Empty(changedNotifications);
         }
+
+        [Fact]
+        public async Task SavePlanningForRoundAsync_WhenPublishedNotificationDisabled_ShouldNotNotifyOrEmail()
+        {
+            // Arrange
+            var db = GetInMemoryDb();
+
+            var round = CreateRound();
+            db.PlanningRounds.Add(round);
+
+            db.Users.AddRange(
+                new ApplicationUser { Id = "user1", Email = "test1@example.com" },
+                new ApplicationUser { Id = "user2", Email = "test2@example.com" });
+
+            db.Rule.Add(new Rule
+            {
+                Id = 109,
+                Key = "PlanningPublishedEnabled",
+                Description = "Toggle planning published notification",
+                Value = "false",
+                IsActive = true,
+                Weight = 1
+            });
+            await db.SaveChangesAsync();
+
+            var dispatcher = new DummyEmailDispatcher();
+            var serviceProvider = new DummyServiceProvider(dispatcher);
+            var planningService = new PlanningService(db, serviceProvider);
+
+            // Act
+            await planningService.SavePlanningForRoundAsync(round.Id, round.Year, "Definitieve planning", true, new Dictionary<int, IReadOnlyCollection<int>>());
+            await Task.Delay(100);
+
+            // Assert: planning is still published, but no notifications/emails are sent
+            Assert.Single(await db.PlanningVersions.Where(v => v.IsPublished).ToListAsync());
+            Assert.Empty(await db.Notifications.ToListAsync());
+            Assert.Empty(dispatcher.SentEmails);
+        }
+
+        [Fact]
+        public async Task SavePlanningForRoundAsync_WhenChangedNotificationDisabled_ShouldNotNotifyAffectedLeaders()
+        {
+            // Arrange
+            var db = GetInMemoryDb();
+
+            var round = CreateRound();
+            db.PlanningRounds.Add(round);
+
+            var role = new IdentityRole { Id = "role-reisleider", Name = "Reisleider", NormalizedName = "REISLEIDER" };
+            db.Roles.Add(role);
+
+            var leaderAUser = new ApplicationUser { Id = "user-a", Email = "leadera@example.com" };
+            var leaderBUser = new ApplicationUser { Id = "user-b", Email = "leaderb@example.com" };
+            db.Users.AddRange(leaderAUser, leaderBUser);
+            db.UserRoles.Add(new IdentityUserRole<string> { UserId = leaderAUser.Id, RoleId = role.Id });
+            db.UserRoles.Add(new IdentityUserRole<string> { UserId = leaderBUser.Id, RoleId = role.Id });
+
+            db.TravelLeader.AddRange(
+                new TravelLeader { Id = 100, Name = "Leader A", Email = "leadera@example.com", PhoneNumber = "0612345678", AmountOfTrips = 1, MinTrips = 0, MaxTrips = 2 },
+                new TravelLeader { Id = 101, Name = "Leader B", Email = "leaderb@example.com", PhoneNumber = "0612345679", AmountOfTrips = 1, MinTrips = 0, MaxTrips = 2 });
+
+            db.Rule.Add(new Rule
+            {
+                Id = 110,
+                Key = "PlanningChangedEnabled",
+                Description = "Toggle planning changed notification",
+                Value = "false",
+                IsActive = true,
+                Weight = 1
+            });
+            await db.SaveChangesAsync();
+
+            var dispatcher = new DummyEmailDispatcher();
+            var serviceProvider = new DummyServiceProvider(dispatcher);
+            var planningService = new PlanningService(db, serviceProvider);
+
+            var initialAssignments = new Dictionary<int, IReadOnlyCollection<int>> { [1] = [100] };
+            var changedAssignments = new Dictionary<int, IReadOnlyCollection<int>> { [1] = [101] };
+
+            // Act
+            await planningService.SavePlanningForRoundAsync(round.Id, round.Year, "Planning v1", true, initialAssignments);
+            await planningService.SavePlanningForRoundAsync(round.Id, round.Year, "Planning v2", true, changedAssignments);
+            await Task.Delay(100);
+
+            // Assert: no "gewijzigd" notifications or emails despite an actual change
+            var changedNotifications = await db.Notifications
+                .Where(n => n.Message.Contains("is gewijzigd"))
+                .ToListAsync();
+            Assert.Empty(changedNotifications);
+            Assert.DoesNotContain(dispatcher.SentMessages, m => m.Subject.Contains("gewijzigd"));
+        }
     }
 }
