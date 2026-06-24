@@ -464,7 +464,7 @@ public partial class PlannerRoundDraft : ComponentBase, IAsyncDisposable
         entry.NoteIsProcessed = isChecked;
         await _roundService.UpdateNoteProcessedStatusForTraveleaderInPlanningRoundAsync(entry.PlanningRoundId, entry.TravelLeaderId, isChecked);
     }
-    
+
     public async ValueTask DisposeAsync()
     {
         _locationChangingRegistration?.Dispose();
