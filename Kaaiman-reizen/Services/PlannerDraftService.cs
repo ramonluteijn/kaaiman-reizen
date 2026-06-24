@@ -70,8 +70,7 @@ public class PlannerDraftService : IPlannerDraftService
             AllActiveLeaders = activeLeaderInputs,
             Journeys = journeys
                 .Where(j => j.BookingStatus == BookingStatus.Huidig
-                         && j.Start >= round.StartDate
-                         && j.Start <= round.EndDate)
+                         && j.PlanningRoundId == round.Id)
                 .Select(j => new PlannerJourneyInput
                 {
                     Id = j.Id,

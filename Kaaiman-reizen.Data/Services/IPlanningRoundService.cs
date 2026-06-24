@@ -6,7 +6,8 @@ namespace Kaaiman_reizen.Data.Services;
 public interface IPlanningRoundService
 {
     Task<PlanningRound> CreateAsync(string name, int year, DateOnly startDate, DateOnly endDate,
-        DateTime preferenceDeadline, DateTime publicationDeadline, CancellationToken ct = default);
+        DateTime preferenceDeadline, DateTime publicationDeadline,
+        IEnumerable<int>? journeyIds = null, CancellationToken ct = default);
 
     Task<IReadOnlyList<PlanningRound>> GetAllAsync(CancellationToken ct = default);
     Task<PlanningRound?> GetByIdAsync(int id, CancellationToken ct = default);

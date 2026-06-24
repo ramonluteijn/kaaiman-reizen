@@ -168,7 +168,7 @@
 
         var freeHuidig = Journeys
             .Where(j => j.BookingStatus == BookingStatus.Huidig
-                     && !ExistingRounds.Any(r => j.Start >= r.StartDate && j.Start <= r.EndDate))
+                     && j.PlanningRoundId == null)
             .ToList();
 
         if (freeHuidig.Count > 0)
@@ -215,11 +215,11 @@
             .ToList();
 
         _freeJourneys = inRange
-            .Where(j => !ExistingRounds.Any(r => j.Start >= r.StartDate && j.Start <= r.EndDate))
+            .Where(j => j.PlanningRoundId == null)
             .ToList();
 
         _alreadyInRound = inRange
-            .Select(j => (j, Round: ExistingRounds.FirstOrDefault(r => j.Start >= r.StartDate && j.Start <= r.EndDate)))
+            .Select(j => (j, Round: ExistingRounds.FirstOrDefault(r => r.Id == j.PlanningRoundId)))
             .Where(x => x.Round is not null)
             .Select(x => (x.j, x.Round!))
             .ToList();
@@ -259,7 +259,8 @@
                 _form.StartDate,
                 _form.EndDate,
                 _form.PreferenceDeadline.ToDateTime(new TimeOnly(23, 59, 59)),
-                _form.PublicationDeadline.ToDateTime(new TimeOnly(23, 59, 59))
+                _form.PublicationDeadline.ToDateTime(new TimeOnly(23, 59, 59)),
+                _freeJourneys.Select(j => j.Id).ToList()
             );
 
             await IsOpenChanged.InvokeAsync(false);

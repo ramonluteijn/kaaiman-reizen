@@ -120,6 +120,12 @@ public class MainContext : IdentityDbContext<ApplicationUser>
             .HasForeignKey(v => v.PlanningRoundId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        builder.Entity<Journey>()
+            .HasOne(j => j.PlanningRound)
+            .WithMany(r => r.Journeys)
+            .HasForeignKey(j => j.PlanningRoundId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         builder.Entity<PlanningRoundParticipation>()
             .HasOne(p => p.PlanningRound)
             .WithMany(r => r.Participations)
