@@ -33,6 +33,10 @@ public class Journey : IValidatableObject
 
     public bool IsProcessed { get; set; } = false;
 
+    /// <summary>The planning round this travel belongs to. A travel can be linked to at most one round.</summary>
+    public int? PlanningRoundId { get; set; }
+    public PlanningRound? PlanningRound { get; set; }
+
     public List<TravelLeader> TravelLeaders { get; set; } = new();
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)

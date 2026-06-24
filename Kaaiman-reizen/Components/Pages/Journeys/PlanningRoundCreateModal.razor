@@ -51,18 +51,6 @@
                         </div>
                     </div>
 
-                    @if (_overlapRound is not null)
-                    {
-                        <div class="alert alert-warning d-flex align-items-start gap-2 mb-3 py-2">
-                            <i class="bi bi-exclamation-triangle-fill mt-1 flex-shrink-0"></i>
-                            <span>
-                                Dit datumbereik overlapt met <strong>@_overlapRound.Name</strong>
-                                (@_overlapRound.StartDate.ToString("d MMM") – @_overlapRound.EndDate.ToString("d MMM yyyy")).
-                                Pas de datumreeks aan om een nieuwe ronde aan te maken.
-                            </span>
-                        </div>
-                    }
-
                     <div class="row mb-3">
                         <div class="col-6">
                             <label class="form-label">Voorkeur deadline</label>
@@ -139,7 +127,7 @@
                         </MudButton>
                         <MudButton Variant="Variant.Filled" Color="Color.Primary"
                                    ButtonType="ButtonType.Submit"
-                                   Disabled="@(_saving || _overlapRound is not null)">
+                                   Disabled="_saving">
                             @if (_saving)
                             {
                                 <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" />
@@ -162,7 +150,6 @@
     private RoundForm _form = new();
     private List<Journey> _freeJourneys = [];
     private List<(Journey Journey, PlanningRound Round)> _alreadyInRound = [];
-    private PlanningRound? _overlapRound;
     private bool _saving;
     private string? _errorMessage;
     private bool _prevIsOpen;
@@ -181,7 +168,7 @@
 
         var freeHuidig = Journeys
             .Where(j => j.BookingStatus == BookingStatus.Huidig
-                     && !ExistingRounds.Any(r => j.Start >= r.StartDate && j.Start <= r.EndDate))
+                     && j.PlanningRoundId == null)
             .ToList();
 
         if (freeHuidig.Count > 0)
@@ -220,9 +207,6 @@
 
     private void RefreshJourneysInRange()
     {
-        _overlapRound = ExistingRounds
-            .FirstOrDefault(r => r.StartDate <= _form.EndDate && _form.StartDate <= r.EndDate);
-
         var inRange = Journeys
             .Where(j => j.BookingStatus == BookingStatus.Huidig
                      && j.Start >= _form.StartDate
@@ -231,11 +215,11 @@
             .ToList();
 
         _freeJourneys = inRange
-            .Where(j => !ExistingRounds.Any(r => j.Start >= r.StartDate && j.Start <= r.EndDate))
+            .Where(j => j.PlanningRoundId == null)
             .ToList();
 
         _alreadyInRound = inRange
-            .Select(j => (j, Round: ExistingRounds.FirstOrDefault(r => j.Start >= r.StartDate && j.Start <= r.EndDate)))
+            .Select(j => (j, Round: ExistingRounds.FirstOrDefault(r => r.Id == j.PlanningRoundId)))
             .Where(x => x.Round is not null)
             .Select(x => (x.j, x.Round!))
             .ToList();
@@ -275,7 +259,8 @@
                 _form.StartDate,
                 _form.EndDate,
                 _form.PreferenceDeadline.ToDateTime(new TimeOnly(23, 59, 59)),
-                _form.PublicationDeadline.ToDateTime(new TimeOnly(23, 59, 59))
+                _form.PublicationDeadline.ToDateTime(new TimeOnly(23, 59, 59)),
+                _freeJourneys.Select(j => j.Id).ToList()
             );
 
             await IsOpenChanged.InvokeAsync(false);

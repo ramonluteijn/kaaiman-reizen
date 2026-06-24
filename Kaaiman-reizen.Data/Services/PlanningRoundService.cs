@@ -12,17 +12,9 @@ public class PlanningRoundService : IPlanningRoundService
     public PlanningRoundService(MainContext db) => _db = db;
 
     public async Task<PlanningRound> CreateAsync(string name, int year, DateOnly startDate, DateOnly endDate,
-        DateTime preferenceDeadline, DateTime publicationDeadline, CancellationToken ct = default)
+        DateTime preferenceDeadline, DateTime publicationDeadline,
+        IEnumerable<int>? journeyIds = null, CancellationToken ct = default)
     {
-        var overlapping = await _db.PlanningRounds
-            .Where(r => r.StartDate <= endDate && startDate <= r.EndDate)
-            .FirstOrDefaultAsync(ct);
-
-        if (overlapping is not null)
-            throw new InvalidOperationException(
-                $"De datumreeks overlapt met bestaande ronde \"{overlapping.Name}\" " +
-                $"({overlapping.StartDate:d MMM} – {overlapping.EndDate:d MMM yyyy}). Kies een andere periode.");
-
         var activeLeaders = await _db.TravelLeader
             .Where(l => l.IsActive)
             .Select(l => new { l.Id, l.MinTrips, l.MaxTrips, l.Note })
@@ -48,6 +40,22 @@ public class PlanningRoundService : IPlanningRoundService
 
         _db.PlanningRounds.Add(round);
         await _db.SaveChangesAsync(ct);
+
+        var requestedIds = journeyIds?.Distinct().ToList();
+        if (requestedIds is { Count: > 0 })
+        {
+            // Only link travels that aren't already tied to another round,
+            // so a travel can be linked to at most one round.
+            var journeysToLink = await _db.Journey
+                .Where(j => requestedIds.Contains(j.Id) && j.PlanningRoundId == null)
+                .ToListAsync(ct);
+
+            foreach (var journey in journeysToLink)
+                journey.PlanningRoundId = round.Id;
+
+            if (journeysToLink.Count > 0)
+                await _db.SaveChangesAsync(ct);
+        }
 
         return round;
     }

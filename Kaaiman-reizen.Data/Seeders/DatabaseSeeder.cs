@@ -76,8 +76,8 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
                 Name = "Jan de Vries",
                 PhoneNumber = "06-12345678",
                 AmountOfTrips = 8,
-                MinTrips = 2,
-                MaxTrips = 10,
+                MinTrips = 1,
+                MaxTrips = 4,
                 IsActive = true,
                 Note = Mark("Kernlid — breed beschikbaar"),
                 AvailabilityPeriods = [new() { Start = new(2026, 1, 1), End = new(2026, 12, 31) }]
@@ -87,8 +87,8 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
                 Name = "Maria Jansen",
                 PhoneNumber = "06-87654321",
                 AmountOfTrips = 12,
-                MinTrips = 3,
-                MaxTrips = 15,
+                MinTrips = 1,
+                MaxTrips = 4,
                 IsActive = true,
                 Note = Mark("Kernlid — ervaren, breed beschikbaar"),
                 AvailabilityPeriods = [new() { Start = new(2026, 1, 1), End = new(2026, 12, 31) }]
@@ -98,10 +98,10 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
                 Name = "Thomas de Groot",
                 PhoneNumber = Phone(),
                 AmountOfTrips = 18,
-                MinTrips = 4,
-                MaxTrips = 18,
+                MinTrips = 1,
+                MaxTrips = 4,
                 IsActive = true,
-                Note = Mark("Kernlid — meest ervaren, op historisch maximum"),
+                Note = Mark("Kernlid — meest ervaren"),
                 AvailabilityPeriods = [new() { Start = new(2026, 2, 1), End = new(2026, 12, 31) }]
             },
             ["daan"] = new()
@@ -109,8 +109,8 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
                 Name = "Daan Peters",
                 PhoneNumber = Phone(),
                 AmountOfTrips = 16,
-                MinTrips = 4,
-                MaxTrips = 18,
+                MinTrips = 1,
+                MaxTrips = 4,
                 IsActive = true,
                 Note = Mark("Kernlid — gespecialiseerd in Scandinavië"),
                 AvailabilityPeriods = [new() { Start = new(2026, 1, 1), End = new(2026, 12, 31) }]
@@ -120,8 +120,8 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
                 Name = "Fleur Visser",
                 PhoneNumber = Phone(),
                 AmountOfTrips = 7,
-                MinTrips = 2,
-                MaxTrips = 8,
+                MinTrips = 1,
+                MaxTrips = 3,
                 IsActive = true,
                 Note = Mark("Kernlid — niet in winter beschikbaar"),
                 AvailabilityPeriods = [new() { Start = new(2026, 3, 1), End = new(2026, 11, 30) }]
@@ -138,8 +138,8 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
                 Name = "Anna Smits",
                 PhoneNumber = Phone(),
                 AmountOfTrips = 4,
-                MinTrips = 1,
-                MaxTrips = 5,
+                MinTrips = 0,
+                MaxTrips = 2,
                 IsActive = true,
                 Note = Mark("Lentegast — beschikbaar mrt-jun"),
                 AvailabilityPeriods = [new() { Start = new(2026, 3, 1), End = new(2026, 6, 30) }]
@@ -149,8 +149,8 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
                 Name = "Clara Kuijpers",
                 PhoneNumber = Phone(),
                 AmountOfTrips = 3,
-                MinTrips = 1,
-                MaxTrips = 4,
+                MinTrips = 0,
+                MaxTrips = 2,
                 IsActive = true,
                 Note = Mark("Lentegast — beschikbaar mrt-mei"),
                 AvailabilityPeriods = [new() { Start = new(2026, 3, 1), End = new(2026, 5, 31) }]
@@ -160,10 +160,10 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
                 Name = "David Mulder",
                 PhoneNumber = Phone(),
                 AmountOfTrips = 8,
-                MinTrips = 2,
-                MaxTrips = 8,
+                MinTrips = 0,
+                MaxTrips = 2,
                 IsActive = true,
-                Note = Mark("Lentegast — historisch op maximum (AmountOfTrips == MaxTrips)"),
+                Note = Mark("Lentegast — veel ervaring"),
                 AvailabilityPeriods = [new() { Start = new(2026, 3, 1), End = new(2026, 6, 30) }]
             },
 
@@ -177,8 +177,8 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
                 Name = "Frank Willems",
                 PhoneNumber = Phone(),
                 AmountOfTrips = 9,
-                MinTrips = 2,
-                MaxTrips = 10,
+                MinTrips = 0,
+                MaxTrips = 3,
                 IsActive = true,
                 Note = Mark("Zomers — beschikbaar jun-sep"),
                 AvailabilityPeriods = [new() { Start = new(2026, 6, 1), End = new(2026, 9, 30) }]
@@ -188,8 +188,8 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
                 Name = "Gerda van Dijk",
                 PhoneNumber = Phone(),
                 AmountOfTrips = 7,
-                MinTrips = 2,
-                MaxTrips = 8,
+                MinTrips = 1,
+                MaxTrips = 3,
                 IsActive = true,
                 Note = Mark("Zomers — beschikbaar jul-sep"),
                 AvailabilityPeriods = [new() { Start = new(2026, 7, 1), End = new(2026, 9, 30) }]
@@ -199,10 +199,10 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
                 Name = "Hans Bosman",
                 PhoneNumber = Phone(),
                 AmountOfTrips = 12,
-                MinTrips = 3,
-                MaxTrips = 12,
+                MinTrips = 0,
+                MaxTrips = 3,
                 IsActive = true,
-                Note = Mark("Zomers — historisch op maximum (AmountOfTrips == MaxTrips)"),
+                Note = Mark("Zomers — veel ervaring"),
                 AvailabilityPeriods = [new() { Start = new(2026, 6, 1), End = new(2026, 9, 30) }]
             },
 
@@ -215,8 +215,8 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
                 Name = "Karel Linden",
                 PhoneNumber = Phone(),
                 AmountOfTrips = 3,
-                MinTrips = 1,
-                MaxTrips = 4,
+                MinTrips = 0,
+                MaxTrips = 2,
                 IsActive = true,
                 Note = Mark("Smal venster — alleen beschikbaar 5-25 apr"),
                 AvailabilityPeriods = [new() { Start = new(2026, 4, 5), End = new(2026, 4, 25) }]
@@ -227,7 +227,7 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
                 PhoneNumber = Phone(),
                 AmountOfTrips = 5,
                 MinTrips = 1,
-                MaxTrips = 6,
+                MaxTrips = 2,
                 IsActive = true,
                 Note = Mark("Smal venster — alleen beschikbaar 1-21 jul"),
                 AvailabilityPeriods = [new() { Start = new(2026, 7, 1), End = new(2026, 7, 21) }]
@@ -242,8 +242,8 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
                 Name = "Omar Hassan",
                 PhoneNumber = Phone(),
                 AmountOfTrips = 9,
-                MinTrips = 3,
-                MaxTrips = 12,
+                MinTrips = 0,
+                MaxTrips = 3,
                 IsActive = false,
                 Note = Mark("INACTIEF — heeft beschikbaarheid maar mag niet worden ingepland"),
                 AvailabilityPeriods = [new() { Start = new(2026, 1, 1), End = new(2026, 12, 31) }]
@@ -253,8 +253,8 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
                 Name = "Priya Singh",
                 PhoneNumber = Phone(),
                 AmountOfTrips = 5,
-                MinTrips = 1,
-                MaxTrips = 8,
+                MinTrips = 0,
+                MaxTrips = 2,
                 IsActive = false,
                 Note = Mark("INACTIEF — ook geen beschikbaarheidsperiodes opgegeven"),
             },
@@ -269,8 +269,8 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
                 Name = "Quinten Vos",
                 PhoneNumber = Phone(),
                 AmountOfTrips = 4,
-                MinTrips = 1,
-                MaxTrips = 6,
+                MinTrips = 0,
+                MaxTrips = 2,
                 IsActive = true,
                 Note = Mark("Geen beschikbaarheid — actief maar nooit inplanbaar"),
             },
@@ -296,7 +296,7 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
                 PhoneNumber = Phone(),
                 AmountOfTrips = 0,
                 MinTrips = 2,
-                MaxTrips = 4,
+                MaxTrips = 3,
                 IsActive = true,
                 Note = Mark("AmountOfTrips=0 maar MinTrips=2 — ruim onder minimum"),
                 AvailabilityPeriods = [new() { Start = new(2026, 1, 1), End = new(2026, 12, 31) }]
@@ -456,9 +456,11 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
     private async Task SeedPlanningRoundAsync(Dictionary<string, TravelLeader> leaders)
     {
         // De 8 reizen die binnen Periode 1 (1 jan – 30 jun 2026) vallen.
-        var journeyIds = await context.Journey
+        var periodOneJourneys = await context.Journey
             .Where(j => j.Start.Year == 2026 && j.Start <= new DateOnly(2026, 6, 30))
-            .ToDictionaryAsync(j => j.Name, j => j.Id);
+            .ToListAsync();
+
+        var journeyIds = periodOneJourneys.ToDictionary(j => j.Name, j => j.Id);
 
         // Shorthand: bouw een preference-lijst op basis van een naam→rank map.
         List<PlanningRoundPreference> Prefs(Dictionary<string, int> map) =>
@@ -618,7 +620,8 @@ public class DatabaseSeeder(MainContext context, ILogger<DatabaseSeeder> logger)
             EndDate = new DateOnly(2026, 6, 30),
             PreferenceDeadline = new DateTime(2026, 2, 15, 23, 59, 59),
             PublicationDeadline = new DateTime(2026, 3, 1, 23, 59, 59),
-            Participations = participations
+            Participations = participations,
+            Journeys = periodOneJourneys
         };
 
         context.PlanningRounds.Add(round);
