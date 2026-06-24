@@ -48,8 +48,12 @@ public partial class PlannerRoundDraft : ComponentBase
     private bool _preferenceChangesDetected = false;
     public CalendarModes selectedMode = CalendarModes.JourneyMode;
     private IReadOnlyList<TravelLeader> _availibilityPeriods = [];
-    public IReadOnlyList<ParticipationNoteEntry> planningRoundParticipationNotes = [];
-    public string selectedOption = "unprocessed";
+    private string _selectedOption = "unprocessed";
+    private IReadOnlyList<ParticipationNoteEntry> _planningRoundParticipationNotes = [];
+    private IEnumerable<ParticipationNoteEntry> _filteredParticipationNotes =>
+        _selectedOption == "processed"
+            ? _planningRoundParticipationNotes.Where(p => p.NoteIsProcessed)
+            : _planningRoundParticipationNotes.Where(p => !p.NoteIsProcessed);
 
     private bool CanPublish =>
         _request is not null && _result is not null && _result.IsSuccess;
@@ -93,7 +97,7 @@ public partial class PlannerRoundDraft : ComponentBase
     {
         await LoadDataForRoundAsync();
         _availibilityPeriods = BuildAvailabilityFromRound();
-        planningRoundParticipationNotes = await _roundService.GetParticipationNotesForCurrentRoundAsync(RoundId);
+        _planningRoundParticipationNotes = await _roundService.GetParticipationNotesForCurrentRoundAsync(RoundId);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

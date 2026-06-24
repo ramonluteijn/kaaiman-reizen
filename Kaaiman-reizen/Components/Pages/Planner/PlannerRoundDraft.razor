@@ -266,32 +266,32 @@
                             <aside class="pd-sidebar">
                                 <p class="pd-sidebar-title">Notities verwerken</p>
                                 <div class="my-4">
-                                    <MudSelect @bind-Value="selectedOption">
+                                    <MudSelect @bind-Value="_selectedOption">
                                         <MudSelectItem Value="@("unprocessed")">Toon openstaande notities</MudSelectItem>
                                         <MudSelectItem Value="@("processed")">Toon al verwerkte notities</MudSelectItem>
                                     </MudSelect>
                                 </div>
 
                                 <div class="d-flex flex-column">
-                                    @foreach (var participation in planningRoundParticipationNotes)
+                                    @foreach (var participation in _filteredParticipationNotes)
                                     {
                                         <div class="mb-3">
                                             <p class="fw-bold mb-2">@participation.TravelLeaderName</p>
 
-                                            <div class="d-flex align-items-start gap-2 rounded border p-2">
+                                            <div class="d-flex align-items-start gap-2 rounded border p-2 @(participation.NoteIsProcessed ? "note-bubble-checked" : "")">
                                                 <MudCheckBox Value="@participation.NoteIsProcessed"
                                                  ValueChanged="@((bool value) => OnNoteProcessedChanged(participation, value))"
                                                  Color="Color.Success"
                                                  UncheckedColor="Color.Default"
                                                  Class="mt-n1" />
-                                                <span>@participation.Note</span>
+                                                <span style="@(participation.NoteIsProcessed ? "text-decoration: line-through; color: #757575;" : "")">@participation.Note</span>
                                             </div>
                                         </div>
                                     }
                                 </div>
 
                             </aside>
-                        }s
+                        }
 
                         <div class="pd-main">
                             @if (_result.JourneyWarnings.Any())
