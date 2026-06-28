@@ -4,6 +4,7 @@ using Kaaiman_reizen.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Kaaiman_reizen.Data.Migrations
 {
     [DbContext(typeof(MainContext))]
-    partial class MainContextModelSnapshot : ModelSnapshot
+    [Migration("20260623123713_AddProcessedBooleanToNoteInPlanningroundParticipations")]
+    partial class AddProcessedBooleanToNoteInPlanningroundParticipations
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -73,9 +76,6 @@ namespace Kaaiman_reizen.Data.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<int?>("PlanningRoundId")
-                        .HasColumnType("int");
-
                     b.Property<int>("RequiredLeaders")
                         .HasColumnType("int");
 
@@ -86,8 +86,6 @@ namespace Kaaiman_reizen.Data.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("PlanningRoundId");
 
                     b.ToTable("Journey");
                 });
@@ -445,33 +443,6 @@ namespace Kaaiman_reizen.Data.Migrations
                             Key = "JourneyReminderDays",
                             Value = "7,3",
                             Weight = 1
-                        },
-                        new
-                        {
-                            Id = 8,
-                            Description = "Versturen van een welkomstmail met tijdelijk wachtwoord aan een nieuwe reisleider.",
-                            IsActive = true,
-                            Key = "WelcomeEmailEnabled",
-                            Value = "true",
-                            Weight = 1
-                        },
-                        new
-                        {
-                            Id = 9,
-                            Description = "Versturen van een notificatie wanneer een nieuwe planning wordt gepubliceerd.",
-                            IsActive = true,
-                            Key = "PlanningPublishedEnabled",
-                            Value = "true",
-                            Weight = 1
-                        },
-                        new
-                        {
-                            Id = 10,
-                            Description = "Versturen van een notificatie aan betrokken reisleiders wanneer een gepubliceerde planning wijzigt.",
-                            IsActive = true,
-                            Key = "PlanningChangedEnabled",
-                            Value = "true",
-                            Weight = 1
                         });
                 });
 
@@ -757,16 +728,6 @@ namespace Kaaiman_reizen.Data.Migrations
                     b.Navigation("TravelLeader");
                 });
 
-            modelBuilder.Entity("Kaaiman_reizen.Data.Entities.Journey", b =>
-                {
-                    b.HasOne("Kaaiman_reizen.Data.Entities.PlanningRound", "PlanningRound")
-                        .WithMany("Journeys")
-                        .HasForeignKey("PlanningRoundId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("PlanningRound");
-                });
-
             modelBuilder.Entity("Kaaiman_reizen.Data.Entities.JourneyNotificationHistory", b =>
                 {
                     b.HasOne("Kaaiman_reizen.Data.Entities.Journey", "Journey")
@@ -979,8 +940,6 @@ namespace Kaaiman_reizen.Data.Migrations
 
             modelBuilder.Entity("Kaaiman_reizen.Data.Entities.PlanningRound", b =>
                 {
-                    b.Navigation("Journeys");
-
                     b.Navigation("Participations");
 
                     b.Navigation("Versions");

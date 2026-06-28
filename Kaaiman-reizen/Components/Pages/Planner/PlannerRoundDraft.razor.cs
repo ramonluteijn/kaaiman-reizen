@@ -1,4 +1,5 @@
 using Kaaiman_reizen.Components.Pages.Planner.Components;
+using Kaaiman_reizen.Data.Dtos;
 using Kaaiman_reizen.Data.Entities;
 using Kaaiman_reizen.Data.Enum;
 using Kaaiman_reizen.Data.Services;
@@ -43,12 +44,19 @@ public partial class PlannerRoundDraft : ComponentBase, IAsyncDisposable
     private List<LeaderCandidate> _selectedCandidates = [];
     private bool _sidebarLeaderOpen = true;
     private bool _sidebarJourneyOpen = false;
+    private bool _sidebarNotesOpen = false;
     private DateOnly? _jumpToDate;
     private bool _noteModalOpen;
     private LeaderPlanningRow? _selectedLeaderRow;
     private bool _preferenceChangesDetected = false;
     public CalendarModes selectedMode = CalendarModes.JourneyMode;
     private IReadOnlyList<TravelLeader> _availibilityPeriods = [];
+    private string _selectedOption = "unprocessed";
+    private IReadOnlyList<ParticipationNoteEntry> _planningRoundParticipationNotes = [];
+    private IEnumerable<ParticipationNoteEntry> _filteredParticipationNotes =>
+        _selectedOption == "processed"
+            ? _planningRoundParticipationNotes.Where(p => p.NoteIsProcessed)
+            : _planningRoundParticipationNotes.Where(p => !p.NoteIsProcessed);
 
     private bool _hasUnsavedChanges;
     private bool _leaveConfirmOpen;
@@ -99,6 +107,7 @@ public partial class PlannerRoundDraft : ComponentBase, IAsyncDisposable
     {
         await LoadDataForRoundAsync();
         _availibilityPeriods = BuildAvailabilityFromRound();
+        _planningRoundParticipationNotes = await _roundService.GetParticipationNotesForCurrentRoundAsync(RoundId);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -448,6 +457,12 @@ public partial class PlannerRoundDraft : ComponentBase, IAsyncDisposable
                         }).ToList()
                 };
             }).ToList();
+    }
+
+    private async Task OnNoteProcessedChanged(ParticipationNoteEntry entry, bool isChecked)
+    {
+        entry.NoteIsProcessed = isChecked;
+        await _roundService.UpdateNoteProcessedStatusForTraveleaderInPlanningRoundAsync(entry.PlanningRoundId, entry.TravelLeaderId, isChecked);
     }
 
     public async ValueTask DisposeAsync()

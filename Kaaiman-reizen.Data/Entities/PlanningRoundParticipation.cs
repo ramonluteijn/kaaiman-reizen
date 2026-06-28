@@ -10,6 +10,7 @@ public class PlanningRoundParticipation
     public int? MinTrips { get; set; }
     public int? MaxTrips { get; set; }
     public string Note { get; set; } = string.Empty;
+    public bool NoteIsProcessed { get; set; } = false;
     public ParticipationStatus Status { get; set; } = ParticipationStatus.Pending;
     public DateTime? SubmittedAt { get; set; }
 

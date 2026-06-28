@@ -147,11 +147,43 @@ public class PlanningRoundService : IPlanningRoundService
                 PlanningRoundName = p.PlanningRound.Name,
                 TravelLeaderId = p.TravelLeaderId,
                 TravelLeaderName = p.TravelLeader.Name,
-                Note = p.Note
+                Note = p.Note,
+                NoteIsProcessed = p.NoteIsProcessed,
             })
             .OrderBy(x => x.PlanningRoundName)
             .ThenBy(x => x.TravelLeaderName)
             .ToListAsync(ct);
+    }
+
+    public async Task<IReadOnlyList<ParticipationNoteEntry>> GetParticipationNotesForCurrentRoundAsync(int roundId, CancellationToken ct = default)
+    {
+        return await _db.PlanningRoundParticipations
+            .Where(p =>
+                p.PlanningRound.Id == roundId &&
+                p.Note != null &&
+                p.Note != string.Empty)
+            .Select(p => new ParticipationNoteEntry
+            {
+                PlanningRoundId = p.PlanningRoundId,
+                PlanningRoundName = p.PlanningRound.Name,
+                TravelLeaderId = p.TravelLeaderId,
+                TravelLeaderName = p.TravelLeader.Name,
+                Note = p.Note,
+                NoteIsProcessed = p.NoteIsProcessed,
+            })
+            .OrderBy(x => x.TravelLeaderName)
+            .ToListAsync(ct);
+    }
+
+    public async Task UpdateNoteProcessedStatusForTraveleaderInPlanningRoundAsync(int planningRoundId, int travelLeaderId, bool isProcessed, CancellationToken ct = default)
+    {
+        var planningRoundParticipation = await _db.PlanningRoundParticipations
+            .FirstAsync(participation =>
+                participation.PlanningRoundId == planningRoundId &&
+                participation.TravelLeaderId == travelLeaderId, ct);
+
+        planningRoundParticipation.NoteIsProcessed = isProcessed;
+        await _db.SaveChangesAsync(ct);
     }
 
     public async Task MarkUnavailableAsync(int participationId, CancellationToken ct = default)

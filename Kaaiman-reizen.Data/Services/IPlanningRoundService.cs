@@ -21,6 +21,8 @@ public interface IPlanningRoundService
         bool allowAfterDeadline = false,
         CancellationToken ct = default);
     Task<IReadOnlyList<ParticipationNoteEntry>> GetParticipationNotesAsync(CancellationToken ct = default);
+    Task<IReadOnlyList<ParticipationNoteEntry>> GetParticipationNotesForCurrentRoundAsync(int roundId, CancellationToken ct = default);
     Task MarkUnavailableAsync(int participationId, CancellationToken ct = default);
     Task DeleteAsync(int id, CancellationToken ct = default);
+    Task UpdateNoteProcessedStatusForTraveleaderInPlanningRoundAsync(int planningRoundId, int travelLeaderId, bool isProcessed, CancellationToken ct = default);
 }
